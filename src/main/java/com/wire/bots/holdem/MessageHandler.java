@@ -36,7 +36,7 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onText(WireClient client, TextMessage msg) {
         try {
-            if (msg.getText().startsWith("@hand")) {
+            if (msg.getText().startsWith("@deal")) {
                 round = new Round();
                 deck = new Deck();
 
@@ -55,24 +55,43 @@ public class MessageHandler extends MessageHandlerBase {
                     byte[] image = Images.getImage(player.getCards());
                     client.sendPicture(image, MIME_TYPE, player.getUserId());
                 }
-
-                round.addCardToBoard(deck.drawFromDeck());
-                round.addCardToBoard(deck.drawFromDeck());
-                round.addCardToBoard(deck.drawFromDeck());
-
                 return;
             }
 
-            if (msg.getText().startsWith("@board")) {
-                byte[] image = Images.getImage(round.getBoard());
+            if (msg.getText().startsWith("@flop")) {
+                ArrayList<Card> board = round.getBoard();
+                if (board.size() != 0) {
+                    client.sendText("It's not time for the flop. %d cards on the board", board.size());
+                    return;
+                }
+
+                round.addCardToBoard(deck.drawFromDeck());
+                round.addCardToBoard(deck.drawFromDeck());
+                round.addCardToBoard(deck.drawFromDeck());
+
+                byte[] image = Images.getImage(board);
                 client.sendPicture(image, MIME_TYPE);
                 return;
             }
 
-            if (msg.getText().startsWith("@new")) {
+            if (msg.getText().startsWith("@turn")) {
                 ArrayList<Card> board = round.getBoard();
-                if (board.size() >= 5) {
-                    client.sendText("There are 5 cards on the board already");
+                if (board.size() != 3) {
+                    client.sendText("It's not time for the turn. %d cards on the board", board.size());
+                    return;
+                }
+
+                round.addCardToBoard(deck.drawFromDeck());
+
+                byte[] image = Images.getImage(board);
+                client.sendPicture(image, MIME_TYPE);
+                return;
+            }
+
+            if (msg.getText().startsWith("@river")) {
+                ArrayList<Card> board = round.getBoard();
+                if (board.size() != 4) {
+                    client.sendText("It's not time for the river. %d cards on the board", board.size());
                     return;
                 }
 
@@ -87,7 +106,13 @@ public class MessageHandler extends MessageHandlerBase {
                 round.foldPlayer(msg.getUserId());
             }
 
-            if (msg.getText().startsWith("@drop")) {
+            if (msg.getText().startsWith("@showdown")) {
+                ArrayList<Card> board = round.getBoard();
+                if (board.size() != 5) {
+                    client.sendText("It's not time for the showdown. %d cards on the board", board.size());
+                    return;
+                }
+
                 Player winner = round.getWinner();
 
                 for (Player player : round.getPlayers()) {
