@@ -1,0 +1,9 @@
+# Created by .ignore support plugin (hsz.mobi)
+.gitignore
+.idea/
+add.sh
+build.sh
+holdem.iml
+myprovider.sh
+result.png
+target/

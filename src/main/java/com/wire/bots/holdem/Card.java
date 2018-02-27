@@ -42,4 +42,14 @@ public class Card implements Comparable<Card> {
 
         return 0; //the same cards
     }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Card && hashCode() == o.hashCode();
+    }
 }

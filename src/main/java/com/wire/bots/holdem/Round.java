@@ -27,7 +27,7 @@ public class Round {
         return players;
     }
 
-    public void flopPlayer(String userId) {
+    public void foldPlayer(String userId) {
         players.removeIf(player -> player.getUserId().equals(userId));
     }
 }

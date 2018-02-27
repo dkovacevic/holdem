@@ -1,7 +1,9 @@
 package com.wire.bots.holdem;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 
 public class Player implements Comparable<Player> {
     private final String userId;
@@ -20,14 +22,14 @@ public class Player implements Comparable<Player> {
 
     public Hand bestHand() {
         if (bestHand == null) {
-            ArrayList<Hand> allHands = getAllHands(cards.get(0), cards.get(1), board);
+            Collection<Hand> allHands = getAllHands(cards.get(0), cards.get(1), board);
             bestHand = allHands.stream().max(Comparator.naturalOrder()).get();
         }
         return bestHand;
     }
 
-    private static ArrayList<Hand> getAllHands(Card c1, Card c2, ArrayList<Card> cards) {
-        ArrayList<Hand> ret = new ArrayList<>();
+    private static Collection<Hand> getAllHands(Card c1, Card c2, ArrayList<Card> cards) {
+        HashSet<Hand> ret = new HashSet<>();
         int n = cards.size();
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {

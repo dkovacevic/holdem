@@ -24,6 +24,12 @@ public class CompareHands {
         cards.add(card4);
         cards.add(card5);
 
+        Hand h1 = new Hand(cards);
+        Hand h2 = new Hand(cards);
+        HashSet<Hand> hands = new HashSet<>();
+        hands.add(h1);
+        hands.add(h2);
+
         Card a1 = new Card((short) 2, (short) 10);
         Card a2 = new Card((short) 1, (short) 11);
 
@@ -42,7 +48,7 @@ public class CompareHands {
         int res = handA.compareTo(handB);
         System.out.printf("A bigger than B: %d\n", res);
     }
-    
+
     private static Collection<Hand> getAllHands(Card c1, Card c2, ArrayList<Card> cards) {
         HashSet<Hand> ret = new HashSet<>();
         int n = cards.size();

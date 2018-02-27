@@ -1,6 +1,7 @@
 package com.wire.bots.holdem;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 
 public class Hand implements Comparable<Hand> {
     private ArrayList<Card> cards;
@@ -9,6 +10,7 @@ public class Hand implements Comparable<Hand> {
     public Hand(ArrayList<Card> cards) {
         value = new int[6];
         this.cards = cards;
+        this.cards.sort(Comparator.naturalOrder());
 
         int[] ranks = new int[14];
         int[] orderedRanks = new int[5];     //miscellaneous cards that are not otherwise significant
@@ -187,6 +189,22 @@ public class Hand implements Comparable<Hand> {
                 return -1;
         }
         return 0; //if hands are equal
+    }
+
+    @Override
+    public int hashCode() {
+        return String.format("%s%s%s%s%s",
+                cards.get(0),
+                cards.get(1),
+                cards.get(2),
+                cards.get(3),
+                cards.get(4))
+                .hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Hand && hashCode() == o.hashCode();
     }
 
     public ArrayList<Card> getCards() {

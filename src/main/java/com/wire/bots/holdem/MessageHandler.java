@@ -37,7 +37,7 @@ import java.util.Collection;
 
 public class MessageHandler extends MessageHandlerBase {
     private static final String URL = "https://raw.githubusercontent.com/hayeah/playing-cards-assets/master/png";
-    private static final int SHIFT = 40;
+    private static final int SHIFT = 38;
     private static final int WIDTH = 222;
     private static final int HEIGHT = 323;
 
@@ -98,8 +98,8 @@ public class MessageHandler extends MessageHandlerBase {
                 return;
             }
 
-            if (msg.getText().startsWith("@flop")) {
-                round.flopPlayer(msg.getUserId());
+            if (msg.getText().startsWith("@fold")) {
+                round.foldPlayer(msg.getUserId());
             }
 
             if (msg.getText().startsWith("@drop")) {
