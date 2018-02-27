@@ -7,13 +7,16 @@ import java.util.HashSet;
 
 public class Player implements Comparable<Player> {
     private final String userId;
+    private final String name;
     private final ArrayList<Card> cards = new ArrayList<>();
     private final ArrayList<Card> board;
     private Hand bestHand = null;
     private int chips;
+    private boolean folded;
 
-    public Player(String userId, ArrayList<Card> board) {
+    public Player(String userId, String name, ArrayList<Card> board) {
         this.userId = userId;
+        this.name = name;
         this.board = board;
     }
 
@@ -43,7 +46,7 @@ public class Player implements Comparable<Player> {
         cards.add(card);
     }
 
-    public Hand bestHand() {
+    public Hand getBestHand() {
         if (bestHand == null) {
             Collection<Hand> allHands = getAllHands(cards.get(0), cards.get(1), board);
             bestHand = allHands.stream().max(Comparator.naturalOrder()).get();
@@ -61,7 +64,7 @@ public class Player implements Comparable<Player> {
 
     @Override
     public int compareTo(Player o) {
-        return bestHand().compareTo(o.bestHand());
+        return getBestHand().compareTo(o.getBestHand());
     }
 
     @Override
@@ -72,5 +75,17 @@ public class Player implements Comparable<Player> {
     @Override
     public int hashCode() {
         return userId.hashCode();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public boolean isFolded() {
+        return folded;
+    }
+
+    public void setFolded(boolean folded) {
+        this.folded = folded;
     }
 }

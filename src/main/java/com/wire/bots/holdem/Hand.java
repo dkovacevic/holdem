@@ -143,7 +143,8 @@ public class Hand implements Comparable<Hand> {
         }
     }
 
-    public String display() {
+    @Override
+    public String toString() {
         String s;
         switch (value[0]) {
 

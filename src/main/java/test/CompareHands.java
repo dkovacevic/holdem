@@ -42,8 +42,8 @@ public class CompareHands {
         Hand handA = allHandsA.stream().max(Comparator.naturalOrder()).get();
         Hand handB = allHandsB.stream().max(Comparator.naturalOrder()).get();
 
-        System.out.printf("A: %s\n", handA.display());
-        System.out.printf("B: %s\n", handB.display());
+        System.out.printf("A: %s\n", handA);
+        System.out.printf("B: %s\n", handB);
 
         int res = handA.compareTo(handB);
         System.out.printf("A bigger than B: %d\n", res);

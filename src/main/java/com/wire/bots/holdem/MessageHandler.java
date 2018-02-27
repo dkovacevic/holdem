@@ -24,111 +24,151 @@ import com.wire.bots.sdk.models.TextMessage;
 import com.wire.bots.sdk.server.model.Conversation;
 import com.wire.bots.sdk.server.model.Member;
 import com.wire.bots.sdk.server.model.User;
+import com.wire.bots.sdk.tools.Logger;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MessageHandler extends MessageHandlerBase {
+    private static final ConcurrentHashMap<String, Table> tables = new ConcurrentHashMap<>();
     private static final String MIME_TYPE = "image/png";
-
-    private Round round = new Round();
-    private Deck deck = new Deck();
 
     @Override
     public void onText(WireClient client, TextMessage msg) {
         try {
-            if (msg.getText().startsWith("@deal")) {
-                round = new Round();
-                deck = new Deck();
+            Table table = getTable(client);
 
-                Conversation conversation = client.getConversation();
+            String cmd = msg.getText().toLowerCase().trim();
+            switch (cmd) {
+                case "@deal": {
+                    table.shuffle();
+                    for (Player player : table.getPlayers()) {
+                        table.dealCard(player);
+                        table.dealCard(player);
 
-                for (Member member : conversation.members) {
-                    if (member.service != null)
-                        continue;
-
-                    Player player = round.addPlayer(member.id);
-
-                    for (int i = 0; i < 2; i++)
-                        player.addCard(deck.drawFromDeck());
-
-                    // Send cards to this player
-                    byte[] image = Images.getImage(player.getCards());
-                    client.sendPicture(image, MIME_TYPE, player.getUserId());
+                        // Send cards to this player
+                        byte[] image = Images.getImage(player.getCards());
+                        client.sendPicture(image, MIME_TYPE, player.getUserId());
+                    }
                 }
-                return;
-            }
+                break;
+                case "@flop": {
+                    ArrayList<Card> board = table.getBoard();
+                    if (board.size() != 0) {
+                        client.sendText("It's not time for the flop.", 5000);
+                        return;
+                    }
 
-            if (msg.getText().startsWith("@flop")) {
-                ArrayList<Card> board = round.getBoard();
-                if (board.size() != 0) {
-                    client.sendText("It's not time for the flop. %d cards on the board", board.size());
-                    return;
-                }
+                    table.addCardToBoard();
+                    table.addCardToBoard();
+                    table.addCardToBoard();
 
-                round.addCardToBoard(deck.drawFromDeck());
-                round.addCardToBoard(deck.drawFromDeck());
-                round.addCardToBoard(deck.drawFromDeck());
-
-                byte[] image = Images.getImage(board);
-                client.sendPicture(image, MIME_TYPE);
-                return;
-            }
-
-            if (msg.getText().startsWith("@turn")) {
-                ArrayList<Card> board = round.getBoard();
-                if (board.size() != 3) {
-                    client.sendText("It's not time for the turn. %d cards on the board", board.size());
-                    return;
-                }
-
-                round.addCardToBoard(deck.drawFromDeck());
-
-                byte[] image = Images.getImage(board);
-                client.sendPicture(image, MIME_TYPE);
-                return;
-            }
-
-            if (msg.getText().startsWith("@river")) {
-                ArrayList<Card> board = round.getBoard();
-                if (board.size() != 4) {
-                    client.sendText("It's not time for the river. %d cards on the board", board.size());
-                    return;
-                }
-
-                round.addCardToBoard(deck.drawFromDeck());
-
-                byte[] image = Images.getImage(board);
-                client.sendPicture(image, MIME_TYPE);
-                return;
-            }
-
-            if (msg.getText().startsWith("@fold")) {
-                round.foldPlayer(msg.getUserId());
-            }
-
-            if (msg.getText().startsWith("@showdown")) {
-                ArrayList<Card> board = round.getBoard();
-                if (board.size() != 5) {
-                    client.sendText("It's not time for the showdown. %d cards on the board", board.size());
-                    return;
-                }
-
-                Player winner = round.getWinner();
-
-                for (Player player : round.getPlayers()) {
-                    User user = client.getUser(player.getUserId());
-                    Hand bestHand = player.bestHand();
-
-                    String w = player.equals(winner) ? "**" : "";
-                    String text = String.format("%s%s%s with: %s", w, user.name, w, bestHand.display());
-                    client.sendText(text);
-
-                    byte[] image = Images.getImage(bestHand.getCards());
+                    byte[] image = Images.getImage(board);
                     client.sendPicture(image, MIME_TYPE);
                 }
+                break;
+                case "@turn": {
+                    ArrayList<Card> board = table.getBoard();
+                    if (board.size() != 3) {
+                        client.sendText("It's not time for the turn.", 5000);
+                        return;
+                    }
+
+                    byte[] image = Images.getImage(table.addCardToBoard());
+                    client.sendPicture(image, MIME_TYPE);
+                }
+                break;
+                case "@river": {
+                    ArrayList<Card> board = table.getBoard();
+                    if (board.size() != 4) {
+                        client.sendText("It's not time for the river.", 5000);
+                        return;
+                    }
+
+                    byte[] image = Images.getImage(table.addCardToBoard());
+                    client.sendPicture(image, MIME_TYPE);
+                }
+                break;
+                case "@fold": {
+                    table.foldPlayer(msg.getUserId());
+                }
+                break;
+                case "@showdown": {
+                    ArrayList<Card> board = table.getBoard();
+                    if (board.size() != 5) {
+                        client.sendText("It's not time for the showdown.", 5000);
+                        return;
+                    }
+
+                    Player winner = table.getWinner();
+
+                    for (Player player : table.getPlayers()) {
+                        if (player.isFolded())
+                            continue;
+
+                        Hand bestHand = player.getBestHand();
+
+                        String w = player.equals(winner) ? "**" : "";
+                        String text = String.format("%s%s%s with: %s", w, player.getName(), w, bestHand);
+                        client.sendText(text);
+
+                        byte[] image = Images.getImage(bestHand.getCards());
+                        client.sendPicture(image, MIME_TYPE);
+                    }
+                }
+                break;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.error(e.getMessage());
         }
+    }
+
+    @Override
+    public void onNewConversation(WireClient client) {
+        try {
+            client.sendText("Type: @deal");
+        } catch (Exception e) {
+            Logger.error(e.getMessage());
+        }
+    }
+
+    @Override
+    public void onMemberJoin(WireClient client, ArrayList<String> userIds) {
+        try {
+            Table table = getTable(client);
+            Collection<User> users = client.getUsers(userIds);
+            for (User user : users) {
+                table.addPlayer(user);
+            }
+        } catch (Exception e) {
+            Logger.error(e.getMessage());
+        }
+    }
+
+    @Override
+    public void onMemberLeave(WireClient client, ArrayList<String> userIds) {
+        Table table = getTable(client);
+        for (String userId : userIds)
+            table.removePlayer(userId);
+    }
+
+    private Table getTable(WireClient client) {
+        return tables.computeIfAbsent(client.getId(), k -> {
+            Table table = new Table(new Deck());
+            try {
+                Conversation conversation = client.getConversation();
+                for (Member member : conversation.members) {
+                    if (member.service == null) {
+                        User user = client.getUser(member.id);
+                        table.addPlayer(user);
+                    }
+                }
+            } catch (IOException e) {
+                Logger.error(e.toString());
+            }
+            return table;
+        });
     }
 }
