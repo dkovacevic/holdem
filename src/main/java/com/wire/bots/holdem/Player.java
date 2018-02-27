@@ -10,22 +10,11 @@ public class Player implements Comparable<Player> {
     private final ArrayList<Card> cards = new ArrayList<>();
     private final ArrayList<Card> board;
     private Hand bestHand = null;
+    private int chips;
 
     public Player(String userId, ArrayList<Card> board) {
         this.userId = userId;
         this.board = board;
-    }
-
-    public void addCard(Card card) {
-        cards.add(card);
-    }
-
-    public Hand bestHand() {
-        if (bestHand == null) {
-            Collection<Hand> allHands = getAllHands(cards.get(0), cards.get(1), board);
-            bestHand = allHands.stream().max(Comparator.naturalOrder()).get();
-        }
-        return bestHand;
     }
 
     private static Collection<Hand> getAllHands(Card c1, Card c2, ArrayList<Card> cards) {
@@ -50,6 +39,18 @@ public class Player implements Comparable<Player> {
         return ret;
     }
 
+    public void addCard(Card card) {
+        cards.add(card);
+    }
+
+    public Hand bestHand() {
+        if (bestHand == null) {
+            Collection<Hand> allHands = getAllHands(cards.get(0), cards.get(1), board);
+            bestHand = allHands.stream().max(Comparator.naturalOrder()).get();
+        }
+        return bestHand;
+    }
+
     public String getUserId() {
         return userId;
     }
@@ -61,5 +62,15 @@ public class Player implements Comparable<Player> {
     @Override
     public int compareTo(Player o) {
         return bestHand().compareTo(o.bestHand());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Player && hashCode() == o.hashCode();
+    }
+
+    @Override
+    public int hashCode() {
+        return userId.hashCode();
     }
 }

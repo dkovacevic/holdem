@@ -25,21 +25,10 @@ import com.wire.bots.sdk.server.model.Conversation;
 import com.wire.bots.sdk.server.model.Member;
 import com.wire.bots.sdk.server.model.User;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 
 public class MessageHandler extends MessageHandlerBase {
-    private static final String URL = "https://raw.githubusercontent.com/hayeah/playing-cards-assets/master/png";
-    private static final int SHIFT = 38;
-    private static final int WIDTH = 222;
-    private static final int HEIGHT = 323;
+    private static final String MIME_TYPE = "image/png";
 
     private Round round = new Round();
     private Deck deck = new Deck();
@@ -53,22 +42,18 @@ public class MessageHandler extends MessageHandlerBase {
 
                 Conversation conversation = client.getConversation();
 
-                //client.sendText("Your hand:");
                 for (Member member : conversation.members) {
                     if (member.service != null)
                         continue;
 
-                    Card card1 = deck.drawFromDeck();
-                    Card card2 = deck.drawFromDeck();
+                    Player player = round.addPlayer(member.id);
 
-                    Player player = new Player(member.id, round.getBoard());
-                    player.addCard(card1);
-                    player.addCard(card2);
+                    for (int i = 0; i < 2; i++)
+                        player.addCard(deck.drawFromDeck());
 
-                    round.addPlayer(player);
-
-                    byte[] image = getImage(player.getCards());
-                    client.sendPicture(image, "image/png", member.id);
+                    // Send cards to this player
+                    byte[] image = Images.getImage(player.getCards());
+                    client.sendPicture(image, MIME_TYPE, player.getUserId());
                 }
 
                 round.addCardToBoard(deck.drawFromDeck());
@@ -79,8 +64,8 @@ public class MessageHandler extends MessageHandlerBase {
             }
 
             if (msg.getText().startsWith("@board")) {
-                byte[] image = getImage(round.getBoard());
-                client.sendPicture(image, "image/png");
+                byte[] image = Images.getImage(round.getBoard());
+                client.sendPicture(image, MIME_TYPE);
                 return;
             }
 
@@ -93,8 +78,8 @@ public class MessageHandler extends MessageHandlerBase {
 
                 round.addCardToBoard(deck.drawFromDeck());
 
-                byte[] image = getImage(board);
-                client.sendPicture(image, "image/png");
+                byte[] image = Images.getImage(board);
+                client.sendPicture(image, MIME_TYPE);
                 return;
             }
 
@@ -107,58 +92,18 @@ public class MessageHandler extends MessageHandlerBase {
 
                 for (Player player : round.getPlayers()) {
                     User user = client.getUser(player.getUserId());
+                    Hand bestHand = player.bestHand();
 
-                    String w = player.getUserId().equals(winner.getUserId()) ? "**" : "";
-                    String text = String.format("%s%s%s with: %s", w, user.name, w, player.bestHand().display());
-                    client.sendText(text.trim());
+                    String w = player.equals(winner) ? "**" : "";
+                    String text = String.format("%s%s%s with: %s", w, user.name, w, bestHand.display());
+                    client.sendText(text);
 
-                    byte[] image = getImage(player.bestHand().getCards());
-                    client.sendPicture(image, "image/png");
+                    byte[] image = Images.getImage(bestHand.getCards());
+                    client.sendPicture(image, MIME_TYPE);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private byte[] getImage(Collection<Card> collection) throws IOException {
-        Card[] cards = new Card[collection.size()];
-        collection.toArray(cards);
-        ArrayList<BufferedImage> load = load(cards);
-        BufferedImage combine = combine(load);
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        ImageIO.write(combine, "png", output);
-        return output.toByteArray();
-    }
-
-    private static BufferedImage combine(ArrayList<BufferedImage> images) {
-        int size = images.size() - 1;
-        final int width = WIDTH + size * SHIFT;
-
-        BufferedImage result = new BufferedImage(width, HEIGHT, BufferedImage.TYPE_INT_ARGB);
-        Graphics g = result.getGraphics();
-
-        for (int i = 0; i < size; i++) {
-            BufferedImage image = images.get(i);
-
-            BufferedImage sub = image.getSubimage(0, 0, SHIFT, HEIGHT);
-            g.drawImage(sub, i * SHIFT, 0, null);
-        }
-        BufferedImage image = images.get(size);
-        g.drawImage(image, size * SHIFT, 0, null);
-        return result;
-    }
-
-    private static BufferedImage getBufferedImage(Card card1) throws IOException {
-        try (InputStream input = new URL(String.format("%s/%s.png", URL, card1)).openStream()) {
-            return ImageIO.read(input);
-        }
-    }
-
-    private static ArrayList<BufferedImage> load(Card... cards) throws IOException {
-        ArrayList<BufferedImage> images = new ArrayList<>();
-        for (Card card : cards)
-            images.add(getBufferedImage(card));
-        return images;
     }
 }

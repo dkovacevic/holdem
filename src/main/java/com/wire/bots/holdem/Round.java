@@ -7,8 +7,10 @@ public class Round {
     private final ArrayList<Player> players = new ArrayList<>();
     private final ArrayList<Card> board = new ArrayList<>();
 
-    public void addPlayer(Player p) {
-        players.add(p);
+    public Player addPlayer(String userId) {
+        Player player = new Player(userId, board);
+        players.add(player);
+        return player;
     }
 
     public void addCardToBoard(Card card) {
