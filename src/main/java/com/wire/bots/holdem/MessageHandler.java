@@ -45,6 +45,9 @@ public class MessageHandler extends MessageHandlerBase {
                 case "@deal": {
                     table.shuffle();
                     for (Player player : table.getPlayers()) {
+
+                        table.take(player, 1);
+
                         table.dealCard(player);
                         table.dealCard(player);
 
@@ -101,8 +104,9 @@ public class MessageHandler extends MessageHandlerBase {
                         client.sendText("It's not time for the showdown.", 5000);
                         return;
                     }
-
+                    int pot = table.getPot();
                     Player winner = table.getWinner();
+                    table.pot(winner);
 
                     for (Player player : table.getPlayers()) {
                         if (player.isFolded())
@@ -111,7 +115,14 @@ public class MessageHandler extends MessageHandlerBase {
                         Hand bestHand = player.getBestHand();
 
                         String w = player.equals(winner) ? "**" : "";
-                        String text = String.format("%s%s%s with: %s", w, player.getName(), w, bestHand);
+                        String p = player.equals(winner) ? ", won: " + pot + " chips" : "";
+                        String text = String.format("%s%s%s (%d) with: %s%s",
+                                w,
+                                player.getName(),
+                                w,
+                                player.getChips(),
+                                bestHand,
+                                p);
                         client.sendText(text);
 
                         byte[] image = Images.getImage(bestHand.getCards());

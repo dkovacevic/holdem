@@ -11,7 +11,7 @@ public class Player implements Comparable<Player> {
     private final ArrayList<Card> cards = new ArrayList<>();
     private final ArrayList<Card> board;
     private Hand bestHand = null;
-    private int chips;
+    private int chips = 100;
     private boolean folded;
 
     public Player(String userId, String name, ArrayList<Card> board) {
@@ -20,19 +20,19 @@ public class Player implements Comparable<Player> {
         this.board = board;
     }
 
-    private static Collection<Hand> getAllHands(Card c1, Card c2, ArrayList<Card> cards) {
+    public Collection<Hand> getAllHands(ArrayList<Card> board) {
         HashSet<Hand> ret = new HashSet<>();
-        int n = cards.size();
+        int n = board.size();
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 for (int k = 0; k < n; k++) {
                     if (i != j && j != k && i != k) {
                         ArrayList<Card> tmp = new ArrayList<>();
-                        tmp.add(c1);
-                        tmp.add(c2);
-                        tmp.add(cards.get(i));
-                        tmp.add(cards.get(j));
-                        tmp.add(cards.get(k));
+                        tmp.add(cards.get(0));
+                        tmp.add(cards.get(1));
+                        tmp.add(board.get(i));
+                        tmp.add(board.get(j));
+                        tmp.add(board.get(k));
 
                         ret.add(new Hand(tmp));
                     }
@@ -48,7 +48,7 @@ public class Player implements Comparable<Player> {
 
     public Hand getBestHand() {
         if (bestHand == null) {
-            Collection<Hand> allHands = getAllHands(cards.get(0), cards.get(1), board);
+            Collection<Hand> allHands = getAllHands(board);
             bestHand = allHands.stream().max(Comparator.naturalOrder()).get();
         }
         return bestHand;
@@ -87,5 +87,23 @@ public class Player implements Comparable<Player> {
 
     public void setFolded(boolean folded) {
         this.folded = folded;
+    }
+
+    public void reset() {
+        bestHand = null;
+        cards.clear();
+        folded = false;
+    }
+
+    public void take(int val) {
+        chips -= val;
+    }
+
+    public void put(int val) {
+        chips += val;
+    }
+
+    public int getChips() {
+        return chips;
     }
 }

@@ -9,6 +9,7 @@ public class Table {
     private final ArrayList<Player> players = new ArrayList<>();
     private final ArrayList<Card> board = new ArrayList<>();
     private Deck deck;
+    private int pot;
 
     public Table(Deck deck) {
         this.deck = deck;
@@ -57,6 +58,20 @@ public class Table {
     public void shuffle() {
         deck = new Deck();
         board.clear();
-        players.forEach(player -> player.setFolded(false));
+        players.forEach(Player::reset);
+    }
+
+    public void take(Player player, int val) {
+        player.take(val);
+        pot += val;
+    }
+
+    public void pot(Player player) {
+        player.put(pot);
+        pot = 0;
+    }
+
+    public int getPot() {
+        return pot;
     }
 }
