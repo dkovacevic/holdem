@@ -115,7 +115,7 @@ public class MessageHandler extends MessageHandlerBase {
                         Hand bestHand = player.getBestHand();
 
                         String w = player.equals(winner) ? "**" : "";
-                        String p = player.equals(winner) ? ", won: " + pot + " chips" : "";
+                        String p = player.equals(winner) ? ", pot: " + pot + " chips" : "";
                         String text = String.format("%s%s%s (%d) with: %s%s",
                                 w,
                                 player.getName(),

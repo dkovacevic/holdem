@@ -9,8 +9,8 @@ public class Hand implements Comparable<Hand> {
 
     public Hand(ArrayList<Card> cards) {
         value = new int[6];
-        this.cards = cards;
-        this.cards.sort(Comparator.naturalOrder());
+        this.cards = new ArrayList<>(cards);
+        this.cards.sort(Comparator.reverseOrder());
 
         int[] ranks = new int[14];
         int[] orderedRanks = new int[5];     //miscellaneous cards that are not otherwise significant
@@ -31,9 +31,10 @@ public class Hand implements Comparable<Hand> {
                 flush = false;
         }
 
-        for (int x = 13; x >= 1; x--) {
+        for (int x = 13; x >= 0; x--) {
             if (ranks[x] > sameCards) {
-                if (sameCards != 1) {  //if sameCards was not the default value
+                //if sameCards was not the default value
+                if (sameCards != 1) {
                     sameCards2 = sameCards;
                     smallGroupRank = x;   //changed from smallGroupRank=largeGroupRank;
                 }
