@@ -1,0 +1,13 @@
+server:
+  applicationConnectors:
+    - type: http
+      port: 8080
+
+  requestLog:
+    appenders: []
+
+auth: your_token   # Service's auth token
+data: ./data
+
+#your custom config comes here
+someValue: 'this is some custom string'
