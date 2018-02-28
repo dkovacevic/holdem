@@ -1,14 +1,12 @@
 package test;
 
 import com.wire.bots.holdem.Card;
+import com.wire.bots.holdem.Images;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
 
@@ -25,6 +23,13 @@ public class CombineCards {
         Card card4 = new Card(1, 3);
         Card card5 = new Card(0, 0);
 
+        ArrayList<Card> cards = new ArrayList<>();
+        cards.add(card1);
+        cards.add(card2);
+        cards.add(card3);
+        cards.add(card4);
+        cards.add(card5);
+
         ArrayList<BufferedImage> images = load(card1, card2, card3, card4, card5);
 
         BufferedImage result = combine(images);
@@ -34,6 +39,12 @@ public class CombineCards {
         byte[] bytes = output.toByteArray();
 
         ImageIO.write(result, "png", new File("result.png"));
+
+        byte[] image = Images.getImage(cards.subList(0, 2), cards.subList(2, 5));
+
+        BufferedImage read = ImageIO.read(new ByteArrayInputStream(image));
+        ImageIO.write(read, "png", new File("combined.png"));
+
     }
 
     private static ArrayList<BufferedImage> load(Card... cards) throws IOException {
