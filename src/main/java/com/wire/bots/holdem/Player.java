@@ -6,21 +6,22 @@ import java.util.Comparator;
 import java.util.HashSet;
 
 public class Player implements Comparable<Player> {
-    private final String userId;
+    private static final int INITIAL_CHIPS = 100;
+    private final String id;
     private final String name;
     private final ArrayList<Card> cards = new ArrayList<>();
     private final ArrayList<Card> board;
     private Hand bestHand = null;
-    private int chips = 100;
-    private boolean active;
+    private int chips = INITIAL_CHIPS;
+    private boolean called;
 
     public Player(String userId, String name, ArrayList<Card> board) {
-        this.userId = userId;
+        this.id = userId;
         this.name = name;
         this.board = board;
     }
 
-    public Collection<Hand> getAllHands(ArrayList<Card> board) {
+    public Collection<Hand> getAllHands() {
         HashSet<Hand> ret = new HashSet<>();
         int n = board.size();
         for (int i = 0; i < n; i++) {
@@ -48,17 +49,17 @@ public class Player implements Comparable<Player> {
 
     public Hand getBestHand() {
         if (bestHand == null) {
-            Collection<Hand> allHands = getAllHands(board);
+            Collection<Hand> allHands = getAllHands();
             bestHand = allHands.stream().max(Comparator.naturalOrder()).get();
         }
         return bestHand;
     }
 
-    public String getUserId() {
-        return userId;
+    String getId() {
+        return id;
     }
 
-    public ArrayList<Card> getCards() {
+    ArrayList<Card> getCards() {
         return cards;
     }
 
@@ -74,41 +75,37 @@ public class Player implements Comparable<Player> {
 
     @Override
     public int hashCode() {
-        return userId.hashCode();
+        return id.hashCode();
     }
 
     public String getName() {
         return name;
     }
 
-    public void fold() {
-        active = false;
-    }
-
-    public void reset() {
+    void reset() {
         bestHand = null;
         cards.clear();
-        active = false;
+        called = false;
     }
 
-    public int take(int val) {
+    int take(int val) {
         chips -= val;
         return val;
     }
 
-    public void put(int val) {
+    void put(int val) {
         chips += val;
     }
 
-    public int getChips() {
+    int getChips() {
         return chips;
     }
 
-    public boolean isActive() {
-        return active;
+    boolean isCalled() {
+        return called;
     }
 
-    public void setActive() {
-        this.active = true;
+    void setCalled(boolean called) {
+        this.called = called;
     }
 }

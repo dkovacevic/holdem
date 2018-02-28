@@ -34,6 +34,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MessageHandler extends MessageHandlerBase {
     private static final ConcurrentHashMap<String, Table> tables = new ConcurrentHashMap<>();
     private static final String MIME_TYPE = "image/png";
+    private static final String RAISE = "@raise";
+    private static final String BET = "@bet";
+    private static final String DEAL = "@deal";
+    private static final String FLOP = "@flop";
+    private static final String FOLD = "@fold";
+    private static final String CALL = "@call";
+    private static final String CHECK = "@check";
 
     @Override
     public void onText(WireClient client, TextMessage msg) {
@@ -41,57 +48,55 @@ public class MessageHandler extends MessageHandlerBase {
             Table table = getTable(client);
 
             String cmd = msg.getText().toLowerCase().trim();
+            String userId = msg.getUserId();
 
-            if (cmd.startsWith("@raise")) {
-                String trim = cmd.replace("@raise", "").trim();
+            if (cmd.startsWith(RAISE)) {
+                String trim = cmd.replace(RAISE, "").trim();
                 int raise = Integer.parseInt(trim);
-                table.raise(msg.getUserId(), raise);
+                table.raise(userId, raise);
                 return;
             }
 
-            if (cmd.startsWith("@bet")) {
-                String trim = cmd.replace("@bet", "").trim();
+            if (cmd.startsWith(BET)) {
+                String trim = cmd.replace(BET, "").trim();
                 int raise = Integer.parseInt(trim);
-                table.raise(msg.getUserId(), raise);
+                table.raise(userId, raise);
                 return;
             }
 
             switch (cmd) {
-                case "@deal": {
+                case DEAL: {
                     table.shuffle();
 
                     for (Player player : table.getPlayers()) {
-                        table.blind(player.getUserId()); //take small blind
+                        table.blind(player.getId()); //take small blind
 
                         table.dealCard(player);
                         table.dealCard(player);
 
                         // Send cards to this player
                         byte[] image = Images.getImage(player.getCards());
-                        client.sendPicture(image, MIME_TYPE, player.getUserId());
+                        client.sendPicture(image, MIME_TYPE, player.getId());
                     }
                 }
                 break;
-                case "@flop":
+                case FLOP:
                     flopCard(client, table, 3);
                     break;
-                case "@turn":
-                    flopCard(client, table, 1);
+                case CALL:
+                case CHECK:
+                    table.call(userId);
+                    if (table.isAllCalled()) {
+                        if (table.isShowdown())
+                            showdown(client, table);
+                        else
+                            flopCard(client, table, 1);
+                    }
                     break;
-                case "@river":
-                    flopCard(client, table, 1);
-                    break;
-                case "@fold":
-                    table.fold(msg.getUserId());
-                    break;
-                case "@call":
-                    table.call(msg.getUserId());
-                    break;
-                case "@check":
-                    table.call(msg.getUserId());
-                    break;
-                case "@showdown":
-                    showdown(client, table);
+                case FOLD:
+                    table.fold(userId);
+                    if (table.isDone())
+                        showdown(client, table);
                     break;
             }
         } catch (Exception e) {
@@ -100,7 +105,7 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     private void flopCard(WireClient client, Table table, int number) throws Exception {
-        table.resetBet();
+        table.newBet();
 
         for (int i = 0; i < number; i++)
             table.flopCard();
@@ -113,25 +118,33 @@ public class MessageHandler extends MessageHandlerBase {
         Player winner = table.getWinner();
         int pot = table.flushPot(winner);
 
-        for (Player player : table.getPlayers()) {
-            if (player.isActive()) {
-                Hand bestHand = player.getBestHand();
-
+        Collection<Player> activePlayers = table.getActivePlayers();
+        if (activePlayers.size() > 1) {
+            for (Player player : activePlayers) {
                 String w = player.equals(winner) ? "**" : "";
                 String p = player.equals(winner) ? ", pot: " + pot : "";
-                String text = String.format("%s%s%s (%d) %s%s",
+                String text = String.format("%s%s%s %s%s",
                         w,
                         player.getName(),
                         w,
-                        player.getChips(),
-                        bestHand,
+                        player.getBestHand(),
                         p);
                 client.sendText(text);
 
-                byte[] image = Images.getImage(bestHand.getCards());
+                byte[] image = Images.getImage(player.getBestHand().getCards());
                 client.sendPicture(image, MIME_TYPE);
             }
         }
+
+        StringBuilder sb = new StringBuilder();
+        for (Player player : table.getPlayers()) {
+            String text = String.format("%-20s chips: %d",
+                    player.getName(),
+                    player.getChips());
+            sb.append(text);
+            sb.append("\n");
+        }
+        client.sendText(sb.toString());
     }
 
     @Override

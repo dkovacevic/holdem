@@ -7,98 +7,122 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 
-public class Table {
+class Table {
     private static final int BLIND = 1;
     private final HashMap<String, Player> players = new HashMap<>();
+    private final HashMap<String, Player> round = new HashMap<>();
     private final ArrayList<Card> board = new ArrayList<>();
     private Deck deck;
     private int pot;
     private int bet = BLIND;
+    private boolean flopped;
 
-    public Table(Deck deck) {
+    Table(Deck deck) {
         this.deck = deck;
     }
 
-    public Player addPlayer(User user) {
+    Player addPlayer(User user) {
         Player player = new Player(user.id, user.name, board);
-        players.put(player.getUserId(), player);
+        players.put(player.getId(), player);
         return player;
     }
 
-    public ArrayList<Card> flopCard() {
+    ArrayList<Card> flopCard() {
+        flopped = true;
         board.add(deck.drawFromDeck());
         return board;
     }
 
-    public Player getWinner() {
-        return players
+    Player getWinner() {
+        return round
                 .values()
                 .stream()
-                .filter(Player::isActive)
                 .max(Comparator.naturalOrder())
                 .get();
     }
 
-    public ArrayList<Card> getBoard() {
+    ArrayList<Card> getBoard() {
         return board;
     }
 
-    public Collection<Player> getPlayers() {
+    Collection<Player> getPlayers() {
         return players.values();
     }
 
-    public void fold(String userId) {
-        players.get(userId).fold();
+    Collection<Player> getActivePlayers() {
+        return round.values();
     }
 
-    public void removePlayer(String userId) {
+    void fold(String userId) {
+        round.remove(userId);
+    }
+
+    void removePlayer(String userId) {
         players.remove(userId);
+        round.remove(userId);
     }
 
-    public Card dealCard(Player player) {
+    Card dealCard(Player player) {
         Card card = deck.drawFromDeck();
         player.addCard(card);
         return card;
     }
 
-    public void shuffle() {
+    void shuffle() {
         deck = new Deck();
         board.clear();
         players.values().forEach(Player::reset);
-        resetBet();
+        round.clear();
+        flopped = false;
+        newBet();
     }
 
     // Pay to the Player and flush the pot
-    public int flushPot(Player player) {
+    int flushPot(Player player) {
         int ret = pot;
         player.put(pot);
         pot = 0;
         return ret;
     }
 
-    public int getPot() {
-        return pot;
-    }
-
-    public void call(String userId) {
+    void call(String userId) {
         Player player = players.get(userId);
         pot += player.take(bet);
-        player.setActive();
+        player.setCalled(true);
+        round.put(player.getId(), player);
     }
 
-    public void blind(String userId) {
+    void blind(String userId) {
         Player player = players.get(userId);
         pot += player.take(bet);
     }
 
-    public void raise(String userId, int raise) {
+    void raise(String userId, int raise) {
         if (raise > 0) {
             bet += raise;
+            resetCallers();
             call(userId);
         }
     }
 
-    public void resetBet() {
+    private void resetCallers() {
+        round.values().forEach(player -> player.setCalled(false));
+    }
+
+    void newBet() {
+        resetCallers();
         bet = BLIND;
+    }
+
+    boolean isAllCalled() {
+        return flopped && round.values().stream().anyMatch(Player::isCalled);
+    }
+
+    boolean isShowdown() {
+        return flopped && board.size() == 5;
+    }
+
+    boolean isDone() {
+        return flopped && round.size() <= 1;
     }
 }

@@ -31,10 +31,10 @@ public class CompareHands {
         p2.addCard(new Card(1, 9));
         p2.addCard(new Card(3, 3));
 
-        Collection<Hand> allHands1 = p1.getAllHands(board);
+        Collection<Hand> allHands1 = p1.getAllHands();
         assert allHands1.size() == 10;
 
-        Collection<Hand> allHands2 = p2.getAllHands(board);
+        Collection<Hand> allHands2 = p2.getAllHands();
         assert allHands2.size() == 10;
 
         System.out.printf("%s: %s\n", p1.getName(), p1.getBestHand());
