@@ -41,8 +41,16 @@ public class MessageHandler extends MessageHandlerBase {
             Table table = getTable(client);
 
             String cmd = msg.getText().toLowerCase().trim();
+
             if (cmd.startsWith("@raise")) {
                 String trim = cmd.replace("@raise", "").trim();
+                int raise = Integer.parseInt(trim);
+                table.raise(msg.getUserId(), raise);
+                return;
+            }
+
+            if (cmd.startsWith("@bet")) {
+                String trim = cmd.replace("@bet", "").trim();
                 int raise = Integer.parseInt(trim);
                 table.raise(msg.getUserId(), raise);
                 return;

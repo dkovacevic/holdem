@@ -92,8 +92,10 @@ public class Table {
     }
 
     public void raise(String userId, int raise) {
-        bet += raise;
-        call(userId);
+        if (raise > 0) {
+            bet += raise;
+            call(userId);
+        }
     }
 
     public void resetBet() {
