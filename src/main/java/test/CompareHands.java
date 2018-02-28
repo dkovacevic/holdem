@@ -10,11 +10,11 @@ import java.util.Collection;
 
 public class CompareHands {
     public static void main(String[] args) throws IOException {
-        Card card1 = new Card((short) 2, (short) 10);
-        Card card2 = new Card((short) 1, (short) 0);
-        Card card3 = new Card((short) 2, (short) 0);
-        Card card4 = new Card((short) 1, (short) 7);
-        Card card5 = new Card((short) 0, (short) 3);
+        Card card1 = new Card(2, 10);
+        Card card2 = new Card(1, 0);
+        Card card3 = new Card(2, 0);
+        Card card4 = new Card(1, 7);
+        Card card5 = new Card(0, 3);
 
         ArrayList<Card> board = new ArrayList<>();
         board.add(card1);
@@ -24,12 +24,12 @@ public class CompareHands {
         board.add(card5);
 
         Player p1 = new Player("p1", "P1", board);
-        p1.addCard(new Card((short) 3, (short) 0));
-        p1.addCard(new Card((short) 1, (short) 11));
+        p1.addCard(new Card(3, 0));
+        p1.addCard(new Card(1, 11));
 
         Player p2 = new Player("p2", "P2", board);
-        p2.addCard(new Card((short) 1, (short) 9));
-        p2.addCard(new Card((short) 3, (short) 3));
+        p2.addCard(new Card(1, 9));
+        p2.addCard(new Card(3, 3));
 
         Collection<Hand> allHands1 = p1.getAllHands(board);
         assert allHands1.size() == 10;

@@ -41,12 +41,19 @@ public class MessageHandler extends MessageHandlerBase {
             Table table = getTable(client);
 
             String cmd = msg.getText().toLowerCase().trim();
+            if (cmd.startsWith("@raise")) {
+                String trim = cmd.replace("@raise", "").trim();
+                int raise = Integer.parseInt(trim);
+                table.raise(msg.getUserId(), raise);
+                return;
+            }
+
             switch (cmd) {
                 case "@deal": {
                     table.shuffle();
-                    for (Player player : table.getPlayers()) {
 
-                        table.take(player, 1);
+                    for (Player player : table.getPlayers()) {
+                        table.call(player.getUserId()); //take small blind
 
                         table.dealCard(player);
                         table.dealCard(player);
@@ -57,82 +64,71 @@ public class MessageHandler extends MessageHandlerBase {
                     }
                 }
                 break;
-                case "@flop": {
-                    ArrayList<Card> board = table.getBoard();
-                    if (board.size() != 0) {
-                        client.sendText("It's not time for the flop.", 5000);
-                        return;
-                    }
-
-                    table.addCardToBoard();
-                    table.addCardToBoard();
-                    table.addCardToBoard();
-
-                    byte[] image = Images.getImage(board);
-                    client.sendPicture(image, MIME_TYPE);
-                }
-                break;
-                case "@turn": {
-                    ArrayList<Card> board = table.getBoard();
-                    if (board.size() != 3) {
-                        client.sendText("It's not time for the turn.", 5000);
-                        return;
-                    }
-
-                    byte[] image = Images.getImage(table.addCardToBoard());
-                    client.sendPicture(image, MIME_TYPE);
-                }
-                break;
-                case "@river": {
-                    ArrayList<Card> board = table.getBoard();
-                    if (board.size() != 4) {
-                        client.sendText("It's not time for the river.", 5000);
-                        return;
-                    }
-
-                    byte[] image = Images.getImage(table.addCardToBoard());
-                    client.sendPicture(image, MIME_TYPE);
-                }
-                break;
-                case "@fold": {
-                    table.foldPlayer(msg.getUserId());
-                }
-                break;
-                case "@showdown": {
-                    ArrayList<Card> board = table.getBoard();
-                    if (board.size() != 5) {
-                        client.sendText("It's not time for the showdown.", 5000);
-                        return;
-                    }
-                    int pot = table.getPot();
-                    Player winner = table.getWinner();
-                    table.pot(winner);
-
-                    for (Player player : table.getPlayers()) {
-                        if (player.isFolded())
-                            continue;
-
-                        Hand bestHand = player.getBestHand();
-
-                        String w = player.equals(winner) ? "**" : "";
-                        String p = player.equals(winner) ? ", pot: " + pot + " chips" : "";
-                        String text = String.format("%s%s%s (%d) with: %s%s",
-                                w,
-                                player.getName(),
-                                w,
-                                player.getChips(),
-                                bestHand,
-                                p);
-                        client.sendText(text);
-
-                        byte[] image = Images.getImage(bestHand.getCards());
-                        client.sendPicture(image, MIME_TYPE);
-                    }
-                }
-                break;
+                case "@flop":
+                    flopCard(client, table, 3);
+                    break;
+                case "@turn":
+                    flopCard(client, table, 1);
+                    break;
+                case "@river":
+                    flopCard(client, table, 1);
+                    break;
+                case "@fold":
+                    table.fold(msg.getUserId());
+                    break;
+                case "@call":
+                    table.call(msg.getUserId());
+                    break;
+                case "@check":
+                    table.call(msg.getUserId());
+                    break;
+                case "@showdown":
+                    showdown(client, table);
+                    break;
             }
         } catch (Exception e) {
             Logger.error(e.getMessage());
+        }
+    }
+
+    private void flopCard(WireClient client, Table table, int number) throws Exception {
+        table.resetBet();
+
+        for (int i = 0; i < number; i++)
+            table.flopCard();
+
+        byte[] image = Images.getImage(table.getBoard());
+        client.sendPicture(image, MIME_TYPE);
+    }
+
+    private void showdown(WireClient client, Table table) throws Exception {
+        ArrayList<Card> board = table.getBoard();
+        if (board.size() != 5) {
+            client.sendText("It's not time for the showdown.", 5000);
+            return;
+        }
+
+        Player winner = table.getWinner();
+        int pot = table.flushPot(winner);
+
+        for (Player player : table.getPlayers()) {
+            if (player.isActive()) {
+                Hand bestHand = player.getBestHand();
+
+                String w = player.equals(winner) ? "**" : "";
+                String p = player.equals(winner) ? ", pot: " + pot : "";
+                String text = String.format("%s%s%s (%d) %s%s",
+                        w,
+                        player.getName(),
+                        w,
+                        player.getChips(),
+                        bestHand,
+                        p);
+                client.sendText(text);
+
+                byte[] image = Images.getImage(bestHand.getCards());
+                client.sendPicture(image, MIME_TYPE);
+            }
         }
     }
 

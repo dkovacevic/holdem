@@ -4,14 +4,14 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class Deck {
-    private ArrayList<Card> cards;
     private final static Random generator = new Random();
+    private ArrayList<Card> cards;
 
     Deck() {
         cards = new ArrayList<>();
 
-        for (short a = 0; a <= 3; a++) {
-            for (short b = 0; b <= 12; b++) {
+        for (int a = 0; a <= 3; a++) {
+            for (int b = 0; b <= 12; b++) {
                 cards.add(new Card(a, b));
             }
         }

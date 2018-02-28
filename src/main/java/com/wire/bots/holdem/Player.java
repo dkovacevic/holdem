@@ -12,7 +12,7 @@ public class Player implements Comparable<Player> {
     private final ArrayList<Card> board;
     private Hand bestHand = null;
     private int chips = 100;
-    private boolean folded;
+    private boolean active;
 
     public Player(String userId, String name, ArrayList<Card> board) {
         this.userId = userId;
@@ -81,22 +81,20 @@ public class Player implements Comparable<Player> {
         return name;
     }
 
-    public boolean isFolded() {
-        return folded;
-    }
-
-    public void setFolded(boolean folded) {
-        this.folded = folded;
+    public void fold() {
+        active = false;
     }
 
     public void reset() {
         bestHand = null;
         cards.clear();
-        folded = false;
+        active = false;
     }
 
-    public void take(int val) {
+    public int take(int val) {
+        active = true;
         chips -= val;
+        return val;
     }
 
     public void put(int val) {
@@ -105,5 +103,9 @@ public class Player implements Comparable<Player> {
 
     public int getChips() {
         return chips;
+    }
+
+    public boolean isActive() {
+        return active;
     }
 }

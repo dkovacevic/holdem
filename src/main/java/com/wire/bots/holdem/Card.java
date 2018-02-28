@@ -1,18 +1,17 @@
 package com.wire.bots.holdem;
 
 public class Card implements Comparable<Card> {
-    private short rank, suit;
-
     private static String[] suits = {"hearts", "spades", "diamonds", "clubs"};
     private static String[] ranks = {"ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"};
+    private int rank, suit;
+
+    public Card(int suit, int rank) {
+        this.rank = rank;
+        this.suit = suit;
+    }
 
     static String rankAsString(int rank) {
         return ranks[rank];
-    }
-
-    public Card(short suit, short rank) {
-        this.rank = rank;
-        this.suit = suit;
     }
 
     @Override
@@ -20,11 +19,11 @@ public class Card implements Comparable<Card> {
         return ranks[rank] + "_of_" + suits[suit];
     }
 
-    short getRank() {
+    int getRank() {
         return rank;
     }
 
-    short getSuit() {
+    int getSuit() {
         return suit;
     }
 

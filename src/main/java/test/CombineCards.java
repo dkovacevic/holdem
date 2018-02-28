@@ -19,11 +19,11 @@ public class CombineCards {
     private static final int HEIGHT = 323;
 
     public static void main(String[] args) throws IOException {
-        Card card1 = new Card((short) 1, (short) 11);
-        Card card2 = new Card((short) 3, (short) 12);
-        Card card3 = new Card((short) 2, (short) 10);
-        Card card4 = new Card((short) 1, (short) 3);
-        Card card5 = new Card((short) 0, (short) 0);
+        Card card1 = new Card(1, 11);
+        Card card2 = new Card(3, 12);
+        Card card3 = new Card(2, 10);
+        Card card4 = new Card(1, 3);
+        Card card5 = new Card(0, 0);
 
         ArrayList<BufferedImage> images = load(card1, card2, card3, card4, card5);
 
@@ -32,7 +32,7 @@ public class CombineCards {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         ImageIO.write(result, "png", output);
         byte[] bytes = output.toByteArray();
-        
+
         ImageIO.write(result, "png", new File("result.png"));
     }
 
