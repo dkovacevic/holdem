@@ -53,7 +53,7 @@ public class MessageHandler extends MessageHandlerBase {
                     table.shuffle();
 
                     for (Player player : table.getPlayers()) {
-                        table.call(player.getUserId()); //take small blind
+                        table.blind(player.getUserId()); //take small blind
 
                         table.dealCard(player);
                         table.dealCard(player);
@@ -102,12 +102,6 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     private void showdown(WireClient client, Table table) throws Exception {
-        ArrayList<Card> board = table.getBoard();
-        if (board.size() != 5) {
-            client.sendText("It's not time for the showdown.", 5000);
-            return;
-        }
-
         Player winner = table.getWinner();
         int pot = table.flushPot(winner);
 

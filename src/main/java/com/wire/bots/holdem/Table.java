@@ -83,12 +83,12 @@ public class Table {
     public void call(String userId) {
         Player player = players.get(userId);
         pot += player.take(bet);
+        player.setActive();
     }
 
-    @Deprecated
-    public void bet(String userId, int bet) {
-        this.bet = bet;
-        call(userId);
+    public void blind(String userId) {
+        Player player = players.get(userId);
+        pot += player.take(bet);
     }
 
     public void raise(String userId, int raise) {

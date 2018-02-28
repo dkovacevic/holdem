@@ -92,7 +92,6 @@ public class Player implements Comparable<Player> {
     }
 
     public int take(int val) {
-        active = true;
         chips -= val;
         return val;
     }
@@ -107,5 +106,9 @@ public class Player implements Comparable<Player> {
 
     public boolean isActive() {
         return active;
+    }
+
+    public void setActive() {
+        this.active = true;
     }
 }
