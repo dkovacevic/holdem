@@ -105,7 +105,7 @@ public class Player implements Comparable<Player> {
         return called;
     }
 
-    void setCalled(boolean called) {
-        this.called = called;
+    void setCalled(boolean val) {
+        this.called = val;
     }
 }

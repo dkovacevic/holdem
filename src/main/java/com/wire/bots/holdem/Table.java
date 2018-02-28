@@ -115,7 +115,7 @@ class Table {
     }
 
     boolean isAllCalled() {
-        return flopped && round.values().stream().anyMatch(Player::isCalled);
+        return round.values().stream().allMatch(Player::isCalled);
     }
 
     boolean isShowdown() {

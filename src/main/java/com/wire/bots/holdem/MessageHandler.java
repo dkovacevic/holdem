@@ -34,20 +34,22 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MessageHandler extends MessageHandlerBase {
     private static final ConcurrentHashMap<String, Table> tables = new ConcurrentHashMap<>();
     private static final String MIME_TYPE = "image/png";
-    private static final String RAISE = "@raise";
-    private static final String BET = "@bet";
-    private static final String DEAL = "@deal";
-    private static final String FLOP = "@flop";
-    private static final String FOLD = "@fold";
-    private static final String CALL = "@call";
-    private static final String CHECK = "@check";
+
+    // Commands
+    private static final String RAISE = "raise";
+    private static final String BET = "bet";    // equivalent to `raise`
+    private static final String DEAL = "deal";
+    private static final String FLOP = "flop";
+    private static final String FOLD = "fold";
+    private static final String CALL = "call";
+    private static final String CHECK = "check"; // equivalent to `call`
 
     @Override
     public void onText(WireClient client, TextMessage msg) {
         try {
             Table table = getTable(client);
 
-            String cmd = msg.getText().toLowerCase().trim();
+            String cmd = msg.getText().toLowerCase().replace("@", "").trim();
             String userId = msg.getUserId();
 
             if (cmd.startsWith(RAISE)) {
@@ -121,12 +123,10 @@ public class MessageHandler extends MessageHandlerBase {
         Collection<Player> activePlayers = table.getActivePlayers();
         if (activePlayers.size() > 1) {
             for (Player player : activePlayers) {
-                String w = player.equals(winner) ? "**" : "";
-                String p = player.equals(winner) ? ", pot: " + pot : "";
-                String text = String.format("%s%s%s %s%s",
-                        w,
-                        player.getName(),
-                        w,
+                String p = player.equals(winner) ? "pot: " + pot : "";
+                String name = player.equals(winner) ? "Winner **" + player.getName() + "**" : player.getName();
+                String text = String.format("%s: *%s* %s",
+                        name,
                         player.getBestHand(),
                         p);
                 client.sendText(text);
@@ -134,9 +134,12 @@ public class MessageHandler extends MessageHandlerBase {
                 byte[] image = Images.getImage(player.getBestHand().getCards());
                 client.sendPicture(image, MIME_TYPE);
             }
+        } else {
+            String text = String.format("%s won pot of %d chips", winner.getName(), pot);
+            client.sendText(text);
         }
 
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder("```");
         for (Player player : table.getPlayers()) {
             String text = String.format("%-20s chips: %d",
                     player.getName(),
@@ -144,6 +147,7 @@ public class MessageHandler extends MessageHandlerBase {
             sb.append(text);
             sb.append("\n");
         }
+        sb.append("```");
         client.sendText(sb.toString());
     }
 
