@@ -15,7 +15,6 @@ class Table {
     private Deck deck;
     private int pot;
     private int bet = BLIND;
-    private boolean flopped;
 
     Table(Deck deck) {
         this.deck = deck;
@@ -28,7 +27,6 @@ class Table {
     }
 
     ArrayList<Card> flopCard() {
-        flopped = true;
         board.add(deck.drawFromDeck());
         return board;
     }
@@ -73,7 +71,6 @@ class Table {
         board.clear();
         players.values().forEach(Player::reset);
         round.clear();
-        flopped = false;
         newBet();
     }
 
@@ -119,10 +116,18 @@ class Table {
     }
 
     boolean isShowdown() {
-        return flopped && board.size() == 5;
+        return board.size() == 5;
     }
 
     boolean isDone() {
-        return flopped && round.size() <= 1;
+        return isFlopped() && round.size() <= 1;
+    }
+
+    boolean isAllPlaying() {
+        return round.size() == players.size() && isAllCalled();
+    }
+
+    boolean isFlopped() {
+        return !board.isEmpty();
     }
 }

@@ -88,15 +88,20 @@ public class MessageHandler extends MessageHandlerBase {
                 case CALL:
                 case CHECK:
                     table.call(userId);
-                    if (table.isAllCalled()) {
+                    if (table.isFlopped() && table.isAllCalled()) {
                         if (table.isShowdown())
                             showdown(client, table);
                         else
-                            flopCard(client, table, 1);
+                            flopCard(client, table, 1); // turn or river
+                    } else if (table.isAllPlaying()) {
+                        // perform the Flop if all participants called
+                        flopCard(client, table, 3);
                     }
                     break;
                 case FOLD:
                     table.fold(userId);
+
+                    // if we have only one player left then the round is finished
                     if (table.isDone())
                         showdown(client, table);
                     break;
@@ -141,7 +146,7 @@ public class MessageHandler extends MessageHandlerBase {
 
         StringBuilder sb = new StringBuilder("```");
         for (Player player : table.getPlayers()) {
-            String text = String.format("%-20s chips: %d",
+            String text = String.format("%-15s chips: %d",
                     player.getName(),
                     player.getChips());
             sb.append(text);
