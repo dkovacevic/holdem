@@ -16,14 +16,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Images {
     private static final ConcurrentHashMap<Card, BufferedImage> cache = new ConcurrentHashMap<>();
     private static final String URL = "https://raw.githubusercontent.com/hayeah/playing-cards-assets/master/png";
-    private static final int SHIFT = 38;
+    private static final int SHIFT = 42;
     private static final int WIDTH = 222;
     private static final int HEIGHT = 323;
 
-    public static byte[] getImage(Collection<Card> collection) throws IOException {
-        Card[] cards = new Card[collection.size()];
-        collection.toArray(cards);
-        ArrayList<BufferedImage> load = load(cards);
+    public static byte[] getImage(Collection<Card> cards) throws IOException {
+        ArrayList<BufferedImage> load = getBufferedImages(cards);
         BufferedImage combine = combine(load);
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         ImageIO.write(combine, "png", output);
@@ -31,17 +29,12 @@ public class Images {
     }
 
     public static byte[] getImage(Collection<Card> coll1, Collection<Card> coll2) throws IOException {
-        Card[] cards1 = new Card[coll1.size()];
-        coll1.toArray(cards1);
-        ArrayList<BufferedImage> load1 = load(cards1);
+        ArrayList<BufferedImage> load1 = getBufferedImages(coll1);
+        ArrayList<BufferedImage> load2 = getBufferedImages(coll2);
 
-        Card[] cards2 = new Card[coll2.size()];
-        coll2.toArray(cards2);
-        ArrayList<BufferedImage> load2 = load(cards2);
-
-        BufferedImage combine = combine(load1, load2);
+        BufferedImage attached = attach(load1, load2);
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-        ImageIO.write(combine, "png", output);
+        ImageIO.write(attached, "png", output);
         return output.toByteArray();
     }
 
@@ -63,18 +56,25 @@ public class Images {
         return result;
     }
 
-    private static BufferedImage combine(ArrayList<BufferedImage> images1, ArrayList<BufferedImage> images2) {
-        BufferedImage combine1 = combine(images1);
-        BufferedImage combine2 = combine(images2);
+    private static BufferedImage attach(ArrayList<BufferedImage> images1, ArrayList<BufferedImage> images2) {
+        BufferedImage a = combine(images1);
+        BufferedImage b = combine(images2);
 
-        final int width = combine1.getWidth() + combine2.getWidth();
+        int shift = 3 * SHIFT;
+        final int width = a.getWidth() + b.getWidth() + shift;
 
         BufferedImage result = new BufferedImage(width, HEIGHT, BufferedImage.TYPE_INT_ARGB);
         Graphics g = result.getGraphics();
 
-        g.drawImage(combine1, 0, 0, null);
-        g.drawImage(combine2, combine1.getWidth(), 0, null);
+        g.drawImage(a, 0, 0, null);
+        g.drawImage(b, a.getWidth() + shift, 0, null);
         return result;
+    }
+
+    private static ArrayList<BufferedImage> getBufferedImages(Collection<Card> collection) throws IOException {
+        Card[] cards = new Card[collection.size()];
+        collection.toArray(cards);
+        return load(cards);
     }
 
     private static BufferedImage getBufferedImage(Card card) throws IOException {

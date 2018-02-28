@@ -88,35 +88,30 @@ public class MessageHandler extends MessageHandlerBase {
                 case CALL:
                 case CHECK:
                     table.call(userId);
-                    if (table.isFlopped() && table.isAllCalled()) {
-                        if (table.isShowdown())
-                            showdown(client, table);
-                        else
-                            flopCard(client, table, 1); // turn or river
-                    } else if (table.isAllPlaying()) {
-                        // perform the Flop if all participants called
-                        flopCard(client, table, 3);
-                    }
+                    check(client, table);
                     break;
                 case FOLD:
                     table.fold(userId);
-
-                    if (table.isFlopped() && table.isAllCalled()) {
-                        if (table.isShowdown())
-                            showdown(client, table);
-                        else
-                            flopCard(client, table, 1); // turn or river
-                    } else if (table.isAllPlaying()) {
-                        // perform the Flop if all participants called
-                        flopCard(client, table, 3);
-                    } else if (table.isDone()) {
-                        // if we have only one player left then the round is finished
-                        showdown(client, table);
-                    }
+                    check(client, table);
                     break;
             }
         } catch (Exception e) {
             Logger.error(e.getMessage());
+        }
+    }
+
+    private void check(WireClient client, Table table) throws Exception {
+        if (table.isFlopped() && table.isAllCalled()) {
+            if (table.isShowdown())
+                showdown(client, table);
+            else
+                flopCard(client, table, 1); // turn or river
+        } else if (table.isAllPlaying()) {
+            // perform the Flop if all participants called
+            flopCard(client, table, 3);
+        } else if (table.isDone()) {
+            // if we have only one player left then the round is finished
+            showdown(client, table);
         }
     }
 
@@ -126,13 +121,7 @@ public class MessageHandler extends MessageHandlerBase {
         for (int i = 0; i < number; i++)
             table.flopCard();
 
-        /*
-        byte[] image = Images.getImage(table.getBoard());
-        client.sendPicture(image, MIME_TYPE);
-        */
-
         for (Player player : table.getActivePlayers()) {
-            // Send cards to this player
             byte[] image = Images.getImage(player.getCards(), table.getBoard());
             client.sendPicture(image, MIME_TYPE, player.getId());
         }
