@@ -49,26 +49,27 @@ public class MessageHandler extends MessageHandlerBase {
         try {
             Table table = getTable(client);
 
-            String cmd = msg.getText().toLowerCase().replace("@", "").trim();
+            String cmd = msg.getText().toLowerCase().trim();
             String userId = msg.getUserId();
 
             if (cmd.startsWith(RAISE)) {
-                String trim = cmd.replace(RAISE, "").trim();
-                int raise = Integer.parseInt(trim);
-                table.raise(userId, raise);
-                return;
-            }
-
-            if (cmd.startsWith(BET)) {
-                String trim = cmd.replace(BET, "").trim();
-                int raise = Integer.parseInt(trim);
-                table.raise(userId, raise);
+                int newBet = table.raise(userId);
+                Player player = table.getPlayer(userId);
+                client.sendText(String.format("%s raised by %d. Bet is now: %d",
+                        player.getName(),
+                        table.getRaise(),
+                        newBet));
                 return;
             }
 
             switch (cmd) {
                 case DEAL: {
                     table.shuffle();
+
+                    client.sendText(String.format("Round %d, small blind %d, raise by %d",
+                            table.getRoundNumber(),
+                            table.getSmallBlind(),
+                            table.getRaise()));
 
                     for (Player player : table.getPlayers()) {
                         table.blind(player.getId()); //take small blind
@@ -83,7 +84,8 @@ public class MessageHandler extends MessageHandlerBase {
                 }
                 break;
                 case FLOP:
-                    flopCard(client, table, 3);
+                    if (!table.isFlopped())
+                        flopCard(client, table, 3);
                     break;
                 case CALL:
                 case CHECK:
@@ -125,6 +127,8 @@ public class MessageHandler extends MessageHandlerBase {
             byte[] image = Images.getImage(player.getCards(), table.getBoard());
             client.sendPicture(image, MIME_TYPE, player.getId());
         }
+
+        client.sendText(String.format("Pot %d chips", table.getPot()));
     }
 
     private void showdown(WireClient client, Table table) throws Exception {
@@ -146,7 +150,7 @@ public class MessageHandler extends MessageHandlerBase {
                 client.sendPicture(image, MIME_TYPE);
             }
         } else {
-            String text = String.format("%s won pot of %d chips", winner.getName(), pot);
+            String text = String.format("%s has won pot of %d chips", winner.getName(), pot);
             client.sendText(text);
         }
 
@@ -172,7 +176,7 @@ public class MessageHandler extends MessageHandlerBase {
                         player.getChips());
                 client.sendText(text);
             }
-            client.sendText("Type: `deal` to start");
+            client.sendText("Type: `deal` to start. `call`, `raise`, `fold` when betting... Have fun!");
         } catch (Exception e) {
             Logger.error(e.getMessage());
         }
@@ -185,10 +189,10 @@ public class MessageHandler extends MessageHandlerBase {
             Collection<User> users = client.getUsers(userIds);
             for (User user : users) {
                 Player player = table.addPlayer(user);
-                String text = String.format("Player: %s has joined the table with %d chips",
+                String text = String.format("%s has joined the table with %d chips",
                         player.getName(),
                         player.getChips());
-                client.sendText(text, 5000);
+                client.sendText(text);
             }
         } catch (Exception e) {
             Logger.error(e.getMessage());

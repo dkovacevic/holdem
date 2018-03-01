@@ -8,13 +8,17 @@ import java.util.Comparator;
 import java.util.HashMap;
 
 class Table {
-    private static final int BLIND = 1;
+    private static final int INITIAL_SMALL_BLIND = 1;
+    private static final int INITIAL_RAISE = 5;
     private final HashMap<String, Player> players = new HashMap<>();
     private final HashMap<String, Player> round = new HashMap<>();
     private final ArrayList<Card> board = new ArrayList<>();
     private Deck deck;
     private int pot;
-    private int bet = BLIND;
+    private int bet;
+    private int roundNumber;
+    private int raise = INITIAL_RAISE;
+    private int smallBlind = INITIAL_SMALL_BLIND;
 
     Table(Deck deck) {
         this.deck = deck;
@@ -67,6 +71,7 @@ class Table {
     }
 
     void shuffle() {
+        roundNumber++;
         deck = new Deck();
         board.clear();
         players.values().forEach(Player::reset);
@@ -94,12 +99,11 @@ class Table {
         pot += player.take(bet);
     }
 
-    void raise(String userId, int raise) {
-        if (raise > 0) {
-            bet += raise;
-            resetCallers();
-            call(userId);
-        }
+    int raise(String userId) {
+        bet += raise;
+        resetCallers();
+        call(userId);
+        return bet;
     }
 
     private void resetCallers() {
@@ -108,7 +112,7 @@ class Table {
 
     void newBet() {
         resetCallers();
-        bet = BLIND;
+        bet = smallBlind;
     }
 
     boolean isAllCalled() {
@@ -129,5 +133,25 @@ class Table {
 
     boolean isFlopped() {
         return !board.isEmpty();
+    }
+
+    int getRoundNumber() {
+        return roundNumber;
+    }
+
+    int getPot() {
+        return pot;
+    }
+
+    int getSmallBlind() {
+        return smallBlind;
+    }
+
+    int getRaise() {
+        return raise;
+    }
+
+    Player getPlayer(String userId) {
+        return players.get(userId);
     }
 }
