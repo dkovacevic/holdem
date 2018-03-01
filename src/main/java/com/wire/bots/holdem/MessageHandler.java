@@ -73,11 +73,11 @@ public class MessageHandler extends MessageHandlerBase {
                     for (Player player : table.getPlayers()) {
                         table.blind(player.getId()); //take small blind
 
-                        table.dealCard(player);
-                        table.dealCard(player);
+                        Card a = table.dealCard(player);
+                        Card b = table.dealCard(player);
 
                         // Send cards to this player
-                        byte[] image = Images.getImage(player.getCards());
+                        byte[] image = Images.getImage(a, b);
                         client.sendPicture(image, MIME_TYPE, player.getId());
                     }
                 }
@@ -165,7 +165,14 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onNewConversation(WireClient client) {
         try {
-            client.sendText("Type: @deal");
+            Table table = getTable(client);
+            for (Player player : table.getPlayers()) {
+                String text = String.format("Player: %s has joined the table with %d chips",
+                        player.getName(),
+                        player.getChips());
+                client.sendText(text);
+            }
+            client.sendText("Type: `deal` to start");
         } catch (Exception e) {
             Logger.error(e.getMessage());
         }
@@ -177,7 +184,11 @@ public class MessageHandler extends MessageHandlerBase {
             Table table = getTable(client);
             Collection<User> users = client.getUsers(userIds);
             for (User user : users) {
-                table.addPlayer(user);
+                Player player = table.addPlayer(user);
+                String text = String.format("Player: %s has joined the table with %d chips",
+                        player.getName(),
+                        player.getChips());
+                client.sendText(text, 5000);
             }
         } catch (Exception e) {
             Logger.error(e.getMessage());

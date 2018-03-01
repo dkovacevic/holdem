@@ -36,5 +36,10 @@ public class CombineCards {
         image = Images.getImage(cards.subList(0, 2), cards.subList(2, 7));
         read = ImageIO.read(new ByteArrayInputStream(image));
         ImageIO.write(read, "png", new File("combined.png"));
+
+        image = Images.getImage(card1, card2);
+        read = ImageIO.read(new ByteArrayInputStream(image));
+        ImageIO.write(read, "png", new File("attached.png"));
+
     }
 }

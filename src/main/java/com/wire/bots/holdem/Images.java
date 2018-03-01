@@ -28,6 +28,15 @@ public class Images {
         return output.toByteArray();
     }
 
+    public static byte[] getImage(Card c1, Card c2) throws IOException {
+        BufferedImage a = load(c1).get(0);
+        BufferedImage b = load(c2).get(0);
+        BufferedImage attached = attach(a, b);
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        ImageIO.write(attached, "png", output);
+        return output.toByteArray();
+    }
+
     public static byte[] getImage(Collection<Card> coll1, Collection<Card> coll2) throws IOException {
         ArrayList<BufferedImage> load1 = getBufferedImages(coll1);
         ArrayList<BufferedImage> load2 = getBufferedImages(coll2);
@@ -68,6 +77,17 @@ public class Images {
 
         g.drawImage(a, 0, 0, null);
         g.drawImage(b, a.getWidth() + shift, 0, null);
+        return result;
+    }
+
+    private static BufferedImage attach(BufferedImage a, BufferedImage b) {
+        final int width = a.getWidth() + b.getWidth();
+
+        BufferedImage result = new BufferedImage(width, HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        Graphics g = result.getGraphics();
+
+        g.drawImage(a, 0, 0, null);
+        g.drawImage(b, a.getWidth(), 0, null);
         return result;
     }
 
