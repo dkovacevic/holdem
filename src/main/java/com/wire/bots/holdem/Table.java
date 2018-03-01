@@ -72,6 +72,10 @@ class Table {
 
     void shuffle() {
         roundNumber++;
+        if (roundNumber % 3 == 0)
+            smallBlind += smallBlind;
+        if (roundNumber % 5 == 0)
+            raise += raise;
         deck = new Deck();
         board.clear();
         players.values().forEach(Player::reset);

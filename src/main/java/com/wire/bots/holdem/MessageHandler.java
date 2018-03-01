@@ -37,7 +37,6 @@ public class MessageHandler extends MessageHandlerBase {
 
     // Commands
     private static final String RAISE = "raise";
-    private static final String BET = "bet";    // equivalent to `raise`
     private static final String DEAL = "deal";
     private static final String FLOP = "flop";
     private static final String FOLD = "fold";
