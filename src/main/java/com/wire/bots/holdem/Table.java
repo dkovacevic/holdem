@@ -4,13 +4,11 @@ import com.wire.bots.sdk.server.model.User;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 class Table {
     private static final int INITIAL_SMALL_BLIND = 1;
     private static final int INITIAL_RAISE = 5;
     private final HashMap<String, Player> players = new HashMap<>();
-    private final HashMap<String, Player> round = new HashMap<>();
     private final ArrayList<Card> board = new ArrayList<>();
     private Deck deck;
     private int pot;
@@ -35,7 +33,7 @@ class Table {
     }
 
     Player getWinner() {
-        return round
+        return players
                 .values()
                 .stream()
                 .filter(player -> !player.isFolded())
@@ -52,7 +50,11 @@ class Table {
     }
 
     Collection<Player> getActivePlayers() {
-        return round.values().stream().filter(player -> !player.isFolded()).collect(Collectors.toList());
+        return players.values().stream().filter(player -> !player.isFolded()).collect(Collectors.toList());
+    }
+
+    boolean isAllFolded() {
+        return getActivePlayers().size() <= 1;
     }
 
     boolean fold(String userId) {
@@ -66,7 +68,6 @@ class Table {
 
     void removePlayer(String userId) {
         players.remove(userId);
-        round.remove(userId);
     }
 
     Card dealCard(Player player) {
@@ -84,7 +85,6 @@ class Table {
         deck = new Deck();
         board.clear();
         players.values().forEach(Player::reset);
-        round.clear();
         newBet();
     }
 
@@ -101,7 +101,6 @@ class Table {
         if (!player.isCalled()) {
             pot += player.take(bet);
             player.setCalled(true);
-            round.put(player.getId(), player);
             return true;
         }
         return false;
@@ -124,7 +123,7 @@ class Table {
     }
 
     private void resetCallers() {
-        round.values().forEach(player -> player.setCalled(false));
+        players.values().forEach(player -> player.setCalled(false));
     }
 
     void newBet() {
@@ -133,20 +132,11 @@ class Table {
     }
 
     boolean isAllCalled() {
-        return round.values().stream().allMatch(Player::isCalled);
+        return players.values().stream().allMatch(Player::isCalled);
     }
 
     boolean isShowdown() {
         return board.size() == 5;
-    }
-
-    boolean isDone() {
-        Stream<Player> stream = players.values().stream().filter(player -> !player.isFolded());
-        return stream.toArray().length <= 1;
-    }
-
-    boolean isAllPlaying() {
-        return round.size() == players.size() && isAllCalled();
     }
 
     boolean isFlopped() {
@@ -185,4 +175,5 @@ class Table {
         }
         return ret;
     }
+
 }
