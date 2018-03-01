@@ -2,7 +2,7 @@ package com.wire.bots.holdem;
 
 public class Card implements Comparable<Card> {
     private static String[] suits = {"hearts", "spades", "diamonds", "clubs"};
-    private static String[] ranks = {"ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"};
+    private static String[] ranks = {"2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king", "ace"};
     private int rank, suit;
 
     public Card(int suit, int rank) {

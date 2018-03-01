@@ -14,6 +14,7 @@ public class Player implements Comparable<Player> {
     private Hand bestHand = null;
     private int chips = INITIAL_CHIPS;
     private boolean called;
+    private boolean folded;
 
     public Player(String userId, String name, ArrayList<Card> board) {
         this.id = userId;
@@ -86,6 +87,7 @@ public class Player implements Comparable<Player> {
         bestHand = null;
         cards.clear();
         called = false;
+        folded = false;
     }
 
     int take(int val) {
@@ -102,10 +104,18 @@ public class Player implements Comparable<Player> {
     }
 
     boolean isCalled() {
-        return called;
+        return called || folded;
     }
 
     void setCalled(boolean val) {
         this.called = val;
+    }
+
+    void fold() {
+        folded = true;
+    }
+
+    boolean isFolded() {
+        return folded;
     }
 }

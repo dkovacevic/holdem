@@ -7,7 +7,7 @@ public class Hand implements Comparable<Hand> {
     private ArrayList<Card> cards;
     private int[] value;
 
-    public Hand(ArrayList<Card> cards) {
+    Hand(ArrayList<Card> cards) {
         value = new int[6];
         this.cards = new ArrayList<>(cards);
         this.cards.sort(Comparator.reverseOrder());

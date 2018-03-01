@@ -37,10 +37,13 @@ public class MessageHandler extends MessageHandlerBase {
 
     // Commands
     private static final String RAISE = "raise";
+    private static final String R = "r";
     private static final String DEAL = "deal";
     private static final String FLOP = "flop";
+    private static final String F = "f";
     private static final String FOLD = "fold";
     private static final String CALL = "call";
+    private static final String C = "c";
     private static final String CHECK = "check"; // equivalent to `call`
 
     @Override
@@ -50,18 +53,6 @@ public class MessageHandler extends MessageHandlerBase {
 
             String cmd = msg.getText().toLowerCase().trim();
             String userId = msg.getUserId();
-
-            if (cmd.startsWith(RAISE)) {
-                int newBet = table.raise(userId);
-                if (newBet > 0) {
-                    Player player = table.getPlayer(userId);
-                    client.sendText(String.format("%s raised by %d to %d",
-                            player.getName(),
-                            table.getRaise(),
-                            newBet));
-                }
-                return;
-            }
 
             switch (cmd) {
                 case DEAL: {
@@ -88,13 +79,27 @@ public class MessageHandler extends MessageHandlerBase {
                     if (!table.isFlopped())
                         flopCard(client, table, 3);
                     break;
-                case CALL:
+                case R:
+                case RAISE: {
+                    int newBet = table.raise(userId);
+                    if (newBet > 0) {
+                        Player player = table.getPlayer(userId);
+                        client.sendText(String.format("%s raised by %d to %d",
+                                player.getName(),
+                                table.getRaise(),
+                                newBet));
+                    }
+                }
+                break;
+                case C:
                 case CHECK:
+                case CALL:
                     if (table.call(userId)) {
                         check(client, table);
                     }
                     break;
                 case FOLD:
+                case F:
                     if (table.fold(userId)) {
                         check(client, table);
                     }
@@ -106,17 +111,23 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     private void check(WireClient client, Table table) throws Exception {
+        if (table.isDone()) {
+            showdown(client, table);
+            return;
+        }
+
         if (table.isFlopped() && table.isAllCalled()) {
             if (table.isShowdown())
                 showdown(client, table);
             else
                 flopCard(client, table, 1); // turn or river
-        } else if (table.isAllPlaying()) {
+
+            return;
+        }
+
+        if (table.isAllPlaying()) {
             // perform the Flop if all participants called
             flopCard(client, table, 3);
-        } else if (table.isDone()) {
-            // if we have only one player left then the round is finished
-            showdown(client, table);
         }
     }
 

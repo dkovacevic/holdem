@@ -3,6 +3,8 @@ package com.wire.bots.holdem;
 import com.wire.bots.sdk.server.model.User;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 class Table {
     private static final int INITIAL_SMALL_BLIND = 1;
@@ -36,6 +38,7 @@ class Table {
         return round
                 .values()
                 .stream()
+                .filter(player -> !player.isFolded())
                 .max(Comparator.naturalOrder())
                 .get();
     }
@@ -49,13 +52,13 @@ class Table {
     }
 
     Collection<Player> getActivePlayers() {
-        return round.values();
+        return round.values().stream().filter(player -> !player.isFolded()).collect(Collectors.toList());
     }
 
     boolean fold(String userId) {
         Player player = getPlayer(userId);
         if (!player.isCalled()) {
-            round.remove(userId);
+            player.fold();
             return true;
         }
         return false;
@@ -74,7 +77,7 @@ class Table {
 
     void shuffle() {
         roundNumber++;
-        if (roundNumber % 3 == 0)
+        if (roundNumber % 2 == 0)
             smallBlind += smallBlind;
         if (roundNumber % 5 == 0)
             raise += raise;
@@ -138,7 +141,8 @@ class Table {
     }
 
     boolean isDone() {
-        return isFlopped() && round.size() <= 1;
+        Stream<Player> stream = players.values().stream().filter(player -> !player.isFolded());
+        return stream.toArray().length <= 1;
     }
 
     boolean isAllPlaying() {
