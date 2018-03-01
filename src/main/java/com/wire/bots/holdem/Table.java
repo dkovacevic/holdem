@@ -2,10 +2,7 @@ package com.wire.bots.holdem;
 
 import com.wire.bots.sdk.server.model.User;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.*;
 
 class Table {
     private static final int INITIAL_SMALL_BLIND = 1;
@@ -55,8 +52,13 @@ class Table {
         return round.values();
     }
 
-    void fold(String userId) {
-        round.remove(userId);
+    boolean fold(String userId) {
+        Player player = getPlayer(userId);
+        if (!player.isCalled()) {
+            round.remove(userId);
+            return true;
+        }
+        return false;
     }
 
     void removePlayer(String userId) {
@@ -91,23 +93,31 @@ class Table {
         return ret;
     }
 
-    void call(String userId) {
-        Player player = players.get(userId);
-        pot += player.take(bet);
-        player.setCalled(true);
-        round.put(player.getId(), player);
+    boolean call(String userId) {
+        Player player = getPlayer(userId);
+        if (!player.isCalled()) {
+            pot += player.take(bet);
+            player.setCalled(true);
+            round.put(player.getId(), player);
+            return true;
+        }
+        return false;
     }
 
     void blind(String userId) {
-        Player player = players.get(userId);
+        Player player = getPlayer(userId);
         pot += player.take(bet);
     }
 
     int raise(String userId) {
-        bet += raise;
-        resetCallers();
-        call(userId);
-        return bet;
+        Player player = getPlayer(userId);
+        if (!player.isCalled()) {
+            bet += raise;
+            resetCallers();
+            call(userId);
+            return bet;
+        }
+        return -1;
     }
 
     private void resetCallers() {
@@ -157,5 +167,18 @@ class Table {
 
     Player getPlayer(String userId) {
         return players.get(userId);
+    }
+
+    Collection<Player> collectPlayers() {
+        ArrayList<Player> ret = new ArrayList<>();
+        Iterator<Map.Entry<String, Player>> iterator = players.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Player player = iterator.next().getValue();
+            if (player.getChips() <= 0) {
+                iterator.remove();
+                ret.add(player);
+            }
+        }
+        return ret;
     }
 }

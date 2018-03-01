@@ -53,11 +53,13 @@ public class MessageHandler extends MessageHandlerBase {
 
             if (cmd.startsWith(RAISE)) {
                 int newBet = table.raise(userId);
-                Player player = table.getPlayer(userId);
-                client.sendText(String.format("%s raised by %d. Bet is now: %d",
-                        player.getName(),
-                        table.getRaise(),
-                        newBet));
+                if (newBet > 0) {
+                    Player player = table.getPlayer(userId);
+                    client.sendText(String.format("%s raised by %d to %d",
+                            player.getName(),
+                            table.getRaise(),
+                            newBet));
+                }
                 return;
             }
 
@@ -88,12 +90,14 @@ public class MessageHandler extends MessageHandlerBase {
                     break;
                 case CALL:
                 case CHECK:
-                    table.call(userId);
-                    check(client, table);
+                    if (table.call(userId)) {
+                        check(client, table);
+                    }
                     break;
                 case FOLD:
-                    table.fold(userId);
-                    check(client, table);
+                    if (table.fold(userId)) {
+                        check(client, table);
+                    }
                     break;
             }
         } catch (Exception e) {
@@ -153,6 +157,10 @@ public class MessageHandler extends MessageHandlerBase {
             client.sendText(text);
         }
 
+        for (Player player : table.collectPlayers()) {
+            client.sendText(String.format("%s has ran out of chips and was kicked out", player.getName()));
+        }
+
         StringBuilder sb = new StringBuilder("```");
         for (Player player : table.getPlayers()) {
             String text = String.format("%-15s chips: %d",
@@ -163,6 +171,11 @@ public class MessageHandler extends MessageHandlerBase {
         }
         sb.append("```");
         client.sendText(sb.toString());
+
+        if (table.getPlayers().size() <= 1) {
+            client.ping();
+            closeTable(client);
+        }
     }
 
     @Override
@@ -221,5 +234,10 @@ public class MessageHandler extends MessageHandlerBase {
             }
             return table;
         });
+    }
+
+
+    private void closeTable(WireClient client) {
+        tables.remove(client.getId());
     }
 }
