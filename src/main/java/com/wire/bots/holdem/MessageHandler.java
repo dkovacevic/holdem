@@ -37,14 +37,13 @@ public class MessageHandler extends MessageHandlerBase {
 
     // Commands
     private static final String RAISE = "raise";
-    private static final String R = "r";
-    private static final String DEAL = "deal";
-    private static final String FLOP = "flop";
-    private static final String F = "f";
+    private static final String R = "r";          // short for `raise`
+    private static final String DEAL = "deal";    // deal cards
+    private static final String F = "f";          // short for `fold`
     private static final String FOLD = "fold";
     private static final String CALL = "call";
-    private static final String C = "c";
-    private static final String CHECK = "check"; // equivalent to `call`
+    private static final String C = "c";          // short for `call`
+    private static final String CHECK = "check";  // equivalent to `call`
 
     @Override
     public void onText(WireClient client, TextMessage msg) {
@@ -75,10 +74,6 @@ public class MessageHandler extends MessageHandlerBase {
                     }
                 }
                 break;
-                case FLOP:
-                    if (!table.isFlopped())
-                        flopCard(client, table, 3);
-                    break;
                 case R:
                 case RAISE: {
                     int newBet = table.raise(userId);
@@ -111,23 +106,16 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     private void check(WireClient client, Table table) throws Exception {
-        if (table.isDone()) {
+        if (table.isAllFolded()) {
             showdown(client, table);
             return;
         }
 
-        if (table.isFlopped() && table.isAllCalled()) {
+        if (table.isAllCalled()) {
             if (table.isShowdown())
                 showdown(client, table);
             else
-                flopCard(client, table, 1); // turn or river
-
-            return;
-        }
-
-        if (table.isAllPlaying()) {
-            // perform the Flop if all participants called
-            flopCard(client, table, 3);
+                flopCard(client, table, table.isFlopped() ? 1 : 3); // turn or river or flop
         }
     }
 
