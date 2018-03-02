@@ -190,4 +190,70 @@ public class RankTests {
         assert h.threeKind() == -1;
         assert h.twoPair() == -1;
     }
+
+    @Test
+    public void highCard() {
+        ArrayList<Card> cards = new ArrayList<>();
+        cards.add(new Card(1, 11));
+        cards.add(new Card(2, 9));
+        cards.add(new Card(1, 7));
+        cards.add(new Card(0, 5));
+        cards.add(new Card(1, 3));
+
+        Hand h = new Hand(cards);
+
+        assert h.straightFlush() == -1;
+        assert h.fourKind() == -1;
+        assert h.fullHouse() == -1;
+        assert h.flush() == -1;
+        assert h.straight() == -1;
+        assert h.twoPair() == -1;
+        assert h.threeKind() == -1;
+        assert h.twoPair() == -1;
+        assert h.strongestCard() == 11;
+    }
+
+    @Test
+    public void highCard2() {
+        ArrayList<Card> cards = new ArrayList<>();
+        cards.add(new Card(1, 12));
+        cards.add(new Card(2, 11));
+        cards.add(new Card(1, 10));
+        cards.add(new Card(0, 9));
+        cards.add(new Card(1, 7));
+
+        Hand h = new Hand(cards);
+
+        assert h.straightFlush() == -1;
+        assert h.fourKind() == -1;
+        assert h.fullHouse() == -1;
+        assert h.flush() == -1;
+        assert h.straight() == -1;
+        assert h.twoPair() == -1;
+        assert h.threeKind() == -1;
+        assert h.twoPair() == -1;
+        assert h.strongestCard() == 12;
+    }
+
+    @Test
+    public void highCard3() {
+        ArrayList<Card> cards = new ArrayList<>();
+        cards.add(new Card(1, 12));
+        cards.add(new Card(2, 0));
+        cards.add(new Card(1, 1));
+        cards.add(new Card(0, 2));
+        cards.add(new Card(1, 4));
+
+        Hand h = new Hand(cards);
+
+        assert h.straightFlush() == -1;
+        assert h.fourKind() == -1;
+        assert h.fullHouse() == -1;
+        assert h.flush() == -1;
+        assert h.straight() == -1;
+        assert h.twoPair() == -1;
+        assert h.threeKind() == -1;
+        assert h.twoPair() == -1;
+        assert h.strongestCard() == 12;
+    }
 }
