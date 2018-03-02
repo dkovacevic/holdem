@@ -18,9 +18,9 @@ public class StraightHandTests {
         Hand h1 = new Hand(cards1);
 
         ArrayList<Card> cards2 = new ArrayList<>();
-        cards2.add(new Card(1, 13));
-        cards2.add(new Card(2, 13));
-        cards2.add(new Card(3, 13));
+        cards2.add(new Card(1, 12));
+        cards2.add(new Card(2, 12));
+        cards2.add(new Card(3, 12));
         cards2.add(new Card(1, 10));
         cards2.add(new Card(1, 9));
 
@@ -33,20 +33,20 @@ public class StraightHandTests {
     @Test
     public void straightAceOverThree() {
         ArrayList<Card> cards1 = new ArrayList<>();
-        cards1.add(new Card(1, 13));
-        cards1.add(new Card(2, 12));
-        cards1.add(new Card(1, 11));
+        cards1.add(new Card(0, 12));
+        cards1.add(new Card(2, 11));
         cards1.add(new Card(1, 10));
-        cards1.add(new Card(0, 9));
+        cards1.add(new Card(1, 9));
+        cards1.add(new Card(0, 8));
 
         Hand h1 = new Hand(cards1);
 
         ArrayList<Card> cards2 = new ArrayList<>();
-        cards2.add(new Card(1, 13));
-        cards2.add(new Card(2, 13));
-        cards2.add(new Card(3, 13));
-        cards2.add(new Card(1, 10));
-        cards2.add(new Card(1, 9));
+        cards2.add(new Card(1, 12));
+        cards2.add(new Card(2, 12));
+        cards2.add(new Card(3, 12));
+        cards2.add(new Card(0, 10));
+        cards2.add(new Card(0, 9));
 
         Hand h2 = new Hand(cards2);
 

@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 class Table {
     private static final int INITIAL_SMALL_BLIND = 1;
     private static final int INITIAL_RAISE = 5;
+    private static final int BLIND_INCREASE = 2;
+    private static final int RAISE_INCREASE = 10;
     private final HashMap<String, Player> players = new HashMap<>();
     private final ArrayList<Card> board = new ArrayList<>();
     private Deck deck;
@@ -78,10 +80,9 @@ class Table {
 
     void shuffle() {
         roundNumber++;
-        if (roundNumber % 2 == 0)
-            smallBlind += smallBlind;
-        if (roundNumber % 5 == 0)
-            raise += raise;
+        smallBlind += BLIND_INCREASE;
+        if (roundNumber % 3 == 0)
+            raise += RAISE_INCREASE;
         deck = new Deck();
         board.clear();
         players.values().forEach(Player::reset);
