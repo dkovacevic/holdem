@@ -26,61 +26,61 @@ public class Hand implements Comparable<Hand> {
         if (threeKind() != -1)
             return String.format("three of kind %s", Card.rankAsString(threeKind()));
         if (twoPair() != -1)
-            return String.format("two pair %s high", Card.rankAsString(twoPair()));
+            return String.format("two pairs %s high", Card.rankAsString(twoPair()));
         if (onePair() != -1)
-            return String.format("one pair %s high", Card.rankAsString(onePair()));
+            return String.format("one pair of %s's", Card.rankAsString(onePair()));
 
         return String.format("high card of %s", Card.rankAsString(highCard().getRank()));
     }
 
     @Override
-    public int compareTo(Hand that) {
-        if (straightFlush() > that.straightFlush())
+    public int compareTo(Hand second) {
+        if (straightFlush() > second.straightFlush())
             return 1;
-        if (straightFlush() < that.straightFlush())
+        if (straightFlush() < second.straightFlush())
             return -1;
 
-        if (fourKind() > that.fourKind())
+        if (fourKind() > second.fourKind())
             return 1;
-        if (fourKind() < that.fourKind())
+        if (fourKind() < second.fourKind())
             return -1;
 
-        if (fullHouse() > that.fullHouse())
+        if (fullHouse() > second.fullHouse())
             return 1;
-        if (fullHouse() < that.fullHouse())
+        if (fullHouse() < second.fullHouse())
             return -1;
 
-        if (flush() > that.flush())
+        if (flush() > second.flush())
             return 1;
-        if (flush() < that.flush())
+        if (flush() < second.flush())
             return -1;
 
-        if (straight() > that.straight())
+        if (straight() > second.straight())
             return 1;
-        if (straight() < that.straight())
+        if (straight() < second.straight())
             return -1;
 
-        if (threeKind() > that.threeKind())
+        if (threeKind() > second.threeKind())
             return 1;
-        if (threeKind() < that.threeKind())
+        if (threeKind() < second.threeKind())
             return -1;
 
-        if (twoPair() > that.twoPair())
+        if (twoPair() > second.twoPair())
             return 1;
-        if (twoPair() < that.twoPair())
+        if (twoPair() < second.twoPair())
             return -1;
 
-        if (secondPair() > that.secondPair())
+        if (secondPair() > second.secondPair())
             return 1;
-        if (secondPair() < that.secondPair())
+        if (secondPair() < second.secondPair())
             return -1;
 
-        if (onePair() > that.onePair())
+        if (onePair() > second.onePair())
             return 1;
-        if (onePair() < that.onePair())
+        if (onePair() < second.onePair())
             return -1;
 
-        return higherCard(that);
+        return higherCard(second);
     }
 
     private int higherCard(Hand that) {
@@ -199,6 +199,22 @@ public class Hand implements Comparable<Hand> {
     }
 
     int twoPair() {
+        return pairs(2, 0);
+    }
+
+    int onePair() {
+        return pairs(1, 0);
+    }
+
+    private int secondPair() {
+        return pairs(2, 1);
+    }
+
+    private Card highCard() {
+        return cards.get(0);
+    }
+
+    private int pairs(int size, int ord) {
         ArrayList<Integer> pairs = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
             int c1 = cards.get(i).getRank();
@@ -208,41 +224,7 @@ public class Hand implements Comparable<Hand> {
                 pairs.add(c1);
             }
         }
-        return pairs.size() == 2 ? pairs.get(0) : -1;
-    }
-
-    int onePair() {
-        int dup = 0;
-        int ret = -1;
-        for (int i = 0; i < 4; i++) {
-            int c1 = cards.get(i).getRank();
-            int c2 = cards.get(i + 1).getRank();
-            if (c1 == c2) {
-                i++;
-                ret = c1;
-                dup++;
-            }
-        }
-        return dup == 1 ? ret : -1;
-    }
-
-    private int secondPair() {
-        int dup = 0;
-        int ret = -1;
-        for (int i = 0; i < 4; i++) {
-            int c1 = cards.get(i).getRank();
-            int c2 = cards.get(i + 1).getRank();
-            if (c1 == c2) {
-                i++;
-                ret = c1;
-                dup++;
-            }
-        }
-        return dup == 2 ? ret : -1;
-    }
-
-    private Card highCard() {
-        return cards.get(0);
+        return pairs.size() == size ? pairs.get(ord) : -1;
     }
 }
 
