@@ -102,6 +102,30 @@ public class HandsTests {
     }
 
     @Test
+    public void highCardSeven() {
+        ArrayList<Card> cards1 = new ArrayList<>();
+        cards1.add(new Card(1, 7));
+        cards1.add(new Card(1, 1));
+        cards1.add(new Card(0, 2));
+        cards1.add(new Card(1, 3));
+        cards1.add(new Card(2, 4));
+
+        Hand h1 = new Hand(cards1);
+
+        ArrayList<Card> cards2 = new ArrayList<>();
+        cards2.add(new Card(1, 6));
+        cards2.add(new Card(1, 1));
+        cards2.add(new Card(1, 2));
+        cards2.add(new Card(2, 3));
+        cards2.add(new Card(3, 4));
+
+        Hand h2 = new Hand(cards2);
+
+        assert h1.compareTo(h2) == 1;
+        assert h2.compareTo(h1) == -1;
+    }
+
+    @Test
     public void highCardAceKing() {
         ArrayList<Card> cards1 = new ArrayList<>();
         cards1.add(new Card(1, 12));
