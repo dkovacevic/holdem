@@ -141,17 +141,22 @@ public class Hand implements Comparable<Hand> {
     }
 
     int straight() {
-        //todo fix for Ace
         for (int i = 1; i < 4; i++) {
             int prev = cards.get(i - 1).getRank();
             int mid = cards.get(i).getRank();
             int next = cards.get(i + 1).getRank();
+
+            if (i == 1 && cards.get(0).getRank() == 12 && cards.get(4).getRank() == 0)
+                continue;// Ace and Two at the beginning
+
             if ((prev + next) % 2 != 0)
                 return -1;
             if (mid != (prev + next) / 2)
                 return -1;
+            if (mid == next || mid == prev)
+                return -1;
         }
-        return highCard().getRank();
+        return cards.get(1).getRank() == 3 ? cards.get(1).getRank() : highCard().getRank();
     }
 
 

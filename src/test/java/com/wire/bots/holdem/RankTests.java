@@ -8,8 +8,8 @@ public class RankTests {
     @Test
     public void onePair() {
         ArrayList<Card> cards = new ArrayList<>();
-        cards.add(new Card(1, 13));
-        cards.add(new Card(2, 13));
+        cards.add(new Card(1, 12));
+        cards.add(new Card(2, 12));
         cards.add(new Card(1, 1));
         cards.add(new Card(1, 2));
         cards.add(new Card(1, 3));
@@ -23,13 +23,13 @@ public class RankTests {
         assert h.straight() == -1;
         assert h.threeKind() == -1;
         assert h.twoPair() == -1;
-        assert h.onePair() == 13;
+        assert h.onePair() == 12;
     }
 
     @Test
     public void twoPair() {
         ArrayList<Card> cards = new ArrayList<>();
-        cards.add(new Card(1, 13));
+        cards.add(new Card(1, 12));
         cards.add(new Card(2, 10));
         cards.add(new Card(1, 10));
         cards.add(new Card(1, 0));
@@ -74,7 +74,7 @@ public class RankTests {
         cards.add(new Card(2, 0));
         cards.add(new Card(0, 0));
         cards.add(new Card(3, 0));
-        cards.add(new Card(0, 13));
+        cards.add(new Card(0, 12));
 
         Hand h = new Hand(cards);
 
@@ -83,6 +83,7 @@ public class RankTests {
         assert h.fullHouse() == -1;
         assert h.flush() == -1;
         assert h.straight() == -1;
+        assert h.onePair() == -1;
     }
 
     @Test
@@ -128,9 +129,9 @@ public class RankTests {
     }
 
     @Test
-    public void straightAce() {
+    public void straightAceBeginning() {
         ArrayList<Card> cards = new ArrayList<>();
-        cards.add(new Card(1, 13));
+        cards.add(new Card(1, 12));
         cards.add(new Card(2, 0));
         cards.add(new Card(1, 1));
         cards.add(new Card(0, 2));
@@ -149,21 +150,42 @@ public class RankTests {
     }
 
     @Test
+    public void straightAceEnding() {
+        ArrayList<Card> cards = new ArrayList<>();
+        cards.add(new Card(1, 12));
+        cards.add(new Card(2, 11));
+        cards.add(new Card(1, 10));
+        cards.add(new Card(0, 9));
+        cards.add(new Card(1, 8));
+
+        Hand h = new Hand(cards);
+
+        assert h.straightFlush() == -1;
+        assert h.fourKind() == -1;
+        assert h.fullHouse() == -1;
+        assert h.flush() == -1;
+        assert h.straight() == 12;
+        assert h.twoPair() == -1;
+        assert h.threeKind() == -1;
+        assert h.twoPair() == -1;
+    }
+
+    @Test
     public void flushRoyal() {
         ArrayList<Card> cards = new ArrayList<>();
-        cards.add(new Card(3, 13));
         cards.add(new Card(3, 12));
         cards.add(new Card(3, 11));
         cards.add(new Card(3, 10));
         cards.add(new Card(3, 9));
+        cards.add(new Card(3, 8));
 
         Hand h = new Hand(cards);
 
-        assert h.straightFlush() == 13;
+        assert h.straightFlush() == 12;
         assert h.fourKind() == -1;
         assert h.fullHouse() == -1;
-        assert h.flush() == 13;
-        assert h.straight() == 13;
+        assert h.flush() == 12;
+        assert h.straight() == 12;
         assert h.twoPair() == -1;
         assert h.threeKind() == -1;
         assert h.twoPair() == -1;
