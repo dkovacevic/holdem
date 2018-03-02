@@ -5,192 +5,110 @@ import java.util.Comparator;
 
 public class Hand implements Comparable<Hand> {
     private ArrayList<Card> cards;
-    private int[] value;
 
     Hand(ArrayList<Card> cards) {
-        value = new int[6];
         this.cards = new ArrayList<>(cards);
         this.cards.sort(Comparator.reverseOrder());
-
-        int[] ranks = new int[14];
-        int[] orderedRanks = new int[5];     //miscellaneous cards that are not otherwise significant
-        boolean flush = true, straight = false;
-        int sameCards = 1, sameCards2 = 1;
-        int largeGroupRank = 0, smallGroupRank = 0;
-        int index = 0;
-        int topStraightValue = 0;
-
-        for (int x = 0; x <= 13; x++) {
-            ranks[x] = 0;
-        }
-        for (int x = 0; x <= 4; x++) {
-            ranks[cards.get(x).getRank()]++;
-        }
-        for (int x = 0; x < 4; x++) {
-            if (cards.get(x).getSuit() != cards.get(x + 1).getSuit())
-                flush = false;
-        }
-
-        for (int x = 13; x >= 0; x--) {
-            if (ranks[x] > sameCards) {
-                //if sameCards was not the default value
-                if (sameCards != 1) {
-                    sameCards2 = sameCards;
-                    smallGroupRank = x;   //changed from smallGroupRank=largeGroupRank;
-                }
-
-                sameCards = ranks[x];
-                largeGroupRank = x;
-            } else if (ranks[x] > sameCards2) {
-                sameCards2 = ranks[x];
-                smallGroupRank = x;
-            }
-        }
-
-        //if ace, run this before because ace is highest card
-        if (ranks[1] == 1) {
-            orderedRanks[index] = 14;
-            index++;
-        }
-
-        for (int x = 13; x >= 2; x--) {
-            if (ranks[x] == 1) {
-                orderedRanks[index] = x; //if ace
-                index++;
-            }
-        }
-
-        //can't have straight with lowest value of more than 10
-        for (int x = 1; x <= 9; x++) {
-            if (ranks[x] == 1 && ranks[x + 1] == 1 && ranks[x + 2] == 1 && ranks[x + 3] == 1 && ranks[x + 4] == 1) {
-                straight = true;
-                topStraightValue = x + 4; //4 above bottom value
-                break;
-            }
-        }
-
-        //ace high
-        if (ranks[10] == 1 && ranks[11] == 1 && ranks[12] == 1 && ranks[13] == 1 && ranks[1] == 1) {
-            straight = true;
-            topStraightValue = 14; //higher than king
-        }
-
-        for (int x = 0; x <= 5; x++) {
-            value[x] = 0;
-        }
-
-        //start hand evaluation
-        if (sameCards == 1) {
-            value[0] = 1;
-            value[1] = orderedRanks[0];
-            value[2] = orderedRanks[1];
-            value[3] = orderedRanks[2];
-            value[4] = orderedRanks[3];
-            value[5] = orderedRanks[4];
-        }
-
-        if (sameCards == 2 && sameCards2 == 1) {
-            value[0] = 2;
-            value[1] = largeGroupRank; //rank of pair
-            value[2] = orderedRanks[0];
-            value[3] = orderedRanks[1];
-            value[4] = orderedRanks[2];
-        }
-
-        //two pair
-        if (sameCards == 2 && sameCards2 == 2) {
-            value[0] = 3;
-            value[1] = largeGroupRank > smallGroupRank ? largeGroupRank : smallGroupRank; //rank of greater pair
-            value[2] = largeGroupRank < smallGroupRank ? largeGroupRank : smallGroupRank;
-            value[3] = orderedRanks[0];  //extra card
-        }
-
-        if (sameCards == 3 && sameCards2 != 2) {
-            value[0] = 4;
-            value[1] = largeGroupRank;
-            value[2] = orderedRanks[0];
-            value[3] = orderedRanks[1];
-        }
-
-        if (straight && !flush) {
-            value[0] = 5;
-            value[1] = topStraightValue;
-        }
-
-        if (flush && !straight) {
-            value[0] = 6;
-            value[1] = orderedRanks[0]; //tie determined by ranks of cards
-            value[2] = orderedRanks[1];
-            value[3] = orderedRanks[2];
-            value[4] = orderedRanks[3];
-            value[5] = orderedRanks[4];
-        }
-
-        if (sameCards == 3 && sameCards2 == 2) {
-            value[0] = 7;
-            value[1] = largeGroupRank;
-            value[2] = smallGroupRank;
-        }
-
-        if (sameCards == 4) {
-            value[0] = 8;
-            value[1] = largeGroupRank;
-            value[2] = orderedRanks[0];
-        }
-
-        if (straight && flush) {
-            value[0] = 9;
-            value[1] = topStraightValue;
-        }
     }
 
     @Override
     public String toString() {
-        String s;
-        switch (value[0]) {
+        if (straightFlush() != -1)
+            return String.format("straight flush %s high", Card.rankAsString(straightFlush()));
+        if (fourKind() != -1)
+            return String.format("four of kind %s", Card.rankAsString(fourKind()));
+        if (fullHouse() != -1)
+            return String.format("full house of %s", Card.rankAsString(fullHouse()));
+        if (flush() != -1)
+            return String.format("flush %s high", Card.rankAsString(flush()));
+        if (straight() != -1)
+            return String.format("straight %s high", Card.rankAsString(straight()));
+        if (threeKind() != -1)
+            return String.format("three of kind %s", Card.rankAsString(threeKind()));
+        if (twoPair() != -1)
+            return String.format("two pair %s high", Card.rankAsString(twoPair()));
+        if (onePair() != -1)
+            return String.format("one pair %s high", Card.rankAsString(onePair()));
 
-            case 1:
-                s = "High card";
-                break;
-            case 2:
-                s = "Pair of " + Card.rankAsString(value[1]) + "\'s";
-                break;
-            case 3:
-                s = "Two pair " + Card.rankAsString(value[1]) + " " + Card.rankAsString(value[2]);
-                break;
-            case 4:
-                s = "Three of a kind " + Card.rankAsString(value[1]) + "\'s";
-                break;
-            case 5:
-                s = Card.rankAsString(value[1]) + " high straight";
-                break;
-            case 6:
-                s = "Flush";
-                break;
-            case 7:
-                s = "Full house " + Card.rankAsString(value[1]) + " over " + Card.rankAsString(value[2]);
-                break;
-            case 8:
-                s = "Four of a kind " + Card.rankAsString(value[1]);
-                break;
-            case 9:
-                s = "Straight flush " + Card.rankAsString(value[1]) + " high";
-                break;
-            default:
-                s = "Error in Hand.display: value[0] contains invalid value";
-        }
-        return s;
+        return String.format("high card of %s", Card.rankAsString(highCard().getRank()));
     }
 
     @Override
     public int compareTo(Hand that) {
-        for (int x = 0; x < 6; x++) {
-            if (this.value[x] > that.value[x])
-                return 1;
-            else if (this.value[x] < that.value[x])
-                return -1;
-        }
-        return 0; //if hands are equal
+        if (straightFlush() > that.straightFlush())
+            return 1;
+        if (straightFlush() < that.straightFlush())
+            return -1;
+
+        if (fourKind() > that.fourKind())
+            return 1;
+        if (fourKind() < that.fourKind())
+            return -1;
+
+        if (fullHouse() > that.fullHouse())
+            return 1;
+        if (fullHouse() < that.fullHouse())
+            return -1;
+
+        if (flush() > that.flush())
+            return 1;
+        if (flush() < that.flush())
+            return -1;
+
+        if (straight() > that.straight())
+            return 1;
+        if (straight() < that.straight())
+            return -1;
+
+        if (threeKind() > that.threeKind())
+            return 1;
+        if (threeKind() < that.threeKind())
+            return -1;
+
+        if (twoPair() > that.twoPair())
+            return 1;
+        if (twoPair() < that.twoPair())
+            return -1;
+
+        if (secondPair() > that.secondPair())
+            return 1;
+        if (secondPair() < that.secondPair())
+            return -1;
+
+        if (onePair() > that.onePair())
+            return 1;
+        if (onePair() < that.onePair())
+            return -1;
+
+        return higherCard(that);
+    }
+
+    private int higherCard(Hand that) {
+        if (cards.get(0).getRank() > that.cards.get(0).getRank())
+            return 1;
+        if (cards.get(0).getRank() < that.cards.get(0).getRank())
+            return -1;
+
+        if (cards.get(1).getRank() > that.cards.get(1).getRank())
+            return 1;
+        if (cards.get(1).getRank() < that.cards.get(1).getRank())
+            return -1;
+
+        if (cards.get(2).getRank() > that.cards.get(2).getRank())
+            return 1;
+        if (cards.get(2).getRank() < that.cards.get(2).getRank())
+            return -1;
+
+        if (cards.get(3).getRank() > that.cards.get(3).getRank())
+            return 1;
+        if (cards.get(3).getRank() < that.cards.get(3).getRank())
+            return -1;
+
+        if (cards.get(4).getRank() > that.cards.get(4).getRank())
+            return 1;
+        if (cards.get(4).getRank() < that.cards.get(4).getRank())
+            return -1;
+        return 0;
     }
 
     @Override
@@ -209,8 +127,117 @@ public class Hand implements Comparable<Hand> {
         return o instanceof Hand && hashCode() == o.hashCode();
     }
 
-    public ArrayList<Card> getCards() {
+    ArrayList<Card> getCards() {
         return cards;
+    }
+
+    int straightFlush() {
+        return straight() != -1 && flush() != -1 ? highCard().getRank() : -1;
+    }
+
+    int flush() {
+        boolean flush = cards.stream().allMatch(card -> card.getSuit() == highCard().getSuit());
+        return flush ? highCard().getRank() : -1;
+    }
+
+    int straight() {
+        //todo fix for Ace
+        for (int i = 1; i < 4; i++) {
+            int prev = cards.get(i - 1).getRank();
+            int mid = cards.get(i).getRank();
+            int next = cards.get(i + 1).getRank();
+            if ((prev + next) % 2 != 0)
+                return -1;
+            if (mid != (prev + next) / 2)
+                return -1;
+        }
+        return highCard().getRank();
+    }
+
+
+    int fourKind() {
+        for (int i = 0; i < 2; i++) {
+            int c1 = cards.get(i).getRank();
+            int c2 = cards.get(i + 1).getRank();
+            int c3 = cards.get(i + 2).getRank();
+            int c4 = cards.get(i + 3).getRank();
+            if (c1 == c2 && c2 == c3 && c3 == c4)
+                return c4;
+        }
+        return -1;
+    }
+
+    int fullHouse() {
+        int ret = threeKind();
+        if (ret == -1)
+            return -1;
+
+        for (int i = 0; i < 4; i++) {
+            int c1 = cards.get(i).getRank();
+            int c2 = cards.get(i + 1).getRank();
+            if (c1 != ret && c1 == c2) {
+                return ret;
+            }
+        }
+        return -1;
+    }
+
+    int threeKind() {
+        for (int i = 0; i < 3; i++) {
+            int c1 = cards.get(i).getRank();
+            int c2 = cards.get(i + 1).getRank();
+            int c3 = cards.get(i + 2).getRank();
+            if (c1 == c2 && c2 == c3)
+                return c3;
+        }
+        return -1;
+    }
+
+    int twoPair() {
+        ArrayList<Integer> pairs = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            int c1 = cards.get(i).getRank();
+            int c2 = cards.get(i + 1).getRank();
+            if (c1 == c2) {
+                i++; //to avoid three of kind
+                pairs.add(c1);
+            }
+        }
+        return pairs.size() == 2 ? pairs.get(0) : -1;
+    }
+
+    int onePair() {
+        int dup = 0;
+        int ret = -1;
+        for (int i = 0; i < 4; i++) {
+            int c1 = cards.get(i).getRank();
+            int c2 = cards.get(i + 1).getRank();
+            if (c1 == c2) {
+                i++;
+                ret = c1;
+                dup++;
+            }
+        }
+        return dup == 1 ? ret : -1;
+    }
+
+    private int secondPair() {
+        int dup = 0;
+        int ret = -1;
+        for (int i = 0; i < 4; i++) {
+            int c1 = cards.get(i).getRank();
+            int c2 = cards.get(i + 1).getRank();
+            if (c1 == c2) {
+                i++;
+                ret = c1;
+                dup++;
+            }
+        }
+        return dup == 2 ? ret : -1;
+    }
+
+    private Card highCard() {
+        return cards.get(0);
     }
 }
 
