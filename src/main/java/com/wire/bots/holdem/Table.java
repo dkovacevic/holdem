@@ -106,16 +106,6 @@ class Table {
         return ret;
     }
 
-    boolean call(String userId) {
-        Player player = getPlayer(userId);
-        if (!player.isCalled()) {
-            pot += player.take();
-            player.setCalled(true);
-            return true;
-        }
-        return false;
-    }
-
     void blind(String userId) {
         Player player = getPlayer(userId);
         switch (player.getRole()) {
@@ -137,9 +127,21 @@ class Table {
     int raise(String userId) {
         Player player = getPlayer(userId);
         if (!player.isCalled()) {
+            int call = player.getCall();
             resetCallers(raise);
             call(userId);
-            return raise;
+            return raise + call;
+        }
+        return -1;
+    }
+
+    int call(String userId) {
+        Player player = getPlayer(userId);
+        if (!player.isCalled()) {
+            int take = player.take();
+            pot += take;
+            player.setCalled(true);
+            return take;
         }
         return -1;
     }
@@ -205,7 +207,7 @@ class Table {
 
     String printPlayers() {
         StringBuilder sb = new StringBuilder();
-        getPlayers().forEach(player -> sb.append(String.format("%s(%s) ", player.getName(), player.getRole())));
+        getPlayers().forEach(player -> sb.append(player.getNameWithRole()).append(" "));
         return sb.toString();
     }
 }

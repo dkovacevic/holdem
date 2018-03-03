@@ -140,6 +140,11 @@ public class Player implements Comparable<Player> {
     }
 
     int raiseCall(int raise) {
-        return call + raise;
+        call += raise;
+        return call;
+    }
+
+    String getNameWithRole() {
+        return role.isEmpty() ? getName() : String.format("%s(%s)", getName(), getRole());
     }
 }

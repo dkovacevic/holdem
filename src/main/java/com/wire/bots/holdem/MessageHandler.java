@@ -78,22 +78,30 @@ public class MessageHandler extends MessageHandlerBase {
                 case R:
                 case RAISE: {
                     int newBet = table.raise(userId);
-                    if (newBet > 0) {
+                    if (newBet != -1) {
                         Player player = table.getPlayer(userId);
-                        client.sendText(String.format("%s raised by %d to %d",
+                        client.sendText(String.format("%s raised by %d to %d. pot: %d",
                                 player.getName(),
                                 table.getRaise(),
-                                newBet));
+                                newBet,
+                                table.getPot()));
                     }
                 }
                 break;
                 case C:
                 case CHECK:
-                case CALL:
-                    if (table.call(userId)) {
+                case CALL: {
+                    int call = table.call(userId);
+                    if (call != -1) {
+                        Player player = table.getPlayer(userId);
+                        client.sendText(String.format("%s put %d chips. pot: %d",
+                                player.getName(),
+                                call,
+                                table.getPot()));
                         check(client, table);
                     }
-                    break;
+                }
+                break;
                 case FOLD:
                 case F:
                     if (table.fold(userId)) {
