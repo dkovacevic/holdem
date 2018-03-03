@@ -57,8 +57,9 @@ public class MessageHandler extends MessageHandlerBase {
                 case DEAL: {
                     table.shuffle();
 
-                    client.sendText(String.format("Round %d, small blind %d, raise by %d",
+                    client.sendText(String.format("Round %d, players: %s- small blind %d - raise %d",
                             table.getRoundNumber(),
+                            table.printPlayers(),
                             table.getSmallBlind(),
                             table.getRaise()));
 
@@ -125,12 +126,12 @@ public class MessageHandler extends MessageHandlerBase {
         for (int i = 0; i < number; i++)
             table.flopCard();
 
+        client.sendText(String.format("Pot has %d chips", table.getPot()));
+
         for (Player player : table.getActivePlayers()) {
             byte[] image = Images.getImage(player.getCards(), table.getBoard());
             client.sendPicture(image, MIME_TYPE, player.getId());
         }
-
-        client.sendText(String.format("Pot %d chips", table.getPot()));
     }
 
     private void showdown(WireClient client, Table table) throws Exception {
@@ -140,12 +141,12 @@ public class MessageHandler extends MessageHandlerBase {
         Collection<Player> activePlayers = table.getActivePlayers();
         if (activePlayers.size() > 1) {
             for (Player player : activePlayers) {
-                String p = player.equals(winner) ? "pot: " + pot : "";
-                String name = player.equals(winner) ? "Winner **" + player.getName() + "**" : player.getName();
-                String text = String.format("%s: *%s* %s",
+                String name = player.equals(winner)
+                        ? String.format("**%s** has won %d chips", player.getName(), pot)
+                        : player.getName();
+                String text = String.format("%s with %s",
                         name,
-                        player.getBestHand(),
-                        p);
+                        player.getBestHand());
                 client.sendText(text);
 
                 byte[] image = Images.getImage(player.getBestHand().getCards());

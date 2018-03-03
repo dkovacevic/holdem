@@ -15,6 +15,7 @@ public class Player implements Comparable<Player> {
     private int chips = INITIAL_CHIPS;
     private boolean called;
     private boolean folded;
+    private String role = "";
 
     public Player(String userId, String name, ArrayList<Card> board) {
         this.id = userId;
@@ -117,5 +118,13 @@ public class Player implements Comparable<Player> {
 
     boolean isFolded() {
         return folded;
+    }
+
+    String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

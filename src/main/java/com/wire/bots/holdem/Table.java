@@ -25,6 +25,11 @@ class Table {
 
     Player addPlayer(User user) {
         Player player = new Player(user.id, user.name, board);
+        if (players.size() == 0)
+            player.setRole("SB");
+        if (players.size() == 1)
+            player.setRole("BB");
+
         players.put(player.getId(), player);
         return player;
     }
@@ -87,7 +92,12 @@ class Table {
         deck = new Deck();
         board.clear();
         players.values().forEach(Player::reset);
-        newBet();
+        shiftPlayers();
+        bet = smallBlind * 2;
+    }
+
+    private void shiftPlayers() {
+
     }
 
     // Pay to the Player and flush the pot
@@ -110,7 +120,8 @@ class Table {
 
     void blind(String userId) {
         Player player = getPlayer(userId);
-        pot += player.take(bet);
+        if (player.getRole().equals("SB"))
+            pot += player.take(smallBlind);
     }
 
     int raise(String userId) {
@@ -130,7 +141,7 @@ class Table {
 
     void newBet() {
         resetCallers();
-        bet = smallBlind;
+        bet = 0;
     }
 
     boolean isAllCalled() {
@@ -178,4 +189,9 @@ class Table {
         return ret;
     }
 
+    String printPlayers() {
+        StringBuilder sb = new StringBuilder();
+        getPlayers().forEach(player -> sb.append(String.format("%s(%s) ", player.getName(), player.getRole())));
+        return sb.toString();
+    }
 }
