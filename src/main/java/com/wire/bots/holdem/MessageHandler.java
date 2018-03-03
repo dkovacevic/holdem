@@ -55,13 +55,13 @@ public class MessageHandler extends MessageHandlerBase {
 
             switch (cmd) {
                 case DEAL: {
-                    table.shiftPlayers();
+                    table.shiftRoles();
 
                     table.shuffle();
 
-                    client.sendText(String.format("Round %d, players: %s- small blind %d - raise %d",
-                            table.getRoundNumber(),
+                    client.sendText(String.format("%s- round %d - small blind %d - raise %d",
                             table.printPlayers(),
+                            table.getRoundNumber(),
                             table.getSmallBlind(),
                             table.getRaise()));
 
@@ -94,12 +94,10 @@ public class MessageHandler extends MessageHandlerBase {
                 case CHECK:
                 case CALL: {
                     int call = table.call(userId);
-                    if (call != -1) {
-                        Player player = table.getPlayer(userId);
-                        client.sendText(String.format("%s put %d chips. pot: %d",
-                                player.getName(),
-                                call,
-                                table.getPot()));
+                    if (call > 0) {
+//                        Player player = table.getPlayer(userId);
+//                        client.sendDirectText(String.format("You called with %d chips",
+//                                call), player.getId());
                         check(client, table);
                     }
                 }

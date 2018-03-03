@@ -11,7 +11,7 @@ public class ShiftTest {
 
         assert a.getNameWithRole().equals("A(SB)");
 
-        table.shiftPlayers();
+        table.shiftRoles();
         assert a.getNameWithRole().equals("A(SB)");
     }
 
@@ -24,7 +24,7 @@ public class ShiftTest {
         assert a.getNameWithRole().equals("A(SB)");
         assert b.getNameWithRole().equals("B(BB)");
 
-        table.shiftPlayers();
+        table.shiftRoles();
         assert a.getNameWithRole().equals("A(BB)");
         assert b.getNameWithRole().equals("B(SB)");
     }
@@ -40,17 +40,17 @@ public class ShiftTest {
         assert b.getNameWithRole().equals("B(BB)");
         assert c.getNameWithRole().equals("C");
 
-        table.shiftPlayers();
+        table.shiftRoles();
         assert a.getNameWithRole().equals("A");
         assert b.getNameWithRole().equals("B(SB)");
         assert c.getNameWithRole().equals("C(BB)");
 
-        table.shiftPlayers();
+        table.shiftRoles();
         assert a.getNameWithRole().equals("A(BB)");
         assert b.getNameWithRole().equals("B");
         assert c.getNameWithRole().equals("C(SB)");
 
-        table.shiftPlayers();
+        table.shiftRoles();
         assert a.getNameWithRole().equals("A(SB)");
         assert b.getNameWithRole().equals("B(BB)");
         assert c.getNameWithRole().equals("C");
@@ -69,25 +69,25 @@ public class ShiftTest {
         assert c.getNameWithRole().equals("C");
         assert d.getNameWithRole().equals("D");
 
-        table.shiftPlayers();
+        table.shiftRoles();
         assert a.getNameWithRole().equals("A");
         assert b.getNameWithRole().equals("B(SB)");
         assert c.getNameWithRole().equals("C(BB)");
         assert d.getNameWithRole().equals("D");
 
-        table.shiftPlayers();
+        table.shiftRoles();
         assert a.getNameWithRole().equals("A");
         assert b.getNameWithRole().equals("B");
         assert c.getNameWithRole().equals("C(SB)");
         assert d.getNameWithRole().equals("D(BB)");
 
-        table.shiftPlayers();
+        table.shiftRoles();
         assert a.getNameWithRole().equals("A(BB)");
         assert b.getNameWithRole().equals("B");
         assert c.getNameWithRole().equals("C");
         assert d.getNameWithRole().equals("D(SB)");
 
-        table.shiftPlayers();
+        table.shiftRoles();
         assert a.getNameWithRole().equals("A(SB)");
         assert b.getNameWithRole().equals("B(BB)");
         assert c.getNameWithRole().equals("C");

@@ -92,7 +92,7 @@ class Table {
         players.forEach(Player::reset);
     }
 
-    void shiftPlayers() {
+    void shiftRoles() {
         if (players.size() <= 1)
             return;
 
@@ -233,7 +233,7 @@ class Table {
 
     String printPlayers() {
         StringBuilder sb = new StringBuilder();
-        getPlayers().forEach(player -> sb.append(player.getNameWithRole()).append(" "));
+        getPlayers().forEach(player -> sb.append(player.getNameWithRole()).append(" | "));
         return sb.toString();
     }
 }
