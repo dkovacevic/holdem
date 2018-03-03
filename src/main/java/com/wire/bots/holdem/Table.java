@@ -10,7 +10,7 @@ class Table {
     private static final int INITIAL_RAISE = 5;
     private static final int BLIND_INCREASE = 2;
     private static final int RAISE_INCREASE = 5;
-    private final HashMap<String, Player> players = new HashMap<>();
+    private final ArrayList<Player> players = new ArrayList<>();
     private final ArrayList<Card> board = new ArrayList<>();
     private Deck deck;
     private int pot;
@@ -24,27 +24,26 @@ class Table {
 
     Player addPlayer(User user) {
         Player player = new Player(user.id, user.name, board);
-        if (players.size() == 0)
-            player.setRole("SB");
+        players.add(player);
+
         if (players.size() == 1)
+            player.setRole("SB");
+        if (players.size() == 2)
             player.setRole("BB");
 
-        players.put(player.getId(), player);
         return player;
     }
 
-    ArrayList<Card> flopCard() {
+    void flopCard() {
         board.add(deck.drawFromDeck());
-        return board;
     }
 
     Player getWinner() {
         return players
-                .values()
                 .stream()
                 .filter(player -> !player.isFolded())
                 .max(Comparator.naturalOrder())
-                .get();
+                .orElse(null);
     }
 
     ArrayList<Card> getBoard() {
@@ -52,11 +51,11 @@ class Table {
     }
 
     Collection<Player> getPlayers() {
-        return players.values();
+        return players;
     }
 
     Collection<Player> getActivePlayers() {
-        return players.values().stream().filter(player -> !player.isFolded()).collect(Collectors.toList());
+        return players.stream().filter(player -> !player.isFolded()).collect(Collectors.toList());
     }
 
     boolean isAllFolded() {
@@ -73,7 +72,7 @@ class Table {
     }
 
     void removePlayer(String userId) {
-        players.remove(userId);
+        players.removeIf(player -> player.getId().equals(userId));
     }
 
     Card dealCard(Player player) {
@@ -90,12 +89,43 @@ class Table {
             raise += RAISE_INCREASE;
         deck = new Deck();
         board.clear();
-        players.values().forEach(Player::reset);
-        shiftPlayers();
+        players.forEach(Player::reset);
     }
 
-    private void shiftPlayers() {
+    void shiftPlayers() {
+        if (players.size() <= 1)
+            return;
 
+        if (players.size() == 2) {
+            String tmp = players.get(0).getRole();
+            players.get(0).setRole(players.get(1).getRole());
+            players.get(1).setRole(tmp);
+            return;
+        }
+
+        ListIterator<Player> iterator = players.listIterator();
+        while (iterator.hasNext()) {
+            Player player = iterator.next();
+            if (player.getRole().equals("SB")) {
+                player.setRole("");
+
+                if (iterator.hasNext()) {
+                    Player next = iterator.next();
+                    next.setRole("SB");
+                    if (iterator.hasNext()) {
+                        next = iterator.next();
+                        next.setRole("BB");
+                    } else {
+                        players.get(0).setRole("BB");
+                    }
+                } else {
+                    players.get(0).setRole("SB");
+                    players.get(1).setRole("BB");
+                }
+
+                return;
+            }
+        }
     }
 
     // Pay to the Player and flush the pot
@@ -128,7 +158,7 @@ class Table {
         Player player = getPlayer(userId);
         if (!player.isCalled()) {
             int call = player.getCall();
-            resetCallers(raise);
+            raiseCallers(raise);
             call(userId);
             return raise + call;
         }
@@ -146,22 +176,22 @@ class Table {
         return -1;
     }
 
-    private void resetCallers(int raise) {
-        players.values().forEach(player -> {
-            int newCall = player.raiseCall(raise);
+    private void raiseCallers(int raise) {
+        players.forEach(player -> {
+            player.raiseCall(raise);
             player.setCalled(false);
         });
     }
 
     void newBet() {
-        players.values().forEach(player -> {
+        players.forEach(player -> {
             player.setCall(0);
             player.setCalled(false);
         });
     }
 
     boolean isAllCalled() {
-        return players.values().stream().allMatch(Player::isCalled);
+        return players.stream().allMatch(Player::isCalled);
     }
 
     boolean isShowdown() {
@@ -189,20 +219,16 @@ class Table {
     }
 
     Player getPlayer(String userId) {
-        return players.get(userId);
+        return players.stream()
+                .filter(player -> player.getId().equals(userId))
+                .findAny()
+                .orElse(null);
     }
 
     Collection<Player> collectPlayers() {
-        ArrayList<Player> ret = new ArrayList<>();
-        Iterator<Map.Entry<String, Player>> iterator = players.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Player player = iterator.next().getValue();
-            if (player.getChips() <= 0) {
-                iterator.remove();
-                ret.add(player);
-            }
-        }
-        return ret;
+        List<Player> losers = players.stream().filter(player -> player.getChips() <= 0).collect(Collectors.toList());
+        players.removeAll(losers);
+        return losers;
     }
 
     String printPlayers() {

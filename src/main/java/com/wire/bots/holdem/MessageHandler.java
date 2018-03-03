@@ -55,6 +55,8 @@ public class MessageHandler extends MessageHandlerBase {
 
             switch (cmd) {
                 case DEAL: {
+                    table.shiftPlayers();
+
                     table.shuffle();
 
                     client.sendText(String.format("Round %d, players: %s- small blind %d - raise %d",
