@@ -14,7 +14,6 @@ class Table {
     private final ArrayList<Card> board = new ArrayList<>();
     private Deck deck;
     private int pot;
-    private int bet;
     private int roundNumber;
     private int raise = INITIAL_RAISE;
     private int smallBlind = INITIAL_SMALL_BLIND;
@@ -93,7 +92,6 @@ class Table {
         board.clear();
         players.values().forEach(Player::reset);
         shiftPlayers();
-        bet = smallBlind * 2;
     }
 
     private void shiftPlayers() {
@@ -111,7 +109,7 @@ class Table {
     boolean call(String userId) {
         Player player = getPlayer(userId);
         if (!player.isCalled()) {
-            pot += player.take(bet);
+            pot += player.take();
             player.setCalled(true);
             return true;
         }
@@ -120,28 +118,44 @@ class Table {
 
     void blind(String userId) {
         Player player = getPlayer(userId);
-        if (player.getRole().equals("SB"))
-            pot += player.take(smallBlind);
+        switch (player.getRole()) {
+            case "SB":
+                player.setCall(smallBlind);
+                pot += player.take();
+                player.setCall(smallBlind);
+                break;
+            case "BB":
+                player.setCall(2 * smallBlind);
+                pot += player.take();
+                break;
+            default:
+                player.setCall(2 * smallBlind);
+                break;
+        }
     }
 
     int raise(String userId) {
         Player player = getPlayer(userId);
         if (!player.isCalled()) {
-            bet += raise;
-            resetCallers();
+            resetCallers(raise);
             call(userId);
-            return bet;
+            return raise;
         }
         return -1;
     }
 
-    private void resetCallers() {
-        players.values().forEach(player -> player.setCalled(false));
+    private void resetCallers(int raise) {
+        players.values().forEach(player -> {
+            int newCall = player.raiseCall(raise);
+            player.setCalled(false);
+        });
     }
 
     void newBet() {
-        resetCallers();
-        bet = 0;
+        players.values().forEach(player -> {
+            player.setCall(0);
+            player.setCalled(false);
+        });
     }
 
     boolean isAllCalled() {
