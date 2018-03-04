@@ -29,7 +29,6 @@ import com.wire.bots.sdk.tools.Logger;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MessageHandler extends MessageHandlerBase {
@@ -46,7 +45,6 @@ public class MessageHandler extends MessageHandlerBase {
     private static final String CHECK = "check";  // equivalent to `call`
     private static final String ADD_BOT = "add bot";  // equivalent to `call`
     private static final String BETMAN = "Betman";
-    private Random rnd = new Random();
 
     @Override
     public void onText(WireClient client, TextMessage msg) {
@@ -56,7 +54,8 @@ public class MessageHandler extends MessageHandlerBase {
             String cmd = msg.getText().toLowerCase().trim();
             String userId = msg.getUserId();
 
-            switch (cmd) {
+            Action action = parseCommand(cmd);
+            switch (action) {
                 case DEAL: {
                     table.shiftRoles();
 
@@ -79,11 +78,8 @@ public class MessageHandler extends MessageHandlerBase {
                             client.sendPicture(image, MIME_TYPE, player.getId());
                         }
                     }
-
-                    betmanCall(client, table);
                 }
                 break;
-                case R:
                 case RAISE: {
                     int newBet = table.raise(userId);
                     if (newBet != -1) {
@@ -93,29 +89,26 @@ public class MessageHandler extends MessageHandlerBase {
                                 table.getRaise(),
                                 newBet));
 
-                        betmanCall(client, table);
+                        betmanCall(client, table, action);
                         check(client, table);
                     }
                 }
                 break;
-                case C:
-                case CHECK:
                 case CALL: {
                     int call = table.call(userId);
                     if (call != -1) {
                         // Player player = table.getPlayer(userId);
                         // client.sendDirectText(String.format("You called with %d chips",
                         //         call), player.getId());
-                        betmanCall(client, table);
+                        betmanCall(client, table, action);
                         check(client, table);
                     }
 
                 }
                 break;
                 case FOLD:
-                case F:
                     if (table.fold(userId)) {
-                        betmanCall(client, table);
+                        betmanCall(client, table, action);
                         check(client, table);
                     }
                     break;
@@ -132,34 +125,25 @@ public class MessageHandler extends MessageHandlerBase {
         }
     }
 
-    private void betmanCall(WireClient client, Table table) throws Exception {
-        int choice = rnd.nextInt(3);
-        switch (choice) {
-            case 0:
-                int betman = table.call(BETMAN);
-                if (betman != -1) {
-                    Player player = table.getPlayer(BETMAN);
-                    client.sendText(String.format("%s called with %d chips",
-                            player.getName(),
-                            betman));
-
+    private void betmanCall(WireClient client, Table table, Action cmd) throws Exception {
+        Player player = table.getPlayer(BETMAN);
+        Action action = player.action(cmd);
+        switch (action) {
+            case CALL:
+                int call = table.call(BETMAN);
+                if (call != -1) {
+                    client.sendText(String.format("%s called with %d chips", player.getName(), call));
                 }
                 break;
-            case 1:
-                int r = table.raise(BETMAN);
-                if (r != -1) {
-                    Player player = table.getPlayer(BETMAN);
-                    client.sendText(String.format("%s raised %d chips",
-                            player.getName(),
-                            r));
-
+            case RAISE:
+                int raise = table.raise(BETMAN);
+                if (raise != -1) {
+                    client.sendText(String.format("%s raised %d chips", player.getName(), raise));
                 }
                 break;
-            default:
+            case FOLD:
                 if (table.fold(BETMAN)) {
-                    Player player = table.getPlayer(BETMAN);
                     client.sendText(String.format("%s folded like a bitch", player.getName()));
-
                 }
                 break;
         }
@@ -303,5 +287,26 @@ public class MessageHandler extends MessageHandlerBase {
 
     private void closeTable(WireClient client) {
         tables.remove(client.getId());
+    }
+
+    private Action parseCommand(String cmd) {
+        switch (cmd) {
+            case DEAL:
+                return Action.DEAL;
+            case R:
+            case RAISE:
+                return Action.RAISE;
+            case C:
+            case CHECK:
+            case CALL:
+                return Action.CALL;
+            case FOLD:
+            case F:
+                return Action.FOLD;
+            case ADD_BOT:
+                return Action.ADD_BOT;
+            default:
+                return Action.UNKNOWN;
+        }
     }
 }

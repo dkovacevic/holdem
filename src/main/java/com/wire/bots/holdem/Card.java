@@ -1,9 +1,19 @@
 package com.wire.bots.holdem;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Card implements Comparable<Card> {
-    private static String[] suits = {"hearts", "spades", "diamonds", "clubs"};
-    private static String[] ranks = {"2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king", "ace"};
-    private int rank, suit;
+    private static final String[] suits = {"hearts", "spades", "diamonds", "clubs"};
+    private static final String[] ranks = {"2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king", "ace"};
+    @JsonProperty
+    private int rank;
+    @JsonProperty
+    private int suit;
+
+    public Card() {
+    }
 
     public Card(int suit, int rank) {
         this.rank = rank;

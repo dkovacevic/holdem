@@ -1,23 +1,43 @@
 package com.wire.bots.holdem;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Player implements Comparable<Player> {
     private static final int INITIAL_CHIPS = 100;
-    private final String id;
-    private final String name;
+    @JsonProperty
     private final ArrayList<Card> cards = new ArrayList<>();
-    private final ArrayList<Card> board;
+    @JsonProperty
+    boolean bot = false;
+    @JsonProperty
+    private String id;
+    @JsonProperty
+    private String name;
+    @JsonIgnore
+    private ArrayList<Card> board;
+    @JsonIgnore
     private Hand bestHand = null;
+    @JsonProperty
     private int chips = INITIAL_CHIPS;
+    @JsonProperty
     private boolean called;
+    @JsonProperty
     private boolean folded;
+    @JsonProperty
     private String role = "";
+    @JsonProperty
     private int call;
-    private boolean bot;
+
+    public Player() {
+    }
 
     public Player(String userId, String name, ArrayList<Card> board) {
         this.id = userId;
@@ -25,6 +45,7 @@ public class Player implements Comparable<Player> {
         this.board = board;
     }
 
+    @JsonIgnore
     public Collection<Hand> getAllHands() {
         HashSet<Hand> ret = new HashSet<>();
         int n = board.size();
@@ -51,10 +72,12 @@ public class Player implements Comparable<Player> {
         cards.add(card);
     }
 
+    @JsonIgnore
+    @Nullable
     public Hand getBestHand() {
         if (bestHand == null) {
             Collection<Hand> allHands = getAllHands();
-            bestHand = allHands.stream().max(Comparator.naturalOrder()).get();
+            bestHand = allHands.stream().max(Comparator.naturalOrder()).orElse(null);
         }
         return bestHand;
     }
@@ -149,11 +172,15 @@ public class Player implements Comparable<Player> {
         return role.isEmpty() ? getName() : String.format("%s(%s)", getName(), getRole());
     }
 
-    public boolean isBot() {
+    boolean isBot() {
         return bot;
     }
 
-    public void setBot(boolean bot) {
-        this.bot = bot;
+    void setBoard(ArrayList<Card> board) {
+        this.board = board;
+    }
+
+    Action action(Action cmd) {
+        return cmd;
     }
 }

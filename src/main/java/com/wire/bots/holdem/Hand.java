@@ -226,6 +226,26 @@ public class Hand implements Comparable<Hand> {
         }
         return pairs.size() == size ? pairs.get(ord) : -1;
     }
+
+    HandStrength getStrenght() {
+        if (straightFlush() != -1)
+            return HandStrength.StraightFlush;
+        if (fourKind() != -1)
+            return HandStrength.FourOfKind;
+        if (fullHouse() != -1)
+            return HandStrength.FullHouse;
+        if (flush() != -1)
+            return HandStrength.Flush;
+        if (straight() != -1)
+            return HandStrength.Straight;
+        if (threeKind() != -1)
+            return HandStrength.ThreeOfKind;
+        if (twoPair() != -1)
+            return HandStrength.TwoPair;
+        if (onePair() != -1)
+            return HandStrength.OnePair;
+        return HandStrength.HighCard;
+    }
 }
 
 

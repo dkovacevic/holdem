@@ -1,22 +1,36 @@
 package com.wire.bots.holdem;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wire.bots.sdk.server.model.User;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 class Table {
     private static final int INITIAL_SMALL_BLIND = 1;
     private static final int INITIAL_RAISE = 5;
     private static final int BLIND_INCREASE = 2;
     private static final int RAISE_INCREASE = 5;
+    @JsonProperty
     private final ArrayList<Player> players = new ArrayList<>();
+    @JsonProperty
     private final ArrayList<Card> board = new ArrayList<>();
+    @JsonProperty
     private Deck deck;
+    @JsonProperty
     private int pot;
+    @JsonProperty
     private int roundNumber;
+    @JsonProperty
     private int raise = INITIAL_RAISE;
+    @JsonProperty
     private int smallBlind = INITIAL_SMALL_BLIND;
+
+    public Table() {
+    }
 
     Table(Deck deck) {
         this.deck = deck;
@@ -26,9 +40,8 @@ class Table {
         return addPlayer(user.id, user.name, bot);
     }
 
-    private Player addPlayer(String userId, String name, boolean bot) {
-        Player player = new Player(userId, name, board);
-        player.setBot(bot);
+    Player addPlayer(String userId, String name, boolean bot) {
+        Player player = bot ? new BotPlayer(userId, name, board) : new Player(userId, name, board);
         players.add(player);
 
         if (players.size() == 1)
@@ -43,6 +56,7 @@ class Table {
         board.add(deck.drawFromDeck());
     }
 
+    @JsonIgnore
     Player getWinner() {
         return players
                 .stream()
