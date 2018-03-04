@@ -69,7 +69,7 @@ class Table {
 
     boolean fold(String userId) {
         Player player = getPlayer(userId);
-        if (!player.isCalled()) {
+        if (player != null && !player.isCalled()) {
             player.fold();
             return true;
         }
@@ -161,7 +161,7 @@ class Table {
 
     int raise(String userId) {
         Player player = getPlayer(userId);
-        if (!player.isCalled()) {
+        if (player != null && !player.isCalled()) {
             int call = player.getCall();
             raiseCallers(raise);
             call(userId);
@@ -172,7 +172,7 @@ class Table {
 
     int call(String userId) {
         Player player = getPlayer(userId);
-        if (!player.isCalled()) {
+        if (player != null && !player.isCalled()) {
             int take = player.take();
             pot += take;
             player.setCalled(true);

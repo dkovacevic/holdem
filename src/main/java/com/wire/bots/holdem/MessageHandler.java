@@ -29,12 +29,12 @@ import com.wire.bots.sdk.tools.Logger;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MessageHandler extends MessageHandlerBase {
     private static final ConcurrentHashMap<String, Table> tables = new ConcurrentHashMap<>();
     private static final String MIME_TYPE = "image/png";
-
     // Commands
     private static final String RAISE = "raise";
     private static final String R = "r";          // short for `raise`
@@ -46,6 +46,7 @@ public class MessageHandler extends MessageHandlerBase {
     private static final String CHECK = "check";  // equivalent to `call`
     private static final String ADD_BOT = "add bot";  // equivalent to `call`
     private static final String BETMAN = "Betman";
+    private Random rnd = new Random();
 
     @Override
     public void onText(WireClient client, TextMessage msg) {
@@ -102,9 +103,9 @@ public class MessageHandler extends MessageHandlerBase {
                 case CALL: {
                     int call = table.call(userId);
                     if (call != -1) {
-                        Player player = table.getPlayer(userId);
-                        client.sendDirectText(String.format("You called with %d chips",
-                                call), player.getId());
+                        // Player player = table.getPlayer(userId);
+                        // client.sendDirectText(String.format("You called with %d chips",
+                        //         call), player.getId());
                         betmanCall(client, table);
                         check(client, table);
                     }
@@ -132,13 +133,35 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     private void betmanCall(WireClient client, Table table) throws Exception {
-        int betman = table.call(BETMAN);
-        if (betman != -1) {
-            Player player = table.getPlayer(BETMAN);
-            client.sendText(String.format("%s called with %d chips",
-                    player.getName(),
-                    betman));
+        int choice = rnd.nextInt(3);
+        switch (choice) {
+            case 0:
+                int betman = table.call(BETMAN);
+                if (betman != -1) {
+                    Player player = table.getPlayer(BETMAN);
+                    client.sendText(String.format("%s called with %d chips",
+                            player.getName(),
+                            betman));
 
+                }
+                break;
+            case 1:
+                int r = table.raise(BETMAN);
+                if (r != -1) {
+                    Player player = table.getPlayer(BETMAN);
+                    client.sendText(String.format("%s raised %d chips",
+                            player.getName(),
+                            r));
+
+                }
+                break;
+            default:
+                if (table.fold(BETMAN)) {
+                    Player player = table.getPlayer(BETMAN);
+                    client.sendText(String.format("%s folded like a bitch", player.getName()));
+
+                }
+                break;
         }
     }
 
