@@ -41,13 +41,17 @@ class Table {
     }
 
     Player addPlayer(String userId, String name, boolean bot) {
-        Player player = bot ? new BotPlayer(userId, name, board) : new Player(userId, name, board);
+        Player player = new Player(userId, name, board);
+        player.setBot(bot);
+
         players.add(player);
 
         if (players.size() == 1)
-            player.setRole("SB");
+            player.setRole(Role.SB);
         if (players.size() == 2)
-            player.setRole("BB");
+            player.setRole(Role.BB);
+        if (players.size() == 3)
+            player.setRole(Role.Caller);
 
         return player;
     }
@@ -117,7 +121,7 @@ class Table {
             return;
 
         if (players.size() == 2) {
-            String tmp = players.get(0).getRole();
+            Role tmp = players.get(0).getRole();
             players.get(0).setRole(players.get(1).getRole());
             players.get(1).setRole(tmp);
             return;
@@ -126,21 +130,24 @@ class Table {
         ListIterator<Player> iterator = players.listIterator();
         while (iterator.hasNext()) {
             Player player = iterator.next();
-            if (player.getRole().equals("SB")) {
-                player.setRole("");
+            if (player.getRole() == Role.Caller)
+                player.setRole(Role.Player);
+
+            if (player.getRole() == Role.SB) {
+                player.setRole(Role.Caller);
 
                 if (iterator.hasNext()) {
                     Player next = iterator.next();
-                    next.setRole("SB");
+                    next.setRole(Role.SB);
                     if (iterator.hasNext()) {
                         next = iterator.next();
-                        next.setRole("BB");
+                        next.setRole(Role.BB);
                     } else {
-                        players.get(0).setRole("BB");
+                        players.get(0).setRole(Role.BB);
                     }
                 } else {
-                    players.get(0).setRole("SB");
-                    players.get(1).setRole("BB");
+                    players.get(0).setRole(Role.SB);
+                    players.get(1).setRole(Role.BB);
                 }
 
                 return;
@@ -159,12 +166,12 @@ class Table {
     void blind(String userId) {
         Player player = getPlayer(userId);
         switch (player.getRole()) {
-            case "SB":
+            case SB:
                 player.setCall(smallBlind);
                 pot += player.take();
                 player.setCall(smallBlind);
                 break;
-            case "BB":
+            case BB:
                 player.setCall(2 * smallBlind);
                 pot += player.take();
                 break;

@@ -15,10 +15,10 @@ public class Player implements Comparable<Player> {
     private static final int INITIAL_CHIPS = 100;
     @JsonProperty
     private final ArrayList<Card> cards = new ArrayList<>();
-    @JsonProperty
-    boolean bot = false;
     @JsonIgnore
     Hand bestHand = null;
+    @JsonProperty
+    private boolean bot = false;
     @JsonProperty
     private String id;
     @JsonProperty
@@ -32,7 +32,7 @@ public class Player implements Comparable<Player> {
     @JsonProperty
     private boolean folded;
     @JsonProperty
-    private String role = "";
+    private Role role = Role.Player;
     @JsonProperty
     private int call;
 
@@ -43,6 +43,11 @@ public class Player implements Comparable<Player> {
         this.id = userId;
         this.name = name;
         this.board = board;
+    }
+
+    @Override
+    public String toString() {
+        return getNameWithRole();
     }
 
     @JsonIgnore
@@ -147,11 +152,11 @@ public class Player implements Comparable<Player> {
         return folded;
     }
 
-    String getRole() {
+    Role getRole() {
         return role;
     }
 
-    void setRole(String role) {
+    void setRole(Role role) {
         this.role = role;
     }
 
@@ -169,15 +174,42 @@ public class Player implements Comparable<Player> {
     }
 
     String getNameWithRole() {
-        return role.isEmpty() ? getName() : String.format("%s(%s)", getName(), getRole());
+        if (role == Role.SB || role == Role.BB)
+            return String.format("%s(%s)", getName(), getRole());
+        return role == Role.Caller ? String.format("**%s**", getName()) : getName();
     }
 
     boolean isBot() {
         return bot;
     }
 
+    void setBot(boolean bot) {
+        this.bot = bot;
+    }
+
+    // used only when this is a bot
     Action action(Action cmd) {
-        return cmd;
+        this.bestHand = null;
+        Hand hand = getBestHand();
+
+        if (hand == null)
+            return Action.CALL;
+
+        //Logger.info("Betman best hand: %s", hand.toString());
+
+        if (cmd == Action.RAISE) {
+            if (hand.getStrength() == HandStrength.HighCard && getBoard().size() >= 4)
+                return Action.FOLD;
+            else if (hand.getStrength().ordinal() > HandStrength.TwoPair.ordinal())
+                return Action.RAISE;
+            else
+                return Action.CALL;
+        }
+
+        if (hand.getStrength().ordinal() >= HandStrength.TwoPair.ordinal())
+            return Action.RAISE;
+
+        return Action.CALL;
     }
 
     @JsonIgnore

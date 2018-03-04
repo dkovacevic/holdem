@@ -9,10 +9,10 @@ public class ShiftTest {
         Table table = new Table(new Deck());
         Player a = table.addPlayer(newUser("a", "A"), false);
 
-        assert a.getNameWithRole().equals("A(SB)");
+        assert a.getRole() == Role.SB;
 
         table.shiftRoles();
-        assert a.getNameWithRole().equals("A(SB)");
+        assert a.getRole() == Role.SB;
     }
 
     @Test
@@ -21,12 +21,12 @@ public class ShiftTest {
         Player a = table.addPlayer(newUser("a", "A"), false);
         Player b = table.addPlayer(newUser("b", "B"), false);
 
-        assert a.getNameWithRole().equals("A(SB)");
-        assert b.getNameWithRole().equals("B(BB)");
+        assert a.getRole() == Role.SB;
+        assert b.getRole() == Role.BB;
 
         table.shiftRoles();
-        assert a.getNameWithRole().equals("A(BB)");
-        assert b.getNameWithRole().equals("B(SB)");
+        assert a.getRole() == Role.BB;
+        assert b.getRole() == Role.SB;
     }
 
     @Test
@@ -36,24 +36,24 @@ public class ShiftTest {
         Player b = table.addPlayer(newUser("b", "B"), false);
         Player c = table.addPlayer(newUser("c", "C"), false);
 
-        assert a.getNameWithRole().equals("A(SB)");
-        assert b.getNameWithRole().equals("B(BB)");
-        assert c.getNameWithRole().equals("C");
+        assert a.getRole() == Role.SB;
+        assert b.getRole() == Role.BB;
+        assert c.getRole() == Role.Caller;
 
         table.shiftRoles();
-        assert a.getNameWithRole().equals("A");
-        assert b.getNameWithRole().equals("B(SB)");
-        assert c.getNameWithRole().equals("C(BB)");
+        assert a.getRole() == Role.Caller;
+        assert b.getRole() == Role.SB;
+        assert c.getRole() == Role.BB;
 
         table.shiftRoles();
-        assert a.getNameWithRole().equals("A(BB)");
-        assert b.getNameWithRole().equals("B");
-        assert c.getNameWithRole().equals("C(SB)");
+        assert a.getRole() == Role.BB;
+        assert b.getRole() == Role.Caller;
+        assert c.getRole() == Role.SB;
 
         table.shiftRoles();
-        assert a.getNameWithRole().equals("A(SB)");
-        assert b.getNameWithRole().equals("B(BB)");
-        assert c.getNameWithRole().equals("C");
+        assert a.getRole() == Role.SB;
+        assert b.getRole() == Role.BB;
+        assert c.getRole() == Role.Caller;
     }
 
     @Test
@@ -64,35 +64,34 @@ public class ShiftTest {
         Player c = table.addPlayer(newUser("c", "C"), false);
         Player d = table.addPlayer(newUser("d", "D"), false);
 
-        assert a.getNameWithRole().equals("A(SB)");
-        assert b.getNameWithRole().equals("B(BB)");
-        assert c.getNameWithRole().equals("C");
-        assert d.getNameWithRole().equals("D");
+        assert a.getRole() == Role.SB;
+        assert b.getRole() == Role.BB;
+        assert c.getRole() == Role.Caller;
+        assert d.getRole() == Role.Player;
 
         table.shiftRoles();
-        assert a.getNameWithRole().equals("A");
-        assert b.getNameWithRole().equals("B(SB)");
-        assert c.getNameWithRole().equals("C(BB)");
-        assert d.getNameWithRole().equals("D");
+        assert a.getRole() == Role.Caller;
+        assert b.getRole() == Role.SB;
+        assert c.getRole() == Role.BB;
+        assert d.getRole() == Role.Player;
 
         table.shiftRoles();
-        assert a.getNameWithRole().equals("A");
-        assert b.getNameWithRole().equals("B");
-        assert c.getNameWithRole().equals("C(SB)");
-        assert d.getNameWithRole().equals("D(BB)");
+        assert a.getRole() == Role.Player;
+        assert b.getRole() == Role.Caller;
+        assert c.getRole() == Role.SB;
+        assert d.getRole() == Role.BB;
 
         table.shiftRoles();
-        assert a.getNameWithRole().equals("A(BB)");
-        assert b.getNameWithRole().equals("B");
-        assert c.getNameWithRole().equals("C");
-        assert d.getNameWithRole().equals("D(SB)");
+        assert a.getRole() == Role.BB;
+        assert b.getRole() == Role.Player;
+        assert c.getRole() == Role.Caller;
+        assert d.getRole() == Role.SB;
 
         table.shiftRoles();
-        assert a.getNameWithRole().equals("A(SB)");
-        assert b.getNameWithRole().equals("B(BB)");
-        assert c.getNameWithRole().equals("C");
-        assert d.getNameWithRole().equals("D");
-
+        assert a.getRole() == Role.SB;
+        assert b.getRole() == Role.BB;
+        assert c.getRole() == Role.Player;
+        assert d.getRole() == Role.Caller;
     }
 
     private User newUser(String id, String name) {

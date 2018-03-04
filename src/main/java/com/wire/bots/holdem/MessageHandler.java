@@ -87,16 +87,20 @@ public class MessageHandler extends MessageHandlerBase {
                             client.sendPicture(image, MIME_TYPE, player.getId());
                         }
                     }
+
+                    Player betman = table.getPlayer(BETMAN);
+                    if (betman != null && betman.getRole() == Role.Caller)
+                        betmanCall(client, table, Action.CALL);
                 }
                 break;
                 case RAISE: {
                     int newBet = table.raise(userId);
                     if (newBet != -1) {
                         Player player = table.getPlayer(userId);
-                        client.sendText(String.format("%s raised by %d to %d",
+                        client.sendText(String.format("%s raised by %d, pot %d",
                                 player.getName(),
                                 table.getRaise(),
-                                newBet));
+                                table.getPot()));
 
                         betmanCall(client, table, action);
                         check(client, table);
@@ -112,7 +116,6 @@ public class MessageHandler extends MessageHandlerBase {
                         betmanCall(client, table, action);
                         check(client, table);
                     }
-
                 }
                 break;
                 case FOLD:
@@ -122,10 +125,14 @@ public class MessageHandler extends MessageHandlerBase {
                     }
                     break;
                 case ADD_BOT: {
-                    User user = new User();
-                    user.id = BETMAN;
-                    user.name = BETMAN;
-                    newPlayer(client, table, user, true);
+                    Player betman = table.getPlayer(BETMAN);
+                    if (betman == null) {
+                        User user = new User();
+                        user.id = BETMAN;
+                        user.name = BETMAN;
+                        newPlayer(client, table, user, true);
+                    } else
+                        client.sendDirectText("Only one bot player allowed", userId);
                 }
                 break;
             }
@@ -152,7 +159,10 @@ public class MessageHandler extends MessageHandlerBase {
             case RAISE:
                 int raise = table.raise(BETMAN);
                 if (raise != -1) {
-                    client.sendText(String.format("%s raised by %d to %d", player.getName(), table.getRaise(), raise));
+                    client.sendText(String.format("%s raised by %d, pot %d",
+                            player.getName(),
+                            table.getRaise(),
+                            table.getPot()));
                 }
                 break;
             case FOLD:
@@ -248,6 +258,7 @@ public class MessageHandler extends MessageHandlerBase {
                 client.sendText(text);
             }
             client.sendText("Type: `deal` to start. `call`, `raise`, `fold` when betting... Have fun!");
+            saveState(table, client.getId());
         } catch (Exception e) {
             Logger.error(e.getMessage());
         }
@@ -261,6 +272,8 @@ public class MessageHandler extends MessageHandlerBase {
             for (User user : users) {
                 newPlayer(client, table, user, false);
             }
+
+            saveState(table, client.getId());
         } catch (Exception e) {
             Logger.error(e.getMessage());
         }
@@ -268,9 +281,15 @@ public class MessageHandler extends MessageHandlerBase {
 
     @Override
     public void onMemberLeave(WireClient client, ArrayList<String> userIds) {
-        Table table = getTable(client);
-        for (String userId : userIds)
-            table.removePlayer(userId);
+        try {
+            Table table = getTable(client);
+            for (String userId : userIds)
+                table.removePlayer(userId);
+
+            saveState(table, client.getId());
+        } catch (Exception e) {
+            Logger.error(e.getMessage());
+        }
     }
 
     private Table getTable(WireClient client) {
