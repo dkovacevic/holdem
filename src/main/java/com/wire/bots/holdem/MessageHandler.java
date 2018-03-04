@@ -18,15 +18,17 @@
 
 package com.wire.bots.holdem;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.sdk.MessageHandlerBase;
 import com.wire.bots.sdk.WireClient;
+import com.wire.bots.sdk.factories.StorageFactory;
 import com.wire.bots.sdk.models.TextMessage;
 import com.wire.bots.sdk.server.model.Conversation;
 import com.wire.bots.sdk.server.model.Member;
 import com.wire.bots.sdk.server.model.User;
+import com.wire.bots.sdk.storage.Storage;
 import com.wire.bots.sdk.tools.Logger;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,6 +47,12 @@ public class MessageHandler extends MessageHandlerBase {
     private static final String CHECK = "check";  // equivalent to `call`
     private static final String ADD_BOT = "add bot";  // equivalent to `call`
     private static final String BETMAN = "Betman";
+    private static final String TABLE_JSON = "table.json";
+    private final StorageFactory storageFactory;
+
+    MessageHandler(StorageFactory storageFactory) {
+        this.storageFactory = storageFactory;
+    }
 
     @Override
     public void onText(WireClient client, TextMessage msg) {
@@ -120,6 +128,8 @@ public class MessageHandler extends MessageHandlerBase {
                 }
                 break;
             }
+
+            saveState(table, client.getId());
         } catch (Exception e) {
             Logger.error(e.getMessage());
         }
@@ -261,16 +271,26 @@ public class MessageHandler extends MessageHandlerBase {
 
     private Table getTable(WireClient client) {
         return tables.computeIfAbsent(client.getId(), k -> {
-            Table table = new Table(new Deck());
+            Table table = null;
             try {
-                Conversation conversation = client.getConversation();
-                for (Member member : conversation.members) {
-                    if (member.service == null) {
-                        User user = client.getUser(member.id);
-                        table.addPlayer(user, false);
+                Storage storage = storageFactory.create(client.getId());
+                String jsonTable = storage.readFile(TABLE_JSON);
+                if (jsonTable != null) {
+                    ObjectMapper mapper = new ObjectMapper();
+                    table = mapper.readValue(jsonTable, Table.class);
+                    for (Player player : table.getPlayers())
+                        player.setBoard(table.getBoard());
+                } else {
+                    table = new Table(new Deck());
+                    Conversation conversation = client.getConversation();
+                    for (Member member : conversation.members) {
+                        if (member.service == null) {
+                            User user = client.getUser(member.id);
+                            table.addPlayer(user, false);
+                        }
                     }
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 Logger.error(e.toString());
             }
             return table;
@@ -285,8 +305,11 @@ public class MessageHandler extends MessageHandlerBase {
         client.sendText(text);
     }
 
-    private void closeTable(WireClient client) {
-        tables.remove(client.getId());
+    private void closeTable(WireClient client) throws Exception {
+        String botId = client.getId();
+        Storage storage = storageFactory.create(botId);
+        storage.deleteFile(TABLE_JSON);
+        tables.remove(botId);
     }
 
     private Action parseCommand(String cmd) {
@@ -308,5 +331,12 @@ public class MessageHandler extends MessageHandlerBase {
             default:
                 return Action.UNKNOWN;
         }
+    }
+
+    private void saveState(Table table, String botId) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        String jsonTable = mapper.writeValueAsString(table);
+        Storage storage = storageFactory.create(botId);
+        storage.saveFile(TABLE_JSON, jsonTable);
     }
 }

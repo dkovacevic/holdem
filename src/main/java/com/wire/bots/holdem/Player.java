@@ -176,11 +176,16 @@ public class Player implements Comparable<Player> {
         return bot;
     }
 
-    void setBoard(ArrayList<Card> board) {
-        this.board = board;
-    }
-
     Action action(Action cmd) {
         return cmd;
+    }
+
+    @JsonIgnore
+    ArrayList<Card> getBoard() {
+        return board;
+    }
+
+    void setBoard(ArrayList<Card> board) {
+        this.board = board;
     }
 }

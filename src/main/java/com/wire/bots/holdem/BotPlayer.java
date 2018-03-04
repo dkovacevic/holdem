@@ -19,8 +19,10 @@ class BotPlayer extends Player {
         if (hand == null)
             return Action.CALL;
 
+        int call = getCall();
+
         if (cmd == Action.RAISE) {
-            if (hand.getStrenght() == HandStrength.HighCard)
+            if (hand.getStrenght() == HandStrength.HighCard && getBoard().size() >= 5)
                 return Action.FOLD;
             else if (hand.getStrenght().ordinal() > HandStrength.TwoPair.ordinal())
                 return Action.RAISE;
