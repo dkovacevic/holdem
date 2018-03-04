@@ -44,6 +44,8 @@ public class MessageHandler extends MessageHandlerBase {
     private static final String CALL = "call";
     private static final String C = "c";          // short for `call`
     private static final String CHECK = "check";  // equivalent to `call`
+    private static final String ADD_BOT = "add bot";  // equivalent to `call`
+    private static final String BETMAN = "Betman";
 
     @Override
     public void onText(WireClient client, TextMessage msg) {
@@ -66,15 +68,18 @@ public class MessageHandler extends MessageHandlerBase {
                             table.getRaise()));
 
                     for (Player player : table.getPlayers()) {
-                        table.blind(player.getId()); //take small blind
+                        table.blind(player.getId()); //take SB or BB
 
                         Card a = table.dealCard(player);
                         Card b = table.dealCard(player);
 
-                        // Send cards to this player
-                        byte[] image = Images.getImage(a, b);
-                        client.sendPicture(image, MIME_TYPE, player.getId());
+                        if (!player.isBot()) {
+                            byte[] image = Images.getImage(a, b);
+                            client.sendPicture(image, MIME_TYPE, player.getId());
+                        }
                     }
+
+                    betmanCall(client, table);
                 }
                 break;
                 case R:
@@ -82,11 +87,13 @@ public class MessageHandler extends MessageHandlerBase {
                     int newBet = table.raise(userId);
                     if (newBet != -1) {
                         Player player = table.getPlayer(userId);
-                        client.sendText(String.format("%s raised by %d to %d. pot: %d",
+                        client.sendText(String.format("%s raised by %d to %d",
                                 player.getName(),
                                 table.getRaise(),
-                                newBet,
-                                table.getPot()));
+                                newBet));
+
+                        betmanCall(client, table);
+                        check(client, table);
                     }
                 }
                 break;
@@ -94,23 +101,44 @@ public class MessageHandler extends MessageHandlerBase {
                 case CHECK:
                 case CALL: {
                     int call = table.call(userId);
-                    if (call > 0) {
-//                        Player player = table.getPlayer(userId);
-//                        client.sendDirectText(String.format("You called with %d chips",
-//                                call), player.getId());
+                    if (call != -1) {
+                        Player player = table.getPlayer(userId);
+                        client.sendDirectText(String.format("You called with %d chips",
+                                call), player.getId());
+                        betmanCall(client, table);
                         check(client, table);
                     }
+
                 }
                 break;
                 case FOLD:
                 case F:
                     if (table.fold(userId)) {
+                        betmanCall(client, table);
                         check(client, table);
                     }
                     break;
+                case ADD_BOT: {
+                    User user = new User();
+                    user.id = BETMAN;
+                    user.name = BETMAN;
+                    newPlayer(client, table, user, true);
+                }
+                break;
             }
         } catch (Exception e) {
             Logger.error(e.getMessage());
+        }
+    }
+
+    private void betmanCall(WireClient client, Table table) throws Exception {
+        int betman = table.call(BETMAN);
+        if (betman != -1) {
+            Player player = table.getPlayer(BETMAN);
+            client.sendText(String.format("%s called with %d chips",
+                    player.getName(),
+                    betman));
+
         }
     }
 
@@ -137,8 +165,10 @@ public class MessageHandler extends MessageHandlerBase {
         client.sendText(String.format("Pot has %d chips", table.getPot()));
 
         for (Player player : table.getActivePlayers()) {
-            byte[] image = Images.getImage(player.getCards(), table.getBoard());
-            client.sendPicture(image, MIME_TYPE, player.getId());
+            if (!player.isBot()) {
+                byte[] image = Images.getImage(player.getCards(), table.getBoard());
+                client.sendPicture(image, MIME_TYPE, player.getId());
+            }
         }
     }
 
@@ -208,11 +238,7 @@ public class MessageHandler extends MessageHandlerBase {
             Table table = getTable(client);
             Collection<User> users = client.getUsers(userIds);
             for (User user : users) {
-                Player player = table.addPlayer(user);
-                String text = String.format("%s has joined the table with %d chips",
-                        player.getName(),
-                        player.getChips());
-                client.sendText(text);
+                newPlayer(client, table, user, false);
             }
         } catch (Exception e) {
             Logger.error(e.getMessage());
@@ -234,7 +260,7 @@ public class MessageHandler extends MessageHandlerBase {
                 for (Member member : conversation.members) {
                     if (member.service == null) {
                         User user = client.getUser(member.id);
-                        table.addPlayer(user);
+                        table.addPlayer(user, false);
                     }
                 }
             } catch (IOException e) {
@@ -244,6 +270,13 @@ public class MessageHandler extends MessageHandlerBase {
         });
     }
 
+    private void newPlayer(WireClient client, Table table, User user, boolean bot) throws Exception {
+        Player player = table.addPlayer(user, bot);
+        String text = String.format("%s has joined the table with %d chips",
+                player.getName(),
+                player.getChips());
+        client.sendText(text);
+    }
 
     private void closeTable(WireClient client) {
         tables.remove(client.getId());

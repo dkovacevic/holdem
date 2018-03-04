@@ -22,8 +22,13 @@ class Table {
         this.deck = deck;
     }
 
-    Player addPlayer(User user) {
-        Player player = new Player(user.id, user.name, board);
+    Player addPlayer(User user, boolean bot) {
+        return addPlayer(user.id, user.name, bot);
+    }
+
+    private Player addPlayer(String userId, String name, boolean bot) {
+        Player player = new Player(userId, name, board);
+        player.setBot(bot);
         players.add(player);
 
         if (players.size() == 1)

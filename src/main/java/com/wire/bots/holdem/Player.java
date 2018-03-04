@@ -17,6 +17,7 @@ public class Player implements Comparable<Player> {
     private boolean folded;
     private String role = "";
     private int call;
+    private boolean bot;
 
     public Player(String userId, String name, ArrayList<Card> board) {
         this.id = userId;
@@ -146,5 +147,13 @@ public class Player implements Comparable<Player> {
 
     String getNameWithRole() {
         return role.isEmpty() ? getName() : String.format("%s(%s)", getName(), getRole());
+    }
+
+    public boolean isBot() {
+        return bot;
+    }
+
+    public void setBot(boolean bot) {
+        this.bot = bot;
     }
 }

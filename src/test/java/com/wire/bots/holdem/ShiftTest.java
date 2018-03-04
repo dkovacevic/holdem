@@ -7,7 +7,7 @@ public class ShiftTest {
     @Test
     public void test1() {
         Table table = new Table(new Deck());
-        Player a = table.addPlayer(newUser("a", "A"));
+        Player a = table.addPlayer(newUser("a", "A"), false);
 
         assert a.getNameWithRole().equals("A(SB)");
 
@@ -18,8 +18,8 @@ public class ShiftTest {
     @Test
     public void test2() {
         Table table = new Table(new Deck());
-        Player a = table.addPlayer(newUser("a", "A"));
-        Player b = table.addPlayer(newUser("b", "B"));
+        Player a = table.addPlayer(newUser("a", "A"), false);
+        Player b = table.addPlayer(newUser("b", "B"), false);
 
         assert a.getNameWithRole().equals("A(SB)");
         assert b.getNameWithRole().equals("B(BB)");
@@ -32,9 +32,9 @@ public class ShiftTest {
     @Test
     public void test3() {
         Table table = new Table(new Deck());
-        Player a = table.addPlayer(newUser("a", "A"));
-        Player b = table.addPlayer(newUser("b", "B"));
-        Player c = table.addPlayer(newUser("c", "C"));
+        Player a = table.addPlayer(newUser("a", "A"), false);
+        Player b = table.addPlayer(newUser("b", "B"), false);
+        Player c = table.addPlayer(newUser("c", "C"), false);
 
         assert a.getNameWithRole().equals("A(SB)");
         assert b.getNameWithRole().equals("B(BB)");
@@ -59,10 +59,10 @@ public class ShiftTest {
     @Test
     public void test4() {
         Table table = new Table(new Deck());
-        Player a = table.addPlayer(newUser("a", "A"));
-        Player b = table.addPlayer(newUser("b", "B"));
-        Player c = table.addPlayer(newUser("c", "C"));
-        Player d = table.addPlayer(newUser("d", "D"));
+        Player a = table.addPlayer(newUser("a", "A"), false);
+        Player b = table.addPlayer(newUser("b", "B"), false);
+        Player c = table.addPlayer(newUser("c", "C"), false);
+        Player d = table.addPlayer(newUser("d", "D"), false);
 
         assert a.getNameWithRole().equals("A(SB)");
         assert b.getNameWithRole().equals("B(BB)");
