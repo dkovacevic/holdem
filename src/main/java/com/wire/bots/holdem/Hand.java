@@ -227,7 +227,7 @@ public class Hand implements Comparable<Hand> {
         return pairs.size() == size ? pairs.get(ord) : -1;
     }
 
-    HandStrength getStrenght() {
+    HandStrength getStrength() {
         if (straightFlush() != -1)
             return HandStrength.StraightFlush;
         if (fourKind() != -1)

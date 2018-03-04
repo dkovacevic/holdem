@@ -102,6 +102,7 @@ class Table {
 
     void shuffle() {
         roundNumber++;
+        pot = 0;
         if (roundNumber % 3 == 0)
             smallBlind += BLIND_INCREASE;
         if (roundNumber % 5 == 0)
@@ -179,7 +180,7 @@ class Table {
             int call = player.getCall();
             raiseCallers(raise);
             call(userId);
-            return raise + call;
+            return call + raise;
         }
         return -1;
     }

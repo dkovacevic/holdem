@@ -15,22 +15,24 @@ class BotPlayer extends Player {
 
     @Override
     Action action(Action cmd) {
+        this.bestHand = null;
         Hand hand = getBestHand();
+
         if (hand == null)
             return Action.CALL;
 
-        int call = getCall();
-
+        //Logger.info("Betman best hand: %s", hand.toString());
+        
         if (cmd == Action.RAISE) {
-            if (hand.getStrenght() == HandStrength.HighCard && getBoard().size() >= 5)
+            if (hand.getStrength() == HandStrength.HighCard && getBoard().size() >= 4)
                 return Action.FOLD;
-            else if (hand.getStrenght().ordinal() > HandStrength.TwoPair.ordinal())
+            else if (hand.getStrength().ordinal() > HandStrength.TwoPair.ordinal())
                 return Action.RAISE;
             else
                 return Action.CALL;
         }
 
-        if (hand.getStrenght().ordinal() >= HandStrength.TwoPair.ordinal())
+        if (hand.getStrength().ordinal() >= HandStrength.TwoPair.ordinal())
             return Action.RAISE;
 
         return Action.CALL;

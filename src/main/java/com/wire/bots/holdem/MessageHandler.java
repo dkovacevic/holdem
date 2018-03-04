@@ -29,6 +29,7 @@ import com.wire.bots.sdk.server.model.User;
 import com.wire.bots.sdk.storage.Storage;
 import com.wire.bots.sdk.tools.Logger;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
@@ -137,6 +138,9 @@ public class MessageHandler extends MessageHandlerBase {
 
     private void betmanCall(WireClient client, Table table, Action cmd) throws Exception {
         Player player = table.getPlayer(BETMAN);
+        if (player == null)
+            return;
+
         Action action = player.action(cmd);
         switch (action) {
             case CALL:
@@ -148,7 +152,7 @@ public class MessageHandler extends MessageHandlerBase {
             case RAISE:
                 int raise = table.raise(BETMAN);
                 if (raise != -1) {
-                    client.sendText(String.format("%s raised %d chips", player.getName(), raise));
+                    client.sendText(String.format("%s raised by %d to %d", player.getName(), table.getRaise(), raise));
                 }
                 break;
             case FOLD:
@@ -271,30 +275,55 @@ public class MessageHandler extends MessageHandlerBase {
 
     private Table getTable(WireClient client) {
         return tables.computeIfAbsent(client.getId(), k -> {
-            Table table = null;
             try {
                 Storage storage = storageFactory.create(client.getId());
                 String jsonTable = storage.readFile(TABLE_JSON);
                 if (jsonTable != null) {
-                    ObjectMapper mapper = new ObjectMapper();
-                    table = mapper.readValue(jsonTable, Table.class);
-                    for (Player player : table.getPlayers())
-                        player.setBoard(table.getBoard());
+                    Table table = deserializeTable(jsonTable);
+                    return table != null ? table : newTable(client);
                 } else {
-                    table = new Table(new Deck());
-                    Conversation conversation = client.getConversation();
-                    for (Member member : conversation.members) {
-                        if (member.service == null) {
-                            User user = client.getUser(member.id);
-                            table.addPlayer(user, false);
-                        }
-                    }
+                    return newTable(client);
                 }
             } catch (Exception e) {
                 Logger.error(e.toString());
+                return null;
             }
-            return table;
         });
+    }
+
+    private void closeTable(WireClient client) throws Exception {
+        String botId = client.getId();
+        Storage storage = storageFactory.create(botId);
+        storage.deleteFile(TABLE_JSON);
+        tables.remove(botId);
+    }
+
+    private Table newTable(WireClient client) throws IOException {
+        Logger.info("New table");
+        Table table = new Table(new Deck());
+        Conversation conversation = client.getConversation();
+        for (Member member : conversation.members) {
+            if (member.service == null) {
+                User user = client.getUser(member.id);
+                table.addPlayer(user, false);
+            }
+        }
+        return table;
+    }
+
+    private Table deserializeTable(String jsonTable) throws java.io.IOException {
+        Logger.info("Loading table...");
+        ObjectMapper mapper = new ObjectMapper();
+        Table table = mapper.readValue(jsonTable, Table.class);
+        for (Player player : table.getPlayers()) {
+            player.setBoard(table.getBoard());
+        }
+
+        //todo remove this shit
+        if (table.getPlayers().size() == 1)
+            return null;
+
+        return table;
     }
 
     private void newPlayer(WireClient client, Table table, User user, boolean bot) throws Exception {
@@ -303,13 +332,6 @@ public class MessageHandler extends MessageHandlerBase {
                 player.getName(),
                 player.getChips());
         client.sendText(text);
-    }
-
-    private void closeTable(WireClient client) throws Exception {
-        String botId = client.getId();
-        Storage storage = storageFactory.create(botId);
-        storage.deleteFile(TABLE_JSON);
-        tables.remove(botId);
     }
 
     private Action parseCommand(String cmd) {

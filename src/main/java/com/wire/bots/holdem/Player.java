@@ -17,14 +17,14 @@ public class Player implements Comparable<Player> {
     private final ArrayList<Card> cards = new ArrayList<>();
     @JsonProperty
     boolean bot = false;
+    @JsonIgnore
+    Hand bestHand = null;
     @JsonProperty
     private String id;
     @JsonProperty
     private String name;
     @JsonIgnore
     private ArrayList<Card> board;
-    @JsonIgnore
-    private Hand bestHand = null;
     @JsonProperty
     private int chips = INITIAL_CHIPS;
     @JsonProperty
