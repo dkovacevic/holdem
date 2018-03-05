@@ -79,9 +79,7 @@ public class MessageHandler extends MessageHandlerBase {
 
                     dealPlayers(client, table);
 
-                    Player betman = table.getPlayer(BETMAN);
-                    if (betman != null && betman.getRole() == Role.Caller)
-                        betmanCall(client, table, Action.CALL);
+                    betmanCall(client, table, action);
                 }
                 break;
                 case RAISE:
@@ -149,7 +147,10 @@ public class MessageHandler extends MessageHandlerBase {
             case CALL:
                 int call = table.call(betman);
                 if (call != -1) {
-                    client.sendText(String.format("%s called with %d chips", betman.getName(), call));
+                    String msg = call == 0
+                            ? String.format("%s checked", betman.getName())
+                            : String.format("%s called with %d chips", betman.getName(), call);
+                    client.sendText(msg);
                 }
                 break;
             case RAISE:
@@ -196,6 +197,8 @@ public class MessageHandler extends MessageHandlerBase {
                 client.sendPicture(image, MIME_TYPE, player.getId());
             }
         }
+
+        betmanCall(client, table, Action.DEAL);
     }
 
     private void showdown(WireClient client, Table table) throws Exception {

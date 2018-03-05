@@ -188,8 +188,15 @@ public class Player implements Comparable<Player> {
 
     // used only when this is a bot
     Action action(Action cmd) {
-        Hand hand = getBestHand();
 
+        if (cmd == Action.DEAL) {
+            if (getRole() == Role.Caller)
+                return Action.CALL;
+            else
+                return Action.DEAL; //ignore
+        }
+
+        Hand hand = getBestHand();
         if (hand == null)
             return Action.CALL;
 

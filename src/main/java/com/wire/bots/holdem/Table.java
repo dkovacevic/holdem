@@ -206,10 +206,12 @@ class Table {
     }
 
     private void raiseCallers(int raise) {
-        players.forEach(player -> {
-            player.raiseCall(raise);
-            player.setCalled(false);
-        });
+        synchronized (players) {
+            players.forEach(player -> {
+                player.raiseCall(raise);
+                player.setCalled(false);
+            });
+        }
     }
 
     void newBet() {

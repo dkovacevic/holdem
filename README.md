@@ -5,11 +5,13 @@ Texas Hold'em Poker for Wire
 ```
 $ ./add.sh
 ```
-Provide the email/password you used when registering on Wire
-New conversation named: Texas Hold'em is created on Wire
+Provide the email/password you used when registering on Wire. New conversation named: Texas Hold'em is created.
 
 ## How to add more players?
-Add more participants to Texas Hold'em conversation
+Add more participants to _Texas Hold'em_ conversation
+
+## How to add bot player?
+type: `add bot`. This will add _Betman_ player
 
 ## How to play?
  - `deal`  to start new round
