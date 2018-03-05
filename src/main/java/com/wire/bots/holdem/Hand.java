@@ -6,7 +6,7 @@ import java.util.Comparator;
 public class Hand implements Comparable<Hand> {
     private ArrayList<Card> cards;
 
-    Hand(ArrayList<Card> cards) {
+    public Hand(ArrayList<Card> cards) {
         this.cards = new ArrayList<>(cards);
         this.cards.sort(Comparator.reverseOrder());
     }
@@ -198,11 +198,11 @@ public class Hand implements Comparable<Hand> {
         return pairs(2, 0);
     }
 
-    int onePair() {
+    public int onePair() {
         return pairs(1, 0);
     }
 
-    int strongestCard() {
+    public int strongestCard() {
         return highCard().getRank();
     }
 
@@ -216,7 +216,7 @@ public class Hand implements Comparable<Hand> {
 
     private int pairs(int size, int ord) {
         ArrayList<Integer> pairs = new ArrayList<>();
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < cards.size() - 1; i++) {
             int c1 = cards.get(i).getRank();
             int c2 = cards.get(i + 1).getRank();
             if (c1 == c2) {

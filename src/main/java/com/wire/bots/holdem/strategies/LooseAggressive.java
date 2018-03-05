@@ -3,18 +3,32 @@ package com.wire.bots.holdem.strategies;
 import com.wire.bots.holdem.Action;
 import com.wire.bots.holdem.Hand;
 import com.wire.bots.holdem.HandStrength;
+import com.wire.bots.holdem.Player;
 
 public class LooseAggressive implements Strategy {
+
+    private final Player bot;
+
+    public LooseAggressive(Player bot) {
+        this.bot = bot;
+    }
+
     @Override
-    public Action action(Hand hand, int call) {
-        if (hand == null)
-            return Action.CALL;
+    public Action action(Action cmd) {
+        Hand hand = bot.getBestHand();
+        if (hand == null) {
+            hand = new Hand(bot.getCards());
+            if (hand.onePair() != -1)
+                return Action.RAISE;
+            else
+                return Action.CALL;
+        }
 
         HandStrength strength = hand.getStrength();
 
         // it was a raise
-        if (call > 0) {
-            if (strength.ordinal() >= HandStrength.OnePair.ordinal())
+        if (bot.getCall() > 0) {
+            if (strength.ordinal() >= HandStrength.TwoPair.ordinal())
                 return Action.RAISE;
             else
                 return Action.CALL;
@@ -22,7 +36,7 @@ public class LooseAggressive implements Strategy {
 
         // it was a check or a fold
 
-        if (strength.ordinal() >= HandStrength.TwoPair.ordinal())
+        if (strength.ordinal() >= HandStrength.OnePair.ordinal())
             return Action.RAISE;
         else
             return Action.CALL;

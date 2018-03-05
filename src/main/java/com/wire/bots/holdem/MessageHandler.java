@@ -126,7 +126,8 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     private void dealPlayers(WireClient client, Table table) throws Exception {
-        for (Player player : table.getPlayers()) {
+        Collection<Player> players = table.getPlayers();
+        for (Player player : players) {
             table.blind(player); //take SB or BB
 
             Card a = table.dealCard(player);
@@ -136,6 +137,9 @@ public class MessageHandler extends MessageHandlerBase {
                 byte[] image = Images.getImage(a, b);
                 client.sendPicture(image, MIME_TYPE, player.getId());
             }
+
+            if (players.size() == 2 && player.getRole() == Role.SB)
+                player.setRole(Role.Caller);
         }
     }
 

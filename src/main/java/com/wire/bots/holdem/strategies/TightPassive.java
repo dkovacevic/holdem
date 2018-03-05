@@ -3,14 +3,28 @@ package com.wire.bots.holdem.strategies;
 import com.wire.bots.holdem.Action;
 import com.wire.bots.holdem.Hand;
 import com.wire.bots.holdem.HandStrength;
+import com.wire.bots.holdem.Player;
 
 public class TightPassive implements Strategy {
+    private final Player bot;
+
+    public TightPassive(Player bot) {
+        this.bot = bot;
+    }
+
     @Override
-    public Action action(Hand hand, int call) {
-        if (hand == null)
-            return Action.CALL;
+    public Action action(Action cmd) {
+        Hand hand = bot.getBestHand();
+        if (hand == null) {
+            hand = new Hand(bot.getCards());
+            if (cmd == Action.RAISE && hand.strongestCard() < 10)
+                return Action.FOLD;
+            else
+                return Action.CALL;
+        }
 
         HandStrength strength = hand.getStrength();
+        int call = bot.getCall();
 
         // it was a raise
         if (call > 0) {
@@ -22,7 +36,7 @@ public class TightPassive implements Strategy {
 
         // it was a call
 
-        if (strength.ordinal() > HandStrength.ThreeOfKind.ordinal())
+        if (strength.ordinal() >= HandStrength.Straight.ordinal())
             return Action.RAISE;
         else
             return Action.CALL;

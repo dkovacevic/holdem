@@ -87,7 +87,7 @@ public class Player implements Comparable<Player> {
         return id;
     }
 
-    ArrayList<Card> getCards() {
+    public ArrayList<Card> getCards() {
         return cards;
     }
 
@@ -161,7 +161,7 @@ public class Player implements Comparable<Player> {
         this.role = role;
     }
 
-    int getCall() {
+    public int getCall() {
         return call;
     }
 
@@ -194,28 +194,28 @@ public class Player implements Comparable<Player> {
      * @return Bot's call as the result to @cmd
      */
     Action action(Action cmd) {
-        Hand hand = getBestHand();
         Strategy s = chooseStrategy();
 
         if (cmd == Action.DEAL) {
             // Bot is the Caller
             if (getRole() == Role.Caller)
-                return s.action(hand, getCall());
+                return s.action(cmd);
             else
                 return Action.DEAL; //ignore
         }
 
-        return s.action(hand, getCall());
+        return s.action(cmd);
     }
 
     private Strategy chooseStrategy() {
         if (board.size() == 3)
-            return new LoosePassive();
+            return new LoosePassive(this);
         if (chips < 50)
-            return new TightPassive();
+            return new TightPassive(this);
         if (call > 20)
-            return new TightAggressive();
-        return new LooseAggressive();
+            return new TightAggressive(this);
+
+        return new LooseAggressive(this);
     }
 
     @JsonIgnore
@@ -226,4 +226,6 @@ public class Player implements Comparable<Player> {
     void setBoard(ArrayList<Card> board) {
         this.board = board;
     }
+
+
 }
