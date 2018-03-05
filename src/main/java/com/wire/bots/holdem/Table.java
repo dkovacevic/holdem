@@ -85,15 +85,6 @@ class Table {
         return getActivePlayers().size() <= 1;
     }
 
-    boolean fold(String userId) {
-        Player player = getPlayer(userId);
-        if (player != null && !player.isCalled()) {
-            player.fold();
-            return true;
-        }
-        return false;
-    }
-
     void removePlayer(String userId) {
         players.removeIf(player -> player.getId().equals(userId));
     }
@@ -163,8 +154,7 @@ class Table {
         return ret;
     }
 
-    void blind(String userId) {
-        Player player = getPlayer(userId);
+    void blind(Player player) {
         switch (player.getRole()) {
             case SB:
                 player.setCall(smallBlind);
@@ -181,26 +171,38 @@ class Table {
         }
     }
 
-    int raise(String userId) {
-        Player player = getPlayer(userId);
-        if (player != null && !player.isCalled()) {
-            int call = player.getCall();
-            raiseCallers(raise);
-            call(userId);
-            return call + raise;
+    int raise(Player player) {
+        synchronized (players) {
+            if (!player.isCalled()) {
+                int call = player.getCall();
+                raiseCallers(raise);
+                call(player);
+                return call + raise;
+            }
+            return -1;
         }
-        return -1;
     }
 
-    int call(String userId) {
-        Player player = getPlayer(userId);
-        if (player != null && !player.isCalled()) {
-            int take = player.take();
-            pot += take;
-            player.setCalled(true);
-            return take;
+    int call(Player player) {
+        synchronized (players) {
+            if (!player.isCalled()) {
+                int take = player.take();
+                pot += take;
+                player.setCalled(true);
+                return take;
+            }
+            return -1;
         }
-        return -1;
+    }
+
+    boolean fold(Player player) {
+        synchronized (players) {
+            if (!player.isCalled()) {
+                player.fold();
+                return true;
+            }
+            return false;
+        }
     }
 
     private void raiseCallers(int raise) {
@@ -218,7 +220,9 @@ class Table {
     }
 
     boolean isAllCalled() {
-        return players.stream().allMatch(Player::isCalled);
+        synchronized (players) {
+            return players.stream().allMatch(Player::isCalled);
+        }
     }
 
     boolean isShowdown() {

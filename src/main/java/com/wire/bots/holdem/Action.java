@@ -4,5 +4,7 @@ public enum Action {
     UNKNOWN,
     CALL,
     RAISE,
-    DEAL, ADD_BOT, FOLD
+    DEAL,
+    ADD_BOT,
+    FOLD
 }

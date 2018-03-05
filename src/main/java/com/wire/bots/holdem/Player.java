@@ -15,8 +15,6 @@ public class Player implements Comparable<Player> {
     private static final int INITIAL_CHIPS = 100;
     @JsonProperty
     private final ArrayList<Card> cards = new ArrayList<>();
-    @JsonIgnore
-    Hand bestHand = null;
     @JsonProperty
     private boolean bot = false;
     @JsonProperty
@@ -80,11 +78,8 @@ public class Player implements Comparable<Player> {
     @JsonIgnore
     @Nullable
     public Hand getBestHand() {
-        if (bestHand == null) {
-            Collection<Hand> allHands = getAllHands();
-            bestHand = allHands.stream().max(Comparator.naturalOrder()).orElse(null);
-        }
-        return bestHand;
+        Collection<Hand> allHands = getAllHands();
+        return allHands.stream().max(Comparator.naturalOrder()).orElse(null);
     }
 
     String getId() {
@@ -97,7 +92,13 @@ public class Player implements Comparable<Player> {
 
     @Override
     public int compareTo(Player o) {
-        return getBestHand().compareTo(o.getBestHand());
+        Hand bestHand1 = getBestHand();
+        Hand bestHand2 = o.getBestHand();
+        if (bestHand2 == null)
+            return 1;
+        if (bestHand1 == null)
+            return -1;
+        return bestHand1.compareTo(bestHand2);
     }
 
     @Override
@@ -115,7 +116,6 @@ public class Player implements Comparable<Player> {
     }
 
     void reset() {
-        bestHand = null;
         cards.clear();
         called = false;
         folded = false;
@@ -168,9 +168,8 @@ public class Player implements Comparable<Player> {
         this.call = call;
     }
 
-    int raiseCall(int raise) {
+    void raiseCall(int raise) {
         call += raise;
-        return call;
     }
 
     String getNameWithRole() {
@@ -189,7 +188,6 @@ public class Player implements Comparable<Player> {
 
     // used only when this is a bot
     Action action(Action cmd) {
-        this.bestHand = null;
         Hand hand = getBestHand();
 
         if (hand == null)
@@ -213,7 +211,7 @@ public class Player implements Comparable<Player> {
     }
 
     @JsonIgnore
-    ArrayList<Card> getBoard() {
+    private ArrayList<Card> getBoard() {
         return board;
     }
 

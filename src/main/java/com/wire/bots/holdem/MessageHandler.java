@@ -60,43 +60,32 @@ public class MessageHandler extends MessageHandlerBase {
         try {
             Table table = getTable(client);
 
-            String cmd = msg.getText().toLowerCase().trim();
-            String userId = msg.getUserId();
+            Player player = table.getPlayer(msg.getUserId());
+            if (player == null)
+                return;
 
-            Action action = parseCommand(cmd);
+            Action action = parseCommand(msg.getText());
             switch (action) {
                 case DEAL: {
                     table.shiftRoles();
 
                     table.shuffle();
 
-                    client.sendText(String.format("%s- round %d - small blind %d - raise %d",
-                            table.printPlayers(),
+                    client.sendText(String.format("%d. %s blind %d - raise %d",
                             table.getRoundNumber(),
+                            table.printPlayers(),
                             table.getSmallBlind(),
                             table.getRaise()));
 
-                    for (Player player : table.getPlayers()) {
-                        table.blind(player.getId()); //take SB or BB
-
-                        Card a = table.dealCard(player);
-                        Card b = table.dealCard(player);
-
-                        if (!player.isBot()) {
-                            byte[] image = Images.getImage(a, b);
-                            client.sendPicture(image, MIME_TYPE, player.getId());
-                        }
-                    }
+                    dealPlayers(client, table);
 
                     Player betman = table.getPlayer(BETMAN);
                     if (betman != null && betman.getRole() == Role.Caller)
                         betmanCall(client, table, Action.CALL);
                 }
                 break;
-                case RAISE: {
-                    int newBet = table.raise(userId);
-                    if (newBet != -1) {
-                        Player player = table.getPlayer(userId);
+                case RAISE:
+                    if (table.raise(player) != -1) {
                         client.sendText(String.format("%s raised by %d, pot %d",
                                 player.getName(),
                                 table.getRaise(),
@@ -105,69 +94,75 @@ public class MessageHandler extends MessageHandlerBase {
                         betmanCall(client, table, action);
                         check(client, table);
                     }
-                }
-                break;
-                case CALL: {
-                    int call = table.call(userId);
-                    if (call != -1) {
-                        // Player player = table.getPlayer(userId);
+                    break;
+                case CALL:
+                    if (table.call(player) != -1) {
                         // client.sendDirectText(String.format("You called with %d chips",
                         //         call), player.getId());
                         betmanCall(client, table, action);
                         check(client, table);
                     }
-                }
-                break;
+                    break;
                 case FOLD:
-                    if (table.fold(userId)) {
+                    if (table.fold(player)) {
                         betmanCall(client, table, action);
                         check(client, table);
                     }
                     break;
-                case ADD_BOT: {
-                    Player betman = table.getPlayer(BETMAN);
-                    if (betman == null) {
+                case ADD_BOT:
+                    if (table.getPlayer(BETMAN) == null) {
                         User user = new User();
                         user.id = BETMAN;
                         user.name = BETMAN;
-                        newPlayer(client, table, user, true);
+                        addNewPlayer(client, table, user, true);
                     } else
-                        client.sendDirectText("Only one bot player allowed", userId);
-                }
-                break;
+                        client.sendDirectText("Only one bot player allowed", player.getId());
+                    break;
             }
-
             saveState(table, client.getId());
         } catch (Exception e) {
             Logger.error(e.getMessage());
         }
     }
 
+    private void dealPlayers(WireClient client, Table table) throws Exception {
+        for (Player player : table.getPlayers()) {
+            table.blind(player); //take SB or BB
+
+            Card a = table.dealCard(player);
+            Card b = table.dealCard(player);
+
+            if (!player.isBot()) {
+                byte[] image = Images.getImage(a, b);
+                client.sendPicture(image, MIME_TYPE, player.getId());
+            }
+        }
+    }
+
     private void betmanCall(WireClient client, Table table, Action cmd) throws Exception {
-        Player player = table.getPlayer(BETMAN);
-        if (player == null)
+        Player betman = table.getPlayer(BETMAN);
+        if (betman == null)
             return;
 
-        Action action = player.action(cmd);
+        Action action = betman.action(cmd);
         switch (action) {
             case CALL:
-                int call = table.call(BETMAN);
+                int call = table.call(betman);
                 if (call != -1) {
-                    client.sendText(String.format("%s called with %d chips", player.getName(), call));
+                    client.sendText(String.format("%s called with %d chips", betman.getName(), call));
                 }
                 break;
             case RAISE:
-                int raise = table.raise(BETMAN);
-                if (raise != -1) {
+                if (table.raise(betman) != -1) {
                     client.sendText(String.format("%s raised by %d, pot %d",
-                            player.getName(),
+                            betman.getName(),
                             table.getRaise(),
                             table.getPot()));
                 }
                 break;
             case FOLD:
-                if (table.fold(BETMAN)) {
-                    client.sendText(String.format("%s folded like a bitch", player.getName()));
+                if (table.fold(betman)) {
+                    client.sendText(String.format("%s folded like a bitch", betman.getName()));
                 }
                 break;
         }
@@ -183,11 +178,11 @@ public class MessageHandler extends MessageHandlerBase {
             if (table.isShowdown())
                 showdown(client, table);
             else
-                flopCard(client, table, table.isFlopped() ? 1 : 3); // turn or river or flop
+                flopCards(client, table, table.isFlopped() ? 1 : 3); // turn or river or flop
         }
     }
 
-    private void flopCard(WireClient client, Table table, int number) throws Exception {
+    private void flopCards(WireClient client, Table table, int number) throws Exception {
         table.newBet();
 
         for (int i = 0; i < number; i++)
@@ -207,39 +202,13 @@ public class MessageHandler extends MessageHandlerBase {
         Player winner = table.getWinner();
         int pot = table.flushPot(winner);
 
-        Collection<Player> activePlayers = table.getActivePlayers();
-        if (activePlayers.size() > 1) {
-            for (Player player : activePlayers) {
-                String name = player.equals(winner)
-                        ? String.format("**%s** has won %d chips", player.getName(), pot)
-                        : player.getName();
-                String text = String.format("%s with %s",
-                        name,
-                        player.getBestHand());
-                client.sendText(text);
-
-                byte[] image = Images.getImage(player.getBestHand().getCards());
-                client.sendPicture(image, MIME_TYPE);
-            }
-        } else {
-            String text = String.format("%s has won pot of %d chips", winner.getName(), pot);
-            client.sendText(text);
-        }
+        printWinner(client, table, winner, pot);
 
         for (Player player : table.collectPlayers()) {
             client.sendText(String.format("%s has ran out of chips and was kicked out", player.getName()));
         }
 
-        StringBuilder sb = new StringBuilder("```");
-        for (Player player : table.getPlayers()) {
-            String text = String.format("%-15s chips: %d",
-                    player.getName(),
-                    player.getChips());
-            sb.append(text);
-            sb.append("\n");
-        }
-        sb.append("```");
-        client.sendText(sb.toString());
+        printSummary(client, table);
 
         if (table.getPlayers().size() <= 1) {
             client.ping();
@@ -270,7 +239,7 @@ public class MessageHandler extends MessageHandlerBase {
             Table table = getTable(client);
             Collection<User> users = client.getUsers(userIds);
             for (User user : users) {
-                newPlayer(client, table, user, false);
+                addNewPlayer(client, table, user, false);
             }
 
             saveState(table, client.getId());
@@ -313,7 +282,7 @@ public class MessageHandler extends MessageHandlerBase {
     private void closeTable(WireClient client) throws Exception {
         String botId = client.getId();
         Storage storage = storageFactory.create(botId);
-        storage.deleteFile(TABLE_JSON);
+        storage.deleteFile(TABLE_JSON);// todo check for false
         tables.remove(botId);
     }
 
@@ -345,7 +314,7 @@ public class MessageHandler extends MessageHandlerBase {
         return table;
     }
 
-    private void newPlayer(WireClient client, Table table, User user, boolean bot) throws Exception {
+    private void addNewPlayer(WireClient client, Table table, User user, boolean bot) throws Exception {
         Player player = table.addPlayer(user, bot);
         String text = String.format("%s has joined the table with %d chips",
                 player.getName(),
@@ -354,7 +323,7 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     private Action parseCommand(String cmd) {
-        switch (cmd) {
+        switch (cmd.toLowerCase().trim()) {
             case DEAL:
                 return Action.DEAL;
             case R:
@@ -379,5 +348,46 @@ public class MessageHandler extends MessageHandlerBase {
         String jsonTable = mapper.writeValueAsString(table);
         Storage storage = storageFactory.create(botId);
         storage.saveFile(TABLE_JSON, jsonTable);
+    }
+
+    private void printWinner(WireClient client, Table table, Player winner, int pot) throws Exception {
+        Collection<Player> activePlayers = table.getActivePlayers();
+        if (activePlayers.size() <= 1) {
+            String text = String.format("%s has won pot of %d chips", winner.getName(), pot);
+            client.sendText(text);
+            return;
+        }
+
+        for (Player player : activePlayers) {
+            Hand bestHand = player.getBestHand();
+            if (bestHand == null) {
+                Logger.warning("Best hand == null, wtf?");
+                continue;
+            }
+
+            String name = player.equals(winner)
+                    ? String.format("**%s** has won %d chips", player.getName(), pot)
+                    : player.getName();
+            String text = String.format("%s with %s",
+                    name,
+                    bestHand);
+            client.sendText(text);
+
+            byte[] image = Images.getImage(bestHand.getCards());
+            client.sendPicture(image, MIME_TYPE);
+        }
+    }
+
+    private void printSummary(WireClient client, Table table) throws Exception {
+        StringBuilder sb = new StringBuilder("```");
+        for (Player player : table.getPlayers()) {
+            String text = String.format("%-15s chips: %d",
+                    player.getName(),
+                    player.getChips());
+            sb.append(text);
+            sb.append("\n");
+        }
+        sb.append("```");
+        client.sendText(sb.toString());
     }
 }
