@@ -3,6 +3,7 @@ package com.wire.bots.holdem;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wire.bots.holdem.strategies.*;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -186,35 +187,35 @@ public class Player implements Comparable<Player> {
         this.bot = bot;
     }
 
-    // used only when this is a bot
+    /**
+     * AI for the bot. Input param cmd is Action performed by the player that bet before
+     *
+     * @param cmd Previous action (action of some other Player)
+     * @return Bot's call as the result to @cmd
+     */
     Action action(Action cmd) {
+        Hand hand = getBestHand();
+        Strategy s = chooseStrategy();
 
         if (cmd == Action.DEAL) {
+            // Bot is the Caller
             if (getRole() == Role.Caller)
-                return Action.CALL;
+                return s.action(hand, getCall());
             else
                 return Action.DEAL; //ignore
         }
 
-        Hand hand = getBestHand();
-        if (hand == null)
-            return Action.CALL;
+        return s.action(hand, getCall());
+    }
 
-        //Logger.info("Betman best hand: %s", hand.toString());
-
-        if (cmd == Action.RAISE) {
-            if (hand.getStrength() == HandStrength.HighCard && getBoard().size() >= 4)
-                return Action.FOLD;
-            else if (hand.getStrength().ordinal() > HandStrength.TwoPair.ordinal())
-                return Action.RAISE;
-            else
-                return Action.CALL;
-        }
-
-        if (hand.getStrength().ordinal() >= HandStrength.TwoPair.ordinal())
-            return Action.RAISE;
-
-        return Action.CALL;
+    private Strategy chooseStrategy() {
+        if (board.size() == 3)
+            return new LoosePassive();
+        if (chips < 50)
+            return new TightPassive();
+        if (call > 20)
+            return new TightAggressive();
+        return new LooseAggressive();
     }
 
     @JsonIgnore

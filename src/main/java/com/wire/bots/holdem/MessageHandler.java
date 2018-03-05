@@ -49,6 +49,8 @@ public class MessageHandler extends MessageHandlerBase {
     private static final String ADD_BOT = "add bot";  // equivalent to `call`
     private static final String BETMAN = "Betman";
     private static final String TABLE_JSON = "table.json";
+    private static final String BET = "bet";
+    private static final String B = "b";
     private final StorageFactory storageFactory;
 
     MessageHandler(StorageFactory storageFactory) {
@@ -331,6 +333,8 @@ public class MessageHandler extends MessageHandlerBase {
                 return Action.DEAL;
             case R:
             case RAISE:
+            case BET:
+            case B:
                 return Action.RAISE;
             case C:
             case CHECK:
