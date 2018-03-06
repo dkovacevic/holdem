@@ -54,6 +54,7 @@ public class MessageHandler extends MessageHandlerBase {
     private static final String BET = "bet";
     private static final String B = "b";
     private static final String RESET = "reset";
+    private static final int DELAY = 2000;
     private final StorageFactory storageFactory;
 
     MessageHandler(StorageFactory storageFactory) {
@@ -72,7 +73,7 @@ public class MessageHandler extends MessageHandlerBase {
             Action action = parseCommand(msg.getText());
             switch (action) {
                 case RESET:
-                    closeTable(client);
+                    table = closeTable(client);
                     break;
                 case DEAL: {
                     table.shiftRoles();
@@ -95,8 +96,9 @@ public class MessageHandler extends MessageHandlerBase {
                 case RAISE:
                     int raise = table.raise(player);
                     if (raise != -1) {
-                        client.sendText(String.format("%s raised by %d, pot %d",
+                        client.sendText(String.format("%s(%d) raised by %d, pot %d",
                                 player.getName(),
+                                player.getChips(),
                                 raise,
                                 table.getPot()));
 
@@ -197,7 +199,7 @@ public class MessageHandler extends MessageHandlerBase {
                     Logger.error(e.toString());
                 }
             }
-        }, 3000);
+        }, DELAY);
     }
 
     private void onBetmanRaise(WireClient client, Table table, Player betman) {
@@ -208,8 +210,9 @@ public class MessageHandler extends MessageHandlerBase {
                 try {
                     int raise = table.raise(betman);
                     if (raise != -1) {
-                        client.sendText(String.format("%s raised by %d, pot %d",
+                        client.sendText(String.format("%s(%d) raised by %d, pot %d",
                                 betman.getName(),
+                                betman.getChips(),
                                 raise,
                                 table.getPot()));
 
@@ -219,7 +222,7 @@ public class MessageHandler extends MessageHandlerBase {
                     Logger.error(e.toString());
                 }
             }
-        }, 3000);
+        }, DELAY);
     }
 
     private void onBetmanCall(WireClient client, Table table, Player betman) {
@@ -231,8 +234,15 @@ public class MessageHandler extends MessageHandlerBase {
                     int call = table.call(betman);
                     if (call != -1) {
                         String msg = call == 0
-                                ? String.format("%s(%d) checked. pot: %d", betman.getName(), betman.getChips(), table.getPot())
-                                : String.format("%s(%d) called with %d chips. pot: %d", betman.getName(), betman.getChips(), call, table.getPot());
+                                ? String.format("%s(%d) checked. pot: %d",
+                                betman.getName(),
+                                betman.getChips(),
+                                table.getPot())
+                                : String.format("%s(%d) called with %d chips. pot: %d",
+                                betman.getName(),
+                                betman.getChips(),
+                                call,
+                                table.getPot());
                         client.sendText(msg);
 
                         if (betman.getCall() > 0) {
@@ -245,7 +255,7 @@ public class MessageHandler extends MessageHandlerBase {
                     Logger.error(e.toString());
                 }
             }
-        }, 3000);
+        }, DELAY);
     }
 
     private void check(WireClient client, Table table) throws Exception {
@@ -268,7 +278,7 @@ public class MessageHandler extends MessageHandlerBase {
         for (int i = 0; i < number; i++)
             table.flopCard();
 
-        client.sendText(String.format("Pot has %d chips", table.getPot()));
+        //client.sendText(String.format("Pot has %d chips", table.getPot()));
 
         for (Player player : table.getActivePlayers()) {
             if (!player.isBot()) {
@@ -356,11 +366,9 @@ public class MessageHandler extends MessageHandlerBase {
                 Storage storage = storageFactory.create(client.getId());
                 String jsonTable = storage.readFile(TABLE_JSON);
                 if (jsonTable != null) {
-                    Table table = deserializeTable(jsonTable);
-                    return table != null ? table : newTable(client);
-                } else {
-                    return newTable(client);
+                    return deserializeTable(jsonTable);
                 }
+                return newTable(client);
             } catch (Exception e) {
                 Logger.error(e.toString());
                 return null;
@@ -368,11 +376,11 @@ public class MessageHandler extends MessageHandlerBase {
         });
     }
 
-    private void closeTable(WireClient client) throws Exception {
+    private Table closeTable(WireClient client) throws Exception {
         String botId = client.getId();
-        Storage storage = storageFactory.create(botId);
-        storage.deleteFile(TABLE_JSON);// todo check for false
+        Table table = newTable(client); //todo delete json instead of creating new table, ffs!
         tables.remove(botId);
+        return table;
     }
 
     private Table newTable(WireClient client) throws IOException {
@@ -384,9 +392,7 @@ public class MessageHandler extends MessageHandlerBase {
                 table.addPlayer(user, false);
             }
         }
-
         Logger.info("New table with %d players", table.getPlayers().size());
-
         return table;
     }
 
@@ -396,13 +402,7 @@ public class MessageHandler extends MessageHandlerBase {
         for (Player player : table.getPlayers()) {
             player.setBoard(table.getBoard());
         }
-
-        //todo remove this shit
-        if (table.getPlayers().size() == 1)
-            return null;
-
         Logger.info("Loaded table from storage");
-
         return table;
     }
 
