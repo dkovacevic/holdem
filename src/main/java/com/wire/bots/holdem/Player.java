@@ -132,7 +132,7 @@ public class Player implements Comparable<Player> {
         chips += val;
     }
 
-    int getChips() {
+    public int getChips() {
         return chips;
     }
 

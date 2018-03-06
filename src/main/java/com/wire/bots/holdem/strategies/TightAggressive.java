@@ -1,30 +1,23 @@
 package com.wire.bots.holdem.strategies;
 
 import com.wire.bots.holdem.Action;
-import com.wire.bots.holdem.Hand;
 import com.wire.bots.holdem.HandStrength;
 import com.wire.bots.holdem.Player;
 
-public class TightAggressive implements Strategy {
-    private final Player bot;
-
+public class TightAggressive extends BaseStrategy implements Strategy {
     public TightAggressive(Player bot) {
-        this.bot = bot;
+        super(bot);
     }
 
     @Override
     public Action action(Action cmd) {
-        if (bot.getBoard().isEmpty()) {
+        if (!flop()) {
             return Action.CALL;
         }
 
-        Hand hand = bot.getBestHand();
-        HandStrength strength = hand.getStrength();
-        int call = bot.getCall();
-
         // it was a raise
         if (call > 0) {
-            if (strength.ordinal() >= HandStrength.ThreeOfKind.ordinal())
+            if (strength.ordinal() >= HandStrength.ThreeOfKind.ordinal() && able())
                 return Action.RAISE;
             else
                 return Action.CALL;
@@ -32,7 +25,7 @@ public class TightAggressive implements Strategy {
 
         // it was a call
 
-        if (strength.ordinal() >= HandStrength.ThreeOfKind.ordinal())
+        if (strength.ordinal() >= HandStrength.ThreeOfKind.ordinal() && able())
             return Action.RAISE;
         else
             return Action.CALL;

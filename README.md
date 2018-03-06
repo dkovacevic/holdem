@@ -18,6 +18,7 @@ type: `add bot`. This will add _Betman_ player
  - `call`  to call it
  - `raise` to raise by current raise
  - `fold`  to fold
+ - `reset` to reset the game
 
 ## Limited pots
 Blinds are increased every 3rd round. Raise is increased every 5th round

@@ -153,10 +153,13 @@ class Table {
 
     // Pay to the Player and flush the pot
     int flushPot(Player player) {
-        int ret = pot;
-        player.put(pot);
-        pot = 0;
-        return ret;
+        return refund(player, pot);
+    }
+
+    private int refund(Player player, int refund) {
+        pot -= refund;
+        player.put(refund);
+        return refund;
     }
 
     boolean blind(Player player) {
@@ -287,8 +290,9 @@ class Table {
 
     void refund(int refund) {
         players.forEach(player -> {
-            if (player.isCalled() && !player.isFolded())
-                player.put(refund);
+            if (player.isCalled() && !player.isFolded()) {
+                refund(player, refund);
+            }
         });
     }
 }

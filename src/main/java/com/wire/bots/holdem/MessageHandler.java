@@ -32,6 +32,8 @@ import com.wire.bots.sdk.tools.Logger;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MessageHandler extends MessageHandlerBase {
@@ -51,6 +53,7 @@ public class MessageHandler extends MessageHandlerBase {
     private static final String TABLE_JSON = "table.json";
     private static final String BET = "bet";
     private static final String B = "b";
+    private static final String RESET = "reset";
     private final StorageFactory storageFactory;
 
     MessageHandler(StorageFactory storageFactory) {
@@ -68,6 +71,9 @@ public class MessageHandler extends MessageHandlerBase {
 
             Action action = parseCommand(msg.getText());
             switch (action) {
+                case RESET:
+                    closeTable(client);
+                    break;
                 case DEAL: {
                     table.shiftRoles();
 
@@ -79,9 +85,11 @@ public class MessageHandler extends MessageHandlerBase {
                             table.getSmallBlind(),
                             table.getRaise()));
 
-                    dealPlayers(client, table);
-
-                    betmanCall(client, table, action);
+                    boolean showdown = dealPlayers(client, table);
+                    if (showdown)
+                        showdown(client, table);
+                    else
+                        betmanCall(client, table, action);
                 }
                 break;
                 case RAISE:
@@ -132,7 +140,7 @@ public class MessageHandler extends MessageHandlerBase {
         }
     }
 
-    private void dealPlayers(WireClient client, Table table) throws Exception {
+    private boolean dealPlayers(WireClient client, Table table) throws Exception {
         boolean showdown = false;
         Collection<Player> players = table.getPlayers();
         for (Player player : players) {
@@ -152,9 +160,7 @@ public class MessageHandler extends MessageHandlerBase {
             if (players.size() == 2 && player.getRole() == Role.SB)
                 player.setRole(Role.Caller);
         }
-
-        if (showdown)
-            showdown(client, table);
+        return showdown;
     }
 
     private void betmanCall(WireClient client, Table table, Action cmd) throws Exception {
@@ -165,28 +171,81 @@ public class MessageHandler extends MessageHandlerBase {
         Action action = betman.action(cmd);
         switch (action) {
             case CALL:
-                int call = table.call(betman);
-                if (call != -1) {
-                    String msg = call == 0
-                            ? String.format("%s checked", betman.getName())
-                            : String.format("%s called with %d chips", betman.getName(), call);
-                    client.sendText(msg);
-                }
+                onBetmanCall(client, table, betman);
                 break;
             case RAISE:
-                if (table.raise(betman) != -1) {
-                    client.sendText(String.format("%s raised by %d, pot %d",
-                            betman.getName(),
-                            table.getRaise(),
-                            table.getPot()));
-                }
+                onBetmanRaise(client, table, betman);
                 break;
             case FOLD:
-                if (table.fold(betman)) {
-                    client.sendText(String.format("%s folded like a bitch", betman.getName()));
-                }
+                onBetmanFold(client, table, betman);
                 break;
         }
+    }
+
+    private void onBetmanFold(WireClient client, Table table, Player betman) {
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    if (table.fold(betman)) {
+                        client.sendText(String.format("%s has folded", betman.getName()));
+
+                        check(client, table);
+                    }
+                } catch (Exception e) {
+                    Logger.error(e.toString());
+                }
+            }
+        }, 3000);
+    }
+
+    private void onBetmanRaise(WireClient client, Table table, Player betman) {
+        Timer timer = new Timer(BETMAN);
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    int raise = table.raise(betman);
+                    if (raise != -1) {
+                        client.sendText(String.format("%s raised by %d, pot %d",
+                                betman.getName(),
+                                raise,
+                                table.getPot()));
+
+                        check(client, table);
+                    }
+                } catch (Exception e) {
+                    Logger.error(e.toString());
+                }
+            }
+        }, 3000);
+    }
+
+    private void onBetmanCall(WireClient client, Table table, Player betman) {
+        Timer timer = new Timer(BETMAN);
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    int call = table.call(betman);
+                    if (call != -1) {
+                        String msg = call == 0
+                                ? String.format("%s(%d) checked. pot: %d", betman.getName(), betman.getChips(), table.getPot())
+                                : String.format("%s(%d) called with %d chips. pot: %d", betman.getName(), betman.getChips(), call, table.getPot());
+                        client.sendText(msg);
+
+                        if (betman.getCall() > 0) {
+                            table.refund(betman.getCall());
+                            showdown(client, table);
+                        } else
+                            check(client, table);
+                    }
+                } catch (Exception e) {
+                    Logger.error(e.toString());
+                }
+            }
+        }, 3000);
     }
 
     private void check(WireClient client, Table table) throws Exception {
@@ -357,6 +416,8 @@ public class MessageHandler extends MessageHandlerBase {
 
     private Action parseCommand(String cmd) {
         switch (cmd.toLowerCase().trim()) {
+            case RESET:
+                return Action.RESET;
             case DEAL:
                 return Action.DEAL;
             case R:

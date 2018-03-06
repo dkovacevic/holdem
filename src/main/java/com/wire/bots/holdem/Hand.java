@@ -135,11 +135,16 @@ public class Hand implements Comparable<Hand> {
     }
 
     int flush() {
+        if (cards.size() != 5)
+            return -1;
         boolean flush = cards.stream().allMatch(card -> card.getSuit() == highCard().getSuit());
         return flush ? highCard().getRank() : -1;
     }
 
     int straight() {
+        if (cards.size() != 5)
+            return -1;
+
         for (int i = 1; i < cards.size() - 1; i++) {
             int prev = cards.get(i - 1).getRank();
             int mid = cards.get(i).getRank();

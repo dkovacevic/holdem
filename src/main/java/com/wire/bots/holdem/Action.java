@@ -6,5 +6,6 @@ public enum Action {
     RAISE,
     DEAL,
     ADD_BOT,
-    FOLD
+    FOLD,
+    RESET
 }
