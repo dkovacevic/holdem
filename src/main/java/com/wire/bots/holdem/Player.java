@@ -3,7 +3,6 @@ package com.wire.bots.holdem;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wire.bots.holdem.strategies.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,7 +15,7 @@ public class Player implements Comparable<Player> {
     @JsonProperty
     private final ArrayList<Card> cards = new ArrayList<>();
     @JsonProperty
-    private boolean bot = false;
+    protected boolean bot = false;
     @JsonProperty
     private String id;
     @JsonProperty
@@ -51,7 +50,6 @@ public class Player implements Comparable<Player> {
     @JsonIgnore
     public Collection<Hand> getAllHands() {
         HashSet<Hand> ret = new HashSet<>();
-        //ret.add(new Hand(cards));
         int n = board.size();
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
@@ -188,37 +186,6 @@ public class Player implements Comparable<Player> {
 
     void setBot(boolean bot) {
         this.bot = bot;
-    }
-
-    /**
-     * AI for the bot. Input param cmd is Action performed by the player that bet before
-     *
-     * @param cmd Previous action (action of some other Player)
-     * @return Bot's call as the result to @cmd
-     */
-    Action action(Action cmd) {
-        Strategy s = chooseStrategy();
-
-        if (cmd == Action.DEAL) {
-            // Bot is the Caller
-            if (getRole() == Role.Caller)
-                return s.action(cmd);
-            else
-                return Action.DEAL; //ignore
-        }
-
-        return s.action(cmd);
-    }
-
-    private Strategy chooseStrategy() {
-        if (board.size() == 3)
-            return new LoosePassive(this);
-        if (chips < 50)
-            return new TightPassive(this);
-        if (call > 20)
-            return new TightAggressive(this);
-
-        return new LooseAggressive(this);
     }
 
     @JsonIgnore

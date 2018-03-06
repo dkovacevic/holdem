@@ -81,6 +81,9 @@ class Table {
         return players.stream().filter(player -> !player.isFolded()).collect(Collectors.toList());
     }
 
+    Collection<Player> getTopPlayers() {
+        return players.stream().sorted((o1, o2) -> Integer.compare(o2.getChips(), o1.getChips())).collect(Collectors.toList());
+    }
 
     Collection<Player> getFoldedPlayers() {
         return players.stream().filter(Player::isFolded).collect(Collectors.toList());
@@ -153,7 +156,9 @@ class Table {
 
     // Pay to the Player and flush the pot
     int flushPot(Player player) {
-        return refund(player, pot);
+        synchronized (players) {
+            return refund(player, pot);
+        }
     }
 
     private int refund(Player player, int refund) {
@@ -254,7 +259,9 @@ class Table {
     }
 
     int getPot() {
-        return pot;
+        synchronized (players) {
+            return pot;
+        }
     }
 
     int getSmallBlind() {
@@ -294,5 +301,11 @@ class Table {
                 refund(player, refund);
             }
         });
+    }
+
+    boolean isSomeoneKaputt() {
+        synchronized (players) {
+            return players.stream().anyMatch(player -> player.getChips() <= 0);
+        }
     }
 }

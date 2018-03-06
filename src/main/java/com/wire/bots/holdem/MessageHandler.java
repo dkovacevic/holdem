@@ -32,8 +32,7 @@ import com.wire.bots.sdk.tools.Logger;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MessageHandler extends MessageHandlerBase {
@@ -49,12 +48,12 @@ public class MessageHandler extends MessageHandlerBase {
     private static final String C = "c";          // short for `call`
     private static final String CHECK = "check";  // equivalent to `call`
     private static final String ADD_BOT = "add bot";  // equivalent to `call`
-    private static final String BETMAN = "Betman";
     private static final String TABLE_JSON = "table.json";
     private static final String BET = "bet";
     private static final String B = "b";
     private static final String RESET = "reset";
-    private static final int DELAY = 2000;
+    private static final String BETMAN = "Betman";
+
     private final StorageFactory storageFactory;
 
     MessageHandler(StorageFactory storageFactory) {
@@ -86,11 +85,9 @@ public class MessageHandler extends MessageHandlerBase {
                             table.getSmallBlind(),
                             table.getRaise()));
 
-                    boolean showdown = dealPlayers(client, table);
-                    if (showdown)
-                        showdown(client, table);
-                    else
-                        betmanCall(client, table, action);
+                    dealPlayers(client, table);
+
+                    betmanCall(client, table, action);
                 }
                 break;
                 case RAISE:
@@ -103,7 +100,6 @@ public class MessageHandler extends MessageHandlerBase {
                                 table.getPot()));
 
                         betmanCall(client, table, action);
-                        check(client, table);
                     } else if (!player.isCalled()) {
                         client.sendDirectText("Raise failed due to insufficient funds", player.getId());
                     }
@@ -113,43 +109,37 @@ public class MessageHandler extends MessageHandlerBase {
                     if (call != -1) {
                         if (player.getCall() > 0) {
                             table.refund(player.getCall());
-                            showdown(client, table);
                         } else {
                             betmanCall(client, table, action);
-                            check(client, table);
                         }
                     }
                     break;
                 case FOLD:
                     if (table.fold(player)) {
                         betmanCall(client, table, action);
-                        check(client, table);
                     }
                     break;
-                case ADD_BOT:
-                    if (table.getPlayer(BETMAN) == null) {
-                        User user = new User();
-                        user.id = BETMAN;
-                        user.name = BETMAN;
-                        addNewPlayer(client, table, user, true);
-                    } else
-                        client.sendDirectText("Only one bot player allowed", player.getId());
-                    break;
+                case ADD_BOT: {
+                    User user = new User();
+                    user.id = UUID.randomUUID().toString();
+                    user.name = BETMAN;
+                    addNewPlayer(client, table, user, true);
+                }
+                break;
             }
+
             saveState(table, client.getId());
+
+            check(client, table);
         } catch (Exception e) {
             Logger.error(e.getMessage());
         }
     }
 
-    private boolean dealPlayers(WireClient client, Table table) throws Exception {
-        boolean showdown = false;
+    private void dealPlayers(WireClient client, Table table) throws Exception {
         Collection<Player> players = table.getPlayers();
         for (Player player : players) {
-            boolean blind = table.blind(player);//take SB or BB
-
-            if (!blind)
-                showdown = true;
+            table.blind(player);//take SB or BB
 
             Card a = table.dealCard(player);
             Card b = table.dealCard(player);
@@ -162,106 +152,26 @@ public class MessageHandler extends MessageHandlerBase {
             if (players.size() == 2 && player.getRole() == Role.SB)
                 player.setRole(Role.Caller);
         }
-        return showdown;
     }
 
     private void betmanCall(WireClient client, Table table, Action cmd) throws Exception {
-        Player betman = table.getPlayer(BETMAN);
-        if (betman == null)
-            return;
-
-        Action action = betman.action(cmd);
-        switch (action) {
-            case CALL:
-                onBetmanCall(client, table, betman);
-                break;
-            case RAISE:
-                onBetmanRaise(client, table, betman);
-                break;
-            case FOLD:
-                onBetmanFold(client, table, betman);
-                break;
+        for (Player player : table.getActivePlayers()) {
+            if (player.isBot()) {
+                Betman betman = new Betman(player);
+                betman.action(client, table, cmd, this::check);
+            }
         }
     }
 
-    private void onBetmanFold(WireClient client, Table table, Player betman) {
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    if (table.fold(betman)) {
-                        client.sendText(String.format("%s has folded", betman.getName()));
+    private Boolean check(WireClient client, Table table) {
+        if (table.isSomeoneKaputt()) {
+            showdown(client, table);
+            return Boolean.TRUE;
+        }
 
-                        check(client, table);
-                    }
-                } catch (Exception e) {
-                    Logger.error(e.toString());
-                }
-            }
-        }, DELAY);
-    }
-
-    private void onBetmanRaise(WireClient client, Table table, Player betman) {
-        Timer timer = new Timer(BETMAN);
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    int raise = table.raise(betman);
-                    if (raise != -1) {
-                        client.sendText(String.format("%s(%d) raised by %d, pot %d",
-                                betman.getName(),
-                                betman.getChips(),
-                                raise,
-                                table.getPot()));
-
-                        check(client, table);
-                    }
-                } catch (Exception e) {
-                    Logger.error(e.toString());
-                }
-            }
-        }, DELAY);
-    }
-
-    private void onBetmanCall(WireClient client, Table table, Player betman) {
-        Timer timer = new Timer(BETMAN);
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    int call = table.call(betman);
-                    if (call != -1) {
-                        String msg = call == 0
-                                ? String.format("%s(%d) checked. pot: %d",
-                                betman.getName(),
-                                betman.getChips(),
-                                table.getPot())
-                                : String.format("%s(%d) called with %d chips. pot: %d",
-                                betman.getName(),
-                                betman.getChips(),
-                                call,
-                                table.getPot());
-                        client.sendText(msg);
-
-                        if (betman.getCall() > 0) {
-                            table.refund(betman.getCall());
-                            showdown(client, table);
-                        } else
-                            check(client, table);
-                    }
-                } catch (Exception e) {
-                    Logger.error(e.toString());
-                }
-            }
-        }, DELAY);
-    }
-
-    private void check(WireClient client, Table table) throws Exception {
         if (table.isAllFolded()) {
             showdown(client, table);
-            return;
+            return Boolean.TRUE;
         }
 
         if (table.isAllCalled()) {
@@ -270,48 +180,57 @@ public class MessageHandler extends MessageHandlerBase {
             else
                 flopCards(client, table, table.isFlopped() ? 1 : 3); // turn or river or flop
         }
+        return Boolean.TRUE;
     }
 
-    private void flopCards(WireClient client, Table table, int number) throws Exception {
-        table.newBet();
+    private void flopCards(WireClient client, Table table, int number) {
+        try {
+            table.newBet();
 
-        for (int i = 0; i < number; i++)
-            table.flopCard();
+            for (int i = 0; i < number; i++)
+                table.flopCard();
 
-        //client.sendText(String.format("Pot has %d chips", table.getPot()));
-
-        for (Player player : table.getActivePlayers()) {
-            if (!player.isBot()) {
-                byte[] image = Images.getImage(player.getCards(), table.getBoard());
-                client.sendPicture(image, MIME_TYPE, player.getId());
+            for (Player player : table.getActivePlayers()) {
+                if (!player.isBot()) {
+                    byte[] image = Images.getImage(player.getCards(), table.getBoard());
+                    client.sendPicture(image, MIME_TYPE, player.getId());
+                }
             }
-        }
 
-        for (Player player : table.getFoldedPlayers()) {
-            if (!player.isBot()) {
-                byte[] image = Images.getImage(table.getBoard());
-                client.sendPicture(image, MIME_TYPE, player.getId());
+            for (Player player : table.getFoldedPlayers()) {
+                if (!player.isBot()) {
+                    byte[] image = Images.getImage(table.getBoard());
+                    client.sendPicture(image, MIME_TYPE, player.getId());
+                }
             }
-        }
 
-        betmanCall(client, table, Action.DEAL);
+            betmanCall(client, table, Action.CALL);
+        } catch (Exception e) {
+            Logger.error("flopCards: %s", e.toString());
+        }
     }
 
-    private void showdown(WireClient client, Table table) throws Exception {
-        Player winner = table.getWinner();
-        int pot = table.flushPot(winner);
+    private void showdown(WireClient client, Table table) {
+        try {
+            Player winner = table.getWinner();
+            int pot = table.flushPot(winner);
+            if (pot <= 0)
+                return;
 
-        printWinner(client, table, winner, pot);
+            printWinner(client, table, winner, pot);
 
-        for (Player player : table.collectPlayers()) {
-            client.sendText(String.format("%s has ran out of chips and was kicked out", player.getName()));
-        }
+            for (Player player : table.collectPlayers()) {
+                client.sendText(String.format("%s has ran out of chips and was kicked out", player.getName()));
+            }
 
-        printSummary(client, table);
+            printSummary(client, table);
 
-        if (table.getPlayers().size() <= 1) {
-            client.ping();
-            closeTable(client);
+            if (table.getPlayers().size() <= 1) {
+                client.ping();
+                closeTable(client);
+            }
+        } catch (Exception e) {
+            Logger.error("showdown: %s", e.toString());
         }
     }
 
@@ -476,7 +395,7 @@ public class MessageHandler extends MessageHandlerBase {
 
     private void printSummary(WireClient client, Table table) throws Exception {
         StringBuilder sb = new StringBuilder("```");
-        for (Player player : table.getPlayers()) {
+        for (Player player : table.getTopPlayers()) {
             String text = String.format("%-15s chips: %d",
                     player.getName(),
                     player.getChips());
