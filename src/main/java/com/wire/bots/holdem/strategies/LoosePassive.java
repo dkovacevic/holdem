@@ -14,10 +14,10 @@ public class LoosePassive implements Strategy {
 
     @Override
     public Action action(Action cmd) {
-        Hand hand = bot.getBestHand();
-        if (hand == null)
+        if (bot.getBoard().isEmpty())
             return Action.CALL;
 
+        Hand hand = bot.getBestHand();
         HandStrength strength = hand.getStrength();
 
         // it was a raise

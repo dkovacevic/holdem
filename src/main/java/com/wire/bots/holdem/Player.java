@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wire.bots.holdem.strategies.*;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -52,6 +51,7 @@ public class Player implements Comparable<Player> {
     @JsonIgnore
     public Collection<Hand> getAllHands() {
         HashSet<Hand> ret = new HashSet<>();
+        //ret.add(new Hand(cards));
         int n = board.size();
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
@@ -77,17 +77,16 @@ public class Player implements Comparable<Player> {
     }
 
     @JsonIgnore
-    @Nullable
     public Hand getBestHand() {
         Collection<Hand> allHands = getAllHands();
-        return allHands.stream().max(Comparator.naturalOrder()).orElse(null);
+        return allHands.stream().max(Comparator.naturalOrder()).orElse(new Hand(cards));
     }
 
     String getId() {
         return id;
     }
 
-    public ArrayList<Card> getCards() {
+    ArrayList<Card> getCards() {
         return cards;
     }
 
@@ -123,9 +122,9 @@ public class Player implements Comparable<Player> {
     }
 
     int take() {
-        int ret = call;
-        chips -= call;
-        call = 0;
+        int ret = call <= chips ? call : chips;
+        chips -= ret;
+        call -= ret;
         return ret;
     }
 
@@ -135,6 +134,10 @@ public class Player implements Comparable<Player> {
 
     int getChips() {
         return chips;
+    }
+
+    void setChips(int chips) {
+        this.chips = chips;
     }
 
     boolean isCalled() {
@@ -219,13 +222,11 @@ public class Player implements Comparable<Player> {
     }
 
     @JsonIgnore
-    private ArrayList<Card> getBoard() {
+    public ArrayList<Card> getBoard() {
         return board;
     }
 
     void setBoard(ArrayList<Card> board) {
         this.board = board;
     }
-
-
 }

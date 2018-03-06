@@ -94,6 +94,9 @@ public class Hand implements Comparable<Hand> {
         if (cards.get(1).getRank() < that.cards.get(1).getRank())
             return -1;
 
+        if (cards.size() <= 2 || that.cards.size() <= 2)
+            return 0;
+
         if (cards.get(2).getRank() > that.cards.get(2).getRank())
             return 1;
         if (cards.get(2).getRank() < that.cards.get(2).getRank())
@@ -113,13 +116,9 @@ public class Hand implements Comparable<Hand> {
 
     @Override
     public int hashCode() {
-        return String.format("%s%s%s%s%s",
-                cards.get(0),
-                cards.get(1),
-                cards.get(2),
-                cards.get(3),
-                cards.get(4))
-                .hashCode();
+        StringBuilder ret = new StringBuilder();
+        cards.forEach(card -> ret.append(card.toString()));
+        return ret.toString().hashCode();
     }
 
     @Override
@@ -141,7 +140,7 @@ public class Hand implements Comparable<Hand> {
     }
 
     int straight() {
-        for (int i = 1; i < 4; i++) {
+        for (int i = 1; i < cards.size() - 1; i++) {
             int prev = cards.get(i - 1).getRank();
             int mid = cards.get(i).getRank();
             int next = cards.get(i + 1).getRank();
@@ -157,7 +156,7 @@ public class Hand implements Comparable<Hand> {
 
 
     int fourKind() {
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < cards.size() - 3; i++) {
             int c1 = cards.get(i).getRank();
             int c2 = cards.get(i + 1).getRank();
             int c3 = cards.get(i + 2).getRank();
@@ -173,7 +172,7 @@ public class Hand implements Comparable<Hand> {
         if (ret == -1)
             return -1;
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < cards.size() - 1; i++) {
             int c1 = cards.get(i).getRank();
             int c2 = cards.get(i + 1).getRank();
             if (c1 != ret && c1 == c2) {
@@ -184,7 +183,7 @@ public class Hand implements Comparable<Hand> {
     }
 
     int threeKind() {
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < cards.size() - 2; i++) {
             int c1 = cards.get(i).getRank();
             int c2 = cards.get(i + 1).getRank();
             int c3 = cards.get(i + 2).getRank();

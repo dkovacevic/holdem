@@ -81,6 +81,11 @@ class Table {
         return players.stream().filter(player -> !player.isFolded()).collect(Collectors.toList());
     }
 
+
+    Collection<Player> getFoldedPlayers() {
+        return players.stream().filter(Player::isFolded).collect(Collectors.toList());
+    }
+
     boolean isAllFolded() {
         return getActivePlayers().size() <= 1;
     }
@@ -154,30 +159,36 @@ class Table {
         return ret;
     }
 
-    void blind(Player player) {
+    boolean blind(Player player) {
         switch (player.getRole()) {
-            case SB:
+            case SB: {
                 player.setCall(smallBlind);
-                pot += player.take();
+                int take = player.take();
+                int ret = player.getCall();
+                pot += take;
                 player.setCall(smallBlind);
-                break;
-            case BB:
+                return ret == 0;
+            }
+            case BB: {
                 player.setCall(2 * smallBlind);
-                pot += player.take();
-                break;
+                int take = player.take();
+                int ret = player.getCall();
+                pot += take;
+                return ret == 0;
+            }
             default:
                 player.setCall(2 * smallBlind);
-                break;
+                return true;
         }
     }
 
     int raise(Player player) {
         synchronized (players) {
-            if (!player.isCalled()) {
-                int call = player.getCall();
+            if (!player.isCalled() && player.getChips() > 0) {
+                int raise = this.raise <= player.getChips() ? this.raise : player.getChips();
                 raiseCallers(raise);
                 call(player);
-                return call + raise;
+                return raise;
             }
             return -1;
         }
@@ -185,10 +196,10 @@ class Table {
 
     int call(Player player) {
         synchronized (players) {
-            if (!player.isCalled()) {
+            if (!player.isCalled() && player.getChips() >= 0) {
                 int take = player.take();
                 pot += take;
-                player.setCalled(true);
+                player.setCalled(player.getCall() == 0);
                 return take;
             }
             return -1;
@@ -251,6 +262,10 @@ class Table {
         return raise;
     }
 
+    public void setRaise(int raise) {
+        this.raise = raise;
+    }
+
     Player getPlayer(String userId) {
         return players.stream()
                 .filter(player -> player.getId().equals(userId))
@@ -268,5 +283,12 @@ class Table {
         StringBuilder sb = new StringBuilder();
         getPlayers().forEach(player -> sb.append(player.getNameWithRole()).append(" | "));
         return sb.toString();
+    }
+
+    void refund(int refund) {
+        players.forEach(player -> {
+            if (player.isCalled() && !player.isFolded())
+                player.put(refund);
+        });
     }
 }

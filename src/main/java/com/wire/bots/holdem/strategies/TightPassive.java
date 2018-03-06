@@ -15,8 +15,7 @@ public class TightPassive implements Strategy {
     @Override
     public Action action(Action cmd) {
         Hand hand = bot.getBestHand();
-        if (hand == null) {
-            hand = new Hand(bot.getCards());
+        if (bot.getBoard().isEmpty()) {
             if (cmd == Action.RAISE && hand.strongestCard() < 10)
                 return Action.FOLD;
             else
@@ -28,7 +27,7 @@ public class TightPassive implements Strategy {
 
         // it was a raise
         if (call > 0) {
-            if (strength.ordinal() >= HandStrength.TwoPair.ordinal())
+            if (strength.ordinal() >= HandStrength.OnePair.ordinal())
                 return Action.CALL;
             else
                 return Action.FOLD;

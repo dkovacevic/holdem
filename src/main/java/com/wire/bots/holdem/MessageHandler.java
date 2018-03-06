@@ -85,22 +85,29 @@ public class MessageHandler extends MessageHandlerBase {
                 }
                 break;
                 case RAISE:
-                    if (table.raise(player) != -1) {
+                    int raise = table.raise(player);
+                    if (raise != -1) {
                         client.sendText(String.format("%s raised by %d, pot %d",
                                 player.getName(),
-                                table.getRaise(),
+                                raise,
                                 table.getPot()));
 
                         betmanCall(client, table, action);
                         check(client, table);
+                    } else if (!player.isCalled()) {
+                        client.sendDirectText("Raise failed due to insufficient funds", player.getId());
                     }
                     break;
                 case CALL:
-                    if (table.call(player) != -1) {
-                        // client.sendDirectText(String.format("You called with %d chips",
-                        //         call), player.getId());
-                        betmanCall(client, table, action);
-                        check(client, table);
+                    int call = table.call(player);
+                    if (call != -1) {
+                        if (player.getCall() > 0) {
+                            table.refund(player.getCall());
+                            showdown(client, table);
+                        } else {
+                            betmanCall(client, table, action);
+                            check(client, table);
+                        }
                     }
                     break;
                 case FOLD:
@@ -126,9 +133,13 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     private void dealPlayers(WireClient client, Table table) throws Exception {
+        boolean showdown = false;
         Collection<Player> players = table.getPlayers();
         for (Player player : players) {
-            table.blind(player); //take SB or BB
+            boolean blind = table.blind(player);//take SB or BB
+
+            if (!blind)
+                showdown = true;
 
             Card a = table.dealCard(player);
             Card b = table.dealCard(player);
@@ -141,6 +152,9 @@ public class MessageHandler extends MessageHandlerBase {
             if (players.size() == 2 && player.getRole() == Role.SB)
                 player.setRole(Role.Caller);
         }
+
+        if (showdown)
+            showdown(client, table);
     }
 
     private void betmanCall(WireClient client, Table table, Action cmd) throws Exception {
@@ -200,6 +214,13 @@ public class MessageHandler extends MessageHandlerBase {
         for (Player player : table.getActivePlayers()) {
             if (!player.isBot()) {
                 byte[] image = Images.getImage(player.getCards(), table.getBoard());
+                client.sendPicture(image, MIME_TYPE, player.getId());
+            }
+        }
+
+        for (Player player : table.getFoldedPlayers()) {
+            if (!player.isBot()) {
+                byte[] image = Images.getImage(table.getBoard());
                 client.sendPicture(image, MIME_TYPE, player.getId());
             }
         }
@@ -296,7 +317,6 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     private Table newTable(WireClient client) throws IOException {
-        Logger.info("New table");
         Table table = new Table(new Deck());
         Conversation conversation = client.getConversation();
         for (Member member : conversation.members) {
@@ -305,11 +325,13 @@ public class MessageHandler extends MessageHandlerBase {
                 table.addPlayer(user, false);
             }
         }
+
+        Logger.info("New table with %d players", table.getPlayers().size());
+
         return table;
     }
 
     private Table deserializeTable(String jsonTable) throws java.io.IOException {
-        Logger.info("Loading table...");
         ObjectMapper mapper = new ObjectMapper();
         Table table = mapper.readValue(jsonTable, Table.class);
         for (Player player : table.getPlayers()) {
@@ -319,6 +341,8 @@ public class MessageHandler extends MessageHandlerBase {
         //todo remove this shit
         if (table.getPlayers().size() == 1)
             return null;
+
+        Logger.info("Loaded table from storage");
 
         return table;
     }

@@ -16,9 +16,8 @@ public class LooseAggressive implements Strategy {
     @Override
     public Action action(Action cmd) {
         Hand hand = bot.getBestHand();
-        if (hand == null) {
-            hand = new Hand(bot.getCards());
-            if (hand.onePair() != -1)
+        if (bot.getBoard().isEmpty()) {
+            if (hand.onePair() != -1 || hand.strongestCard() > 7) // One pair or High card stronger than 10
                 return Action.RAISE;
             else
                 return Action.CALL;
