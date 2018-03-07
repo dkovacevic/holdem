@@ -8,7 +8,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
@@ -99,7 +98,9 @@ public class Images {
 
     private static BufferedImage getBufferedImage(Card card) throws IOException {
         return cache.computeIfAbsent(card, k -> {
-            try (InputStream input = new URL(String.format("%s/%s.png", URL, card)).openStream()) {
+            ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+            String path = String.format("%s/%s.png", "cards", card);
+            try (InputStream input = classloader.getResourceAsStream(path)) {
                 return ImageIO.read(input);
             } catch (IOException e) {
                 Logger.error(e.toString());

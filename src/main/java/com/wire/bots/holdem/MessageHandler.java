@@ -234,7 +234,8 @@ public class MessageHandler extends MessageHandlerBase {
 
             if (table.getPlayers().size() <= 1) {
                 client.ping();
-                closeTable(client);
+                table = closeTable(client);
+                saveState(table, client.getId());
             }
         } catch (Exception e) {
             Logger.error("showdown: %s", e.toString());
@@ -382,11 +383,6 @@ public class MessageHandler extends MessageHandlerBase {
 
         for (Player player : activePlayers) {
             Hand bestHand = player.getBestHand();
-            if (bestHand == null) {
-                Logger.warning("Best hand == null, wtf?");
-                continue;
-            }
-
             String name = player.equals(winner)
                     ? String.format("**%s** has won %d chips", player.getName(), pot)
                     : player.getName();
@@ -395,7 +391,7 @@ public class MessageHandler extends MessageHandlerBase {
                     bestHand);
             client.sendText(text);
 
-            byte[] image = Images.getImage(bestHand.getCards());
+            byte[] image = Images.getImage(bestHand.getCards(), player.getCards());
             client.sendPicture(image, MIME_TYPE);
         }
     }
