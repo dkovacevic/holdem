@@ -91,13 +91,13 @@ public class Images {
     }
 
     private static BufferedImage attach(BufferedImage a, BufferedImage b) {
-        final int width = a.getWidth() + b.getWidth();
+        final int width = a.getWidth() + b.getWidth() + SHIFT;
 
         BufferedImage result = new BufferedImage(width, HEIGHT, BufferedImage.TYPE_INT_ARGB);
         Graphics g = result.getGraphics();
 
         g.drawImage(a, 0, 0, null);
-        g.drawImage(b, a.getWidth(), 0, null);
+        g.drawImage(b, a.getWidth() + SHIFT, 0, null);
         g.dispose();
         return result;
     }
