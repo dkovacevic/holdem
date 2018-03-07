@@ -5,6 +5,9 @@ import com.wire.bots.sdk.tools.Logger;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
+import java.awt.image.LookupOp;
+import java.awt.image.LookupTable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,10 +17,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Images {
     private static final ConcurrentHashMap<Card, BufferedImage> cache = new ConcurrentHashMap<>();
-    private static final String URL = "https://raw.githubusercontent.com/hayeah/playing-cards-assets/master/png";
-    private static final int SHIFT = 42;
-    private static final int WIDTH = 222;
-    private static final int HEIGHT = 323;
+    private static final int SHIFT = 30;   // 42
+    private static final int HEIGHT = 216; //323
+    private static final int WIDTH = 150;  //222
 
     public static byte[] getImage(Collection<Card> cards) throws IOException {
         ArrayList<BufferedImage> load = getBufferedImages(cards);
@@ -58,10 +60,18 @@ public class Images {
 
             BufferedImage sub = image.getSubimage(0, 0, SHIFT, HEIGHT);
             g.drawImage(sub, i * SHIFT, 0, null);
+
         }
         BufferedImage image = images.get(size);
+        image = replaceAlpha(image);
         g.drawImage(image, size * SHIFT, 0, null);
+        g.dispose();
         return result;
+    }
+
+    private static BufferedImage replaceAlpha(BufferedImage image) {
+        BufferedImageOp lookup = new LookupOp(new ColorMapper(), null);
+        return lookup.filter(image, null);
     }
 
     private static BufferedImage attach(ArrayList<BufferedImage> images1, ArrayList<BufferedImage> images2) {
@@ -76,6 +86,7 @@ public class Images {
 
         g.drawImage(a, 0, 0, null);
         g.drawImage(b, a.getWidth() + shift, 0, null);
+        g.dispose();
         return result;
     }
 
@@ -87,6 +98,7 @@ public class Images {
 
         g.drawImage(a, 0, 0, null);
         g.drawImage(b, a.getWidth(), 0, null);
+        g.dispose();
         return result;
     }
 
@@ -101,7 +113,9 @@ public class Images {
             ClassLoader classloader = Thread.currentThread().getContextClassLoader();
             String path = String.format("%s/%s.png", "cards", card);
             try (InputStream input = classloader.getResourceAsStream(path)) {
-                return ImageIO.read(input);
+                BufferedImage read = ImageIO.read(input);
+                BufferedImage image = replaceAlpha(read);
+                return scale(image);
             } catch (IOException e) {
                 Logger.error(e.toString());
                 return null;
@@ -109,10 +123,42 @@ public class Images {
         });
     }
 
+    private static BufferedImage scale(BufferedImage image) {
+        Image scaled = image.getScaledInstance(WIDTH, HEIGHT, Image.SCALE_SMOOTH);
+        BufferedImage newImage = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        Graphics g = newImage.getGraphics();
+        g.drawImage(scaled, 0, 0, null);
+        g.dispose();
+        return newImage;
+    }
+
     private static ArrayList<BufferedImage> load(Card... cards) throws IOException {
         ArrayList<BufferedImage> images = new ArrayList<>();
         for (Card card : cards)
             images.add(getBufferedImage(card));
         return images;
+    }
+
+    private static class ColorMapper extends LookupTable {
+        ColorMapper() {
+            super(0, 4);
+        }
+
+        @Override
+        public int[] lookupPixel(int[] src, int[] dest) {
+            if (dest == null) {
+                dest = new int[src.length];
+            }
+
+            if (src[3] == 0) {
+                src[0] = 255;
+                src[1] = 255;
+                src[2] = 255;
+                src[3] = 255;
+            }
+
+            System.arraycopy(src, 0, dest, 0, src.length);
+            return dest;
+        }
     }
 }
