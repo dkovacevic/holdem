@@ -87,7 +87,8 @@ public class MessageHandler extends MessageHandlerBase {
 
                     dealPlayers(client, table);
 
-                    betmanCall(client, table, action);
+                    if (!check(client, table))
+                        betmanCall(client, table, action);
                 }
                 break;
                 case RAISE:
@@ -157,34 +158,40 @@ public class MessageHandler extends MessageHandlerBase {
     private void betmanCall(WireClient client, Table table, Action cmd) throws Exception {
         for (Player player : table.getActivePlayers()) {
             if (player.isBot()) {
-                Betman betman = new Betman(player);
-                betman.action(client, table, cmd, this::check);
+                Betman betman = new Betman(client, table, player);
+                betman.action(cmd, this::check);
             }
         }
     }
 
     private Boolean check(WireClient client, Table table) {
         if (table.isSomeoneKaputt()) {
+            flopCards(client, table, 5 - table.getBoard().size()); // flop remaining cards
             showdown(client, table);
-            return Boolean.TRUE;
+            return true;
         }
 
         if (table.isAllFolded()) {
             showdown(client, table);
-            return Boolean.TRUE;
+            return true;
         }
 
         if (table.isAllCalled()) {
-            if (table.isShowdown())
+            if (table.isShowdown()) {
                 showdown(client, table);
-            else
-                flopCards(client, table, table.isFlopped() ? 1 : 3); // turn or river or flop
+                return true;
+            }
+
+            flopCards(client, table, table.isFlopped() ? 1 : 3); // turn or river or flop
         }
-        return Boolean.TRUE;
+        return false;
     }
 
     private void flopCards(WireClient client, Table table, int number) {
         try {
+            if (number == 0)
+                return;
+
             table.newBet();
 
             for (int i = 0; i < number; i++)

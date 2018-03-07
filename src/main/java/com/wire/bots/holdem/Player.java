@@ -48,21 +48,27 @@ public class Player implements Comparable<Player> {
     }
 
     @JsonIgnore
-    public Collection<Hand> getAllHands() {
+    private Collection<Hand> allHands() {
         HashSet<Hand> ret = new HashSet<>();
-        int n = board.size();
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                for (int k = 0; k < n; k++) {
-                    if (i != j && j != k && i != k) {
-                        ArrayList<Card> tmp = new ArrayList<>();
-                        tmp.add(cards.get(0));
-                        tmp.add(cards.get(1));
-                        tmp.add(board.get(i));
-                        tmp.add(board.get(j));
-                        tmp.add(board.get(k));
+        ArrayList<Card> all = new ArrayList<>();
+        all.addAll(cards);
+        all.addAll(board);
 
-                        ret.add(new Hand(tmp));
+        for (Card a : all) {
+            for (Card b : all) {
+                for (Card c : all) {
+                    for (Card d : all) {
+                        for (Card e : all) {
+                            HashSet<Card> tmp = new HashSet<>();
+                            tmp.add(a);
+                            tmp.add(b);
+                            tmp.add(c);
+                            tmp.add(d);
+                            tmp.add(e);
+
+                            if (tmp.size() == 5)
+                                ret.add(new Hand(tmp));
+                        }
                     }
                 }
             }
@@ -70,13 +76,13 @@ public class Player implements Comparable<Player> {
         return ret;
     }
 
-    public void addCard(Card card) {
+    void addCard(Card card) {
         cards.add(card);
     }
 
     @JsonIgnore
     public Hand getBestHand() {
-        Collection<Hand> allHands = getAllHands();
+        Collection<Hand> allHands = allHands();
         return allHands.stream().max(Comparator.naturalOrder()).orElse(new Hand(cards));
     }
 
@@ -109,7 +115,7 @@ public class Player implements Comparable<Player> {
         return id.hashCode();
     }
 
-    public String getName() {
+    String getName() {
         return name;
     }
 

@@ -9,32 +9,36 @@ import java.util.TimerTask;
 import java.util.function.BiFunction;
 
 class Betman {
-    private static final int DELAY = 2000;
+    private static final int DELAY = 1500;
 
     private final Timer timer = new Timer("Betman");
+    private final WireClient client;
+    private final Table table;
     private Player bot;
 
-    Betman(Player bot) {
+    Betman(WireClient client, Table table, Player bot) {
+        this.client = client;
+        this.table = table;
         this.bot = bot;
     }
 
-    Action action(WireClient client, Table table, Action cmd, BiFunction<WireClient, Table, Boolean> check) {
+    Action action(Action cmd, BiFunction<WireClient, Table, Boolean> check) {
         Action action = action(cmd);
         switch (action) {
             case CALL:
-                call(client, table, check);
+                call(check);
                 break;
             case RAISE:
-                raise(client, table, check);
+                raise(check);
                 break;
             case FOLD:
-                fold(client, table, check);
+                fold(check);
                 break;
         }
         return action;
     }
 
-    private void fold(WireClient client, Table table, BiFunction<WireClient, Table, Boolean> check) {
+    private void fold(BiFunction<WireClient, Table, Boolean> check) {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -51,7 +55,7 @@ class Betman {
         }, DELAY);
     }
 
-    private void raise(WireClient client, Table table, BiFunction<WireClient, Table, Boolean> check) {
+    private void raise(BiFunction<WireClient, Table, Boolean> check) {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -73,7 +77,7 @@ class Betman {
         }, DELAY);
     }
 
-    private void call(WireClient client, Table table, BiFunction<WireClient, Table, Boolean> check) {
+    private void call(BiFunction<WireClient, Table, Boolean> check) {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -116,7 +120,6 @@ class Betman {
         Strategy s = chooseStrategy();
 
         if (cmd == Action.DEAL) {
-            // Bot is the Caller
             if (bot.getRole() == Role.Caller)
                 return s.action(cmd);
             else
@@ -136,5 +139,4 @@ class Betman {
 
         return new LooseAggressive(bot);
     }
-
 }

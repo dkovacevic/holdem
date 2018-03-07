@@ -1,12 +1,13 @@
 package com.wire.bots.holdem;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 
 public class Hand implements Comparable<Hand> {
     private ArrayList<Card> cards;
 
-    public Hand(ArrayList<Card> cards) {
+    Hand(Collection<Card> cards) {
         this.cards = new ArrayList<>(cards);
         this.cards.sort(Comparator.reverseOrder());
     }
