@@ -102,7 +102,11 @@ public class Player implements Comparable<Player> {
         if (res == 0) {
             Hand h1 = new Hand(cards);
             Hand h2 = new Hand(other.cards);
-            return h1.compareTo(h2);
+            res = h1.compareTo(h2);
+            if (res == 0) {
+                return cards.get(0).getSuit() == cards.get(1).getSuit() ? 1 : 0;
+            } else
+                return res;
         }
         return res;
     }
