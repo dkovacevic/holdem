@@ -43,6 +43,9 @@ class Betman {
             @Override
             public void run() {
                 try {
+                    if (table.getPot() == 0)
+                        return;
+
                     if (table.fold(bot)) {
                         client.sendText(String.format("%s has folded", bot.getName()));
 
@@ -60,6 +63,8 @@ class Betman {
             @Override
             public void run() {
                 try {
+                    if (table.getPot() == 0)
+                        return;
                     int raise = table.raise(bot);
                     if (raise != -1) {
                         client.sendText(String.format("%s(%d) raised by %d, pot %d",
@@ -82,6 +87,9 @@ class Betman {
             @Override
             public void run() {
                 try {
+                    if (table.getPot() == 0)
+                        return;
+
                     int call = table.call(bot);
                     if (call != -1) {
                         String msg = call == 0

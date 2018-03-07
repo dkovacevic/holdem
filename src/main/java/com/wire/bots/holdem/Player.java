@@ -95,14 +95,16 @@ public class Player implements Comparable<Player> {
     }
 
     @Override
-    public int compareTo(Player o) {
+    public int compareTo(Player other) {
         Hand bestHand1 = getBestHand();
-        Hand bestHand2 = o.getBestHand();
-        if (bestHand2 == null)
-            return 1;
-        if (bestHand1 == null)
-            return -1;
-        return bestHand1.compareTo(bestHand2);
+        Hand bestHand2 = other.getBestHand();
+        int res = bestHand1.compareTo(bestHand2);
+        if (res == 0) {
+            Hand h1 = new Hand(cards);
+            Hand h2 = new Hand(other.cards);
+            return h1.compareTo(h2);
+        }
+        return res;
     }
 
     @Override
