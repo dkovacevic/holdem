@@ -91,8 +91,6 @@ public class MessageHandler extends MessageHandlerBase {
                             table.getRaise()));
 
                     dealPlayers(client, table);
-
-                    betmanCall(client, table, action);
                 }
                 break;
                 case RAISE:
@@ -125,9 +123,9 @@ public class MessageHandler extends MessageHandlerBase {
                 break;
             }
 
-            betmanCall(client, table, action);
+            if (!betmanCall(client, table, action))
+                check(client, table);
 
-            saveState(table, client.getId());
         } catch (Exception e) {
             Logger.error(e.getMessage());
         }
@@ -151,43 +149,45 @@ public class MessageHandler extends MessageHandlerBase {
         }
     }
 
-    private void betmanCall(WireClient client, Table table, Action cmd) throws Exception {
-        boolean checked = false;
+    private boolean betmanCall(WireClient client, Table table, Action cmd) throws Exception {
+        boolean ret = false;
         for (Player player : table.getActivePlayers()) {
             if (player.isBot()) {
                 Betman betman = new Betman(client, table, player);
                 betman.action(cmd, this::check);
-                checked = true;
+                ret = true;
             }
         }
-
-        if (!checked)
-            check(client, table);
+        return ret;
     }
 
     private Boolean check(WireClient client, Table table) {
-        if (table.isSomeoneKaputt()) {
-            flopCards(client, table, 5 - table.getBoard().size()); // flop remaining cards
-            showdown(client, table);
-            return true;
-        }
+        try {
+            if (table.isSomeoneKaputt()) {
+                flopCards(client, table, 5 - table.getBoard().size()); // flop remaining cards
+                showdown(client, table);
+                return true;
+            }
 
-        if (table.isAllFolded()) {
-            showdown(client, table);
-            return true;
-        }
+            if (table.isAllFolded()) {
+                showdown(client, table);
+                return true;
+            }
 
-        if (table.isAllCalled() && table.isShowdown()) {
-            showdown(client, table);
-            return true;
-        }
+            if (table.isAllCalled() && table.isShowdown()) {
+                showdown(client, table);
+                return true;
+            }
 
-        if (table.isAllCalled()) {
-            flopCards(client, table, table.isFlopped() ? 1 : 3); // turn or river or flop
-            return true;
-        }
+            if (table.isAllCalled()) {
+                flopCards(client, table, table.isFlopped() ? 1 : 3); // turn or river or flop
+                return true;
+            }
 
-        return false;
+            return false;
+        } finally {
+            saveState(table, client.getId());
+        }
     }
 
     private void flopCards(WireClient client, Table table, int number) {
@@ -222,6 +222,9 @@ public class MessageHandler extends MessageHandlerBase {
 
     private void showdown(WireClient client, Table table) {
         try {
+            if (table.getPot() == 0)
+                return;
+
             Player winner = table.getWinner();
             int pot = table.flushPot(winner);
 
@@ -240,8 +243,6 @@ public class MessageHandler extends MessageHandlerBase {
             }
         } catch (Exception e) {
             Logger.error("showdown: %s", e.toString());
-        } finally {
-            saveState(table, client.getId());
         }
     }
 
