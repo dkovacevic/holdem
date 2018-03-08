@@ -73,6 +73,11 @@ public class MessageHandler extends MessageHandlerBase {
             switch (action) {
                 case RESET:
                     table = closeTable(client);
+                    client.sendText(String.format("New game. Players: %s blind %d - raise %d",
+                            table.printPlayers(),
+                            table.getSmallBlind(),
+                            table.getRaise()));
+
                     break;
                 case DEAL: {
                     table.shiftRoles();
@@ -87,8 +92,7 @@ public class MessageHandler extends MessageHandlerBase {
 
                     dealPlayers(client, table);
 
-                    if (!check(client, table))
-                        betmanCall(client, table, action);
+                    betmanCall(client, table, action);
                 }
                 break;
                 case RAISE:
@@ -99,26 +103,18 @@ public class MessageHandler extends MessageHandlerBase {
                                 player.getChips(),
                                 raise,
                                 table.getPot()));
-
-                        betmanCall(client, table, action);
                     } else if (!player.isCalled()) {
                         client.sendDirectText("Raise failed due to insufficient funds", player.getId());
                     }
                     break;
                 case CALL:
-                    int call = table.call(player);
-                    if (call != -1) {
-                        if (player.getCall() > 0) {
-                            table.refund(player.getCall());
-                        } else {
-                            betmanCall(client, table, action);
-                        }
+                    table.call(player);
+                    if (player.getCall() > 0) {
+                        table.refund(player.getCall());
                     }
                     break;
                 case FOLD:
-                    if (table.fold(player)) {
-                        betmanCall(client, table, action);
-                    }
+                    table.fold(player);
                     break;
                 case ADD_BOT: {
                     User user = new User();
@@ -129,9 +125,9 @@ public class MessageHandler extends MessageHandlerBase {
                 break;
             }
 
-            saveState(table, client.getId());
+            betmanCall(client, table, action);
 
-            check(client, table);
+            saveState(table, client.getId());
         } catch (Exception e) {
             Logger.error(e.getMessage());
         }
@@ -156,12 +152,17 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     private void betmanCall(WireClient client, Table table, Action cmd) throws Exception {
+        boolean checked = false;
         for (Player player : table.getActivePlayers()) {
             if (player.isBot()) {
                 Betman betman = new Betman(client, table, player);
                 betman.action(cmd, this::check);
+                checked = true;
             }
         }
+
+        if (!checked)
+            check(client, table);
     }
 
     private Boolean check(WireClient client, Table table) {
@@ -176,14 +177,16 @@ public class MessageHandler extends MessageHandlerBase {
             return true;
         }
 
-        if (table.isAllCalled()) {
-            if (table.isShowdown()) {
-                showdown(client, table);
-                return true;
-            }
-
-            flopCards(client, table, table.isFlopped() ? 1 : 3); // turn or river or flop
+        if (table.isAllCalled() && table.isShowdown()) {
+            showdown(client, table);
+            return true;
         }
+
+        if (table.isAllCalled()) {
+            flopCards(client, table, table.isFlopped() ? 1 : 3); // turn or river or flop
+            return true;
+        }
+
         return false;
     }
 
@@ -221,8 +224,6 @@ public class MessageHandler extends MessageHandlerBase {
         try {
             Player winner = table.getWinner();
             int pot = table.flushPot(winner);
-            if (pot <= 0)
-                return;
 
             printWinner(client, table, winner, pot);
 
@@ -239,6 +240,8 @@ public class MessageHandler extends MessageHandlerBase {
             }
         } catch (Exception e) {
             Logger.error("showdown: %s", e.toString());
+        } finally {
+            saveState(table, client.getId());
         }
     }
 
@@ -307,6 +310,7 @@ public class MessageHandler extends MessageHandlerBase {
         String botId = client.getId();
         Table table = newTable(client); //todo delete json instead of creating new table, ffs!
         tables.remove(botId);
+        saveState(table, client.getId());
         return table;
     }
 
@@ -366,11 +370,15 @@ public class MessageHandler extends MessageHandlerBase {
         }
     }
 
-    private void saveState(Table table, String botId) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        String jsonTable = mapper.writeValueAsString(table);
-        Storage storage = storageFactory.create(botId);
-        storage.saveFile(TABLE_JSON, jsonTable);
+    private void saveState(Table table, String botId) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonTable = mapper.writeValueAsString(table);
+            Storage storage = storageFactory.create(botId);
+            storage.saveFile(TABLE_JSON, jsonTable);
+        } catch (Exception e) {
+            Logger.error(e.toString());
+        }
     }
 
     private void printWinner(WireClient client, Table table, Player winner, int pot) throws Exception {
@@ -391,7 +399,7 @@ public class MessageHandler extends MessageHandlerBase {
                     bestHand);
             client.sendText(text);
 
-            byte[] image = Images.getImage(bestHand.getCards(), player.getCards());
+            byte[] image = Images.getImage(player.getCards(), bestHand.getCards());
             client.sendPicture(image, MIME_TYPE);
         }
     }

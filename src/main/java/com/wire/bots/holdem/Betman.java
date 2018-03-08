@@ -34,6 +34,9 @@ class Betman {
             case FOLD:
                 fold(check);
                 break;
+            case DEAL:
+                check.apply(client, table);
+                break;
         }
         return action;
     }
@@ -43,14 +46,10 @@ class Betman {
             @Override
             public void run() {
                 try {
-                    if (table.getPot() == 0)
-                        return;
-
                     if (table.fold(bot)) {
                         client.sendText(String.format("%s has folded", bot.getName()));
-
-                        check.apply(client, table);
                     }
+                    check.apply(client, table);
                 } catch (Exception e) {
                     Logger.error(e.toString());
                 }
@@ -63,8 +62,6 @@ class Betman {
             @Override
             public void run() {
                 try {
-                    if (table.getPot() == 0)
-                        return;
                     int raise = table.raise(bot);
                     if (raise != -1) {
                         client.sendText(String.format("%s(%d) raised by %d, pot %d",
@@ -72,9 +69,8 @@ class Betman {
                                 bot.getChips(),
                                 raise,
                                 table.getPot()));
-
-                        check.apply(client, table);
                     }
+                    check.apply(client, table);
                 } catch (Exception e) {
                     Logger.error(e.toString());
                 }
@@ -87,13 +83,9 @@ class Betman {
             @Override
             public void run() {
                 try {
-                    if (table.getPot() == 0)
-                        return;
-
                     int call = table.call(bot);
                     if (call != -1) {
-                        String msg = call == 0
-                                ? String.format("%s(%d) checked. pot: %d",
+                        String msg = call == 0 ? String.format("%s(%d) checked. pot: %d",
                                 bot.getName(),
                                 bot.getChips(),
                                 table.getPot())
@@ -108,9 +100,8 @@ class Betman {
                         if (bot.getCall() > 0) {
                             table.refund(bot.getCall());
                         }
-
-                        check.apply(client, table);
                     }
+                    check.apply(client, table);
                 } catch (Exception e) {
                     Logger.error(e.toString());
                 }
@@ -126,14 +117,12 @@ class Betman {
      */
     private Action action(Action cmd) {
         Strategy s = chooseStrategy();
-
         if (cmd == Action.DEAL) {
             if (bot.getRole() == Role.Caller)
                 return s.action(cmd);
             else
                 return Action.DEAL; //ignore
         }
-
         return s.action(cmd);
     }
 

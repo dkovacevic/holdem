@@ -148,7 +148,6 @@ class Table {
                     players.get(0).setRole(Role.SB);
                     players.get(1).setRole(Role.BB);
                 }
-
                 return;
             }
         }
