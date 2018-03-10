@@ -143,9 +143,6 @@ public class MessageHandler extends MessageHandlerBase {
                 byte[] image = Images.getImage(a, b);
                 client.sendPicture(image, MIME_TYPE, player.getId());
             }
-
-            if (players.size() == 2 && player.getRole() == Role.SB)
-                player.setRole(Role.Caller);
         }
     }
 

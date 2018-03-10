@@ -100,7 +100,7 @@ class Betman {
     private Action action(Action cmd) {
         Strategy s = chooseStrategy();
         if (cmd == Action.DEAL) {
-            if (bot.getRole() == Role.Caller)
+            if (bot.isTurn())
                 return s.action(cmd);
             else
                 return Action.DEAL; //ignore

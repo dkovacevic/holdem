@@ -12,6 +12,7 @@ public class ShiftTest {
         assert a.getRole() == Role.SB;
 
         table.shiftRoles();
+
         assert a.getRole() == Role.SB;
     }
 
@@ -38,22 +39,22 @@ public class ShiftTest {
 
         assert a.getRole() == Role.SB;
         assert b.getRole() == Role.BB;
-        assert c.getRole() == Role.Caller;
+        assert c.getRole() == Role.Player;
 
         table.shiftRoles();
-        assert a.getRole() == Role.Caller;
+        assert a.getRole() == Role.Player;
         assert b.getRole() == Role.SB;
         assert c.getRole() == Role.BB;
 
         table.shiftRoles();
         assert a.getRole() == Role.BB;
-        assert b.getRole() == Role.Caller;
+        assert b.getRole() == Role.Player;
         assert c.getRole() == Role.SB;
 
         table.shiftRoles();
         assert a.getRole() == Role.SB;
         assert b.getRole() == Role.BB;
-        assert c.getRole() == Role.Caller;
+        assert c.getRole() == Role.Player;
     }
 
     @Test
@@ -66,32 +67,32 @@ public class ShiftTest {
 
         assert a.getRole() == Role.SB;
         assert b.getRole() == Role.BB;
-        assert c.getRole() == Role.Caller;
+        assert c.getRole() == Role.Player;
         assert d.getRole() == Role.Player;
 
         table.shiftRoles();
-        assert a.getRole() == Role.Caller;
+        assert a.getRole() == Role.Player;
         assert b.getRole() == Role.SB;
         assert c.getRole() == Role.BB;
         assert d.getRole() == Role.Player;
 
         table.shiftRoles();
         assert a.getRole() == Role.Player;
-        assert b.getRole() == Role.Caller;
+        assert b.getRole() == Role.Player;
         assert c.getRole() == Role.SB;
         assert d.getRole() == Role.BB;
 
         table.shiftRoles();
         assert a.getRole() == Role.BB;
         assert b.getRole() == Role.Player;
-        assert c.getRole() == Role.Caller;
+        assert c.getRole() == Role.Player;
         assert d.getRole() == Role.SB;
 
         table.shiftRoles();
         assert a.getRole() == Role.SB;
         assert b.getRole() == Role.BB;
         assert c.getRole() == Role.Player;
-        assert d.getRole() == Role.Caller;
+        assert d.getRole() == Role.Player;
     }
 
     private User newUser(String id, String name) {

@@ -15,7 +15,7 @@ class Table {
     private static final int BLIND_INCREASE = 2;
     private static final int RAISE_INCREASE = 5;
     @JsonProperty
-    private final ArrayList<Player> players = new ArrayList<>();
+    private final LinkedList<Player> players = new LinkedList<>();
     @JsonProperty
     private final ArrayList<Card> board = new ArrayList<>();
     @JsonProperty
@@ -46,12 +46,12 @@ class Table {
 
         players.add(player);
 
-        if (players.size() == 1)
+        if (players.size() == 1) {
             player.setRole(Role.SB);
+            player.setTurn(true);
+        }
         if (players.size() == 2)
             player.setRole(Role.BB);
-        if (players.size() == 3)
-            player.setRole(Role.Caller);
 
         return player;
     }
@@ -126,20 +126,15 @@ class Table {
             return;
         }
 
-        ListIterator<Player> iterator = players.listIterator();
-        while (iterator.hasNext()) {
-            Player player = iterator.next();
-            if (player.getRole() == Role.Caller)
-                player.setRole(Role.Player);
-
+        ListIterator<Player> i = players.listIterator();
+        while (i.hasNext()) {
+            Player player = i.next();
             if (player.getRole() == Role.SB) {
-                player.setRole(Role.Caller);
-
-                if (iterator.hasNext()) {
-                    Player next = iterator.next();
+                if (i.hasNext()) {
+                    Player next = i.next();
                     next.setRole(Role.SB);
-                    if (iterator.hasNext()) {
-                        next = iterator.next();
+                    if (i.hasNext()) {
+                        next = i.next();
                         next.setRole(Role.BB);
                     } else {
                         players.get(0).setRole(Role.BB);
@@ -151,6 +146,48 @@ class Table {
                 return;
             }
         }
+    }
+
+    Player turn() {
+        return turn(players.getFirst());
+    }
+
+    /**
+     * Find next turn
+     *
+     * @param current If current.isTurn() == true set to False -> recurse with Next
+     *                If current.is == false and folded  -> recurse with Next
+     *                If current.is == false and !folded -> set to True and return current
+     * @return Play who's turn is now
+     */
+    private Player turn(Player current) {
+        if (players.size() == 1) {
+            current.setTurn(true);
+            return current;
+        }
+
+        int i = players.indexOf(current);
+        ListIterator<Player> iterator = players.listIterator(i + 1);
+        if (!iterator.hasNext())
+            iterator = players.listIterator();
+
+        Player next = iterator.next();
+        if (current.isTurn()) {
+            current.setTurn(false);
+            while (true) {
+                if (!next.isFolded()) {
+                    next.setTurn(true);
+                    return next;
+                }
+                if (!iterator.hasNext()) {
+                    players.getFirst().setTurn(true);
+                    return players.getFirst();
+                }
+                next = iterator.next();
+            }
+        }
+
+        return turn(next);
     }
 
     // Pay to the Player and flush the pot
@@ -166,26 +203,25 @@ class Table {
         return refund;
     }
 
-    boolean blind(Player player) {
+    void blind(Player player) {
         switch (player.getRole()) {
             case SB: {
                 player.setCall(smallBlind);
                 int take = player.take();
-                int ret = player.getCall();
+                player.getCall();
                 pot += take;
                 player.setCall(smallBlind);
-                return ret == 0;
+                break;
             }
             case BB: {
                 player.setCall(2 * smallBlind);
                 int take = player.take();
-                int ret = player.getCall();
+                player.getCall();
                 pot += take;
-                return ret == 0;
+                break;
             }
             default:
                 player.setCall(2 * smallBlind);
-                return true;
         }
     }
 

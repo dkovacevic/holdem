@@ -32,6 +32,8 @@ public class Player implements Comparable<Player> {
     private Role role = Role.Player;
     @JsonProperty
     private int call;
+    @JsonProperty
+    private boolean turn;
 
     public Player() {
     }
@@ -187,9 +189,8 @@ public class Player implements Comparable<Player> {
     }
 
     String getNameWithRole() {
-        if (role == Role.SB || role == Role.BB)
-            return String.format("%s(%s)", getName(), getRole());
-        return role == Role.Caller ? String.format("**%s**", getName()) : getName();
+        String ret = String.format("%s(%s)", getName(), getRole());
+        return turn ? String.format("**%s**", ret) : ret;
     }
 
     boolean isBot() {
@@ -207,5 +208,13 @@ public class Player implements Comparable<Player> {
 
     void setBoard(ArrayList<Card> board) {
         this.board = board;
+    }
+
+    boolean isTurn() {
+        return turn;
+    }
+
+    void setTurn(boolean turn) {
+        this.turn = turn;
     }
 }
