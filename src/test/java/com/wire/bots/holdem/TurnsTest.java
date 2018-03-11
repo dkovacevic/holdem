@@ -8,11 +8,10 @@ public class TurnsTest {
     public void test1() {
         Table table = new Table(new Deck());
         Player a = table.addPlayer(newUser("a", "A"), false);
-        table.turn();
 
         assert a.isTurn();
 
-        table.turn();
+        table.call(a);
 
         assert a.isTurn();
     }
@@ -26,7 +25,7 @@ public class TurnsTest {
         assert a.isTurn();
         assert !b.isTurn();
 
-        table.turn();
+        table.call(a);
         assert !a.isTurn();
         assert b.isTurn();
     }
@@ -42,17 +41,17 @@ public class TurnsTest {
         assert !b.isTurn();
         assert !c.isTurn();
 
-        table.turn();
+        table.call(a);
         assert !a.isTurn();
         assert b.isTurn();
         assert !c.isTurn();
 
-        table.turn();
+        table.call(b);
         assert !a.isTurn();
         assert !b.isTurn();
         assert c.isTurn();
 
-        table.turn();
+        table.call(c);
         assert a.isTurn();
         assert !b.isTurn();
         assert !c.isTurn();
@@ -71,19 +70,19 @@ public class TurnsTest {
         assert !c.isTurn();
         assert !d.isTurn();
 
-        table.turn();
+        table.call(a);
         assert !a.isTurn();
         assert b.isTurn();
         assert !c.isTurn();
         assert !d.isTurn();
 
-        table.turn();
+        table.call(b);
         assert !a.isTurn();
         assert !b.isTurn();
         assert c.isTurn();
         assert !d.isTurn();
 
-        table.turn();
+        table.call(c);
         assert !a.isTurn();
         assert !b.isTurn();
         assert !c.isTurn();
@@ -98,27 +97,27 @@ public class TurnsTest {
         Player c = table.addPlayer(newUser("c", "C"), false);
         Player d = table.addPlayer(newUser("d", "D"), false);
 
-        c.fold();
-        d.fold();
+        table.fold(c);
+        table.fold(d);
 
         assert a.isTurn();
         assert !b.isTurn();
         assert !c.isTurn();
         assert !d.isTurn();
 
-        table.turn();
+        table.call(a);
         assert !a.isTurn();
         assert b.isTurn();
         assert !c.isTurn();
         assert !d.isTurn();
 
-        table.turn();
+        table.raise(b);
         assert a.isTurn();
         assert !b.isTurn();
         assert !c.isTurn();
         assert !d.isTurn();
 
-        table.turn();
+        table.raise(a);
         assert !a.isTurn();
         assert b.isTurn();
         assert !c.isTurn();
@@ -132,19 +131,18 @@ public class TurnsTest {
         Player b = table.addPlayer(newUser("b", "B"), false);
         Player c = table.addPlayer(newUser("c", "C"), false);
 
-        a.fold();
+        table.fold(a);
 
-        table.turn();
         assert !a.isTurn();
         assert b.isTurn();
         assert !c.isTurn();
 
-        table.turn();
+        table.call(b);
         assert !a.isTurn();
         assert !b.isTurn();
         assert c.isTurn();
 
-        table.turn();
+        table.raise(c);
         assert !a.isTurn();
         assert b.isTurn();
         assert !c.isTurn();

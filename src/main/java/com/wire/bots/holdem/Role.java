@@ -4,4 +4,5 @@ public enum Role {
     Player,
     SB,
     BB,
+    Caller // obsolete 
 }

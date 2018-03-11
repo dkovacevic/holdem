@@ -52,7 +52,6 @@ public class MessageHandler extends MessageHandlerBase {
     private static final String BET = "bet";
     private static final String B = "b";
     private static final String RESET = "reset";
-    private static final String BETMAN = "Betman";
 
     private final StorageFactory storageFactory;
 
@@ -66,23 +65,26 @@ public class MessageHandler extends MessageHandlerBase {
             Table table = getTable(client);
 
             Player player = table.getPlayer(msg.getUserId());
-            if (player == null)
-                return;
 
             Action action = parseCommand(msg.getText());
             switch (action) {
+                case PRINT:
+                    client.sendText(table.printPlayers());
+                    break;
                 case RESET:
                     table = closeTable(client);
                     client.sendText(String.format("New game. Players: %s blind %d - raise %d",
                             table.printPlayers(),
                             table.getSmallBlind(),
                             table.getRaise()));
-
                     break;
                 case DEAL: {
-                    table.shiftRoles();
+                    Logger.info("New Deal with %d players", table.getPlayers().size());
 
+                    Player turn = table.shiftRoles();
                     table.shuffle();
+                    turn.setTurn(true);
+                    table.turn();
 
                     client.sendText(String.format("%d. %s blind %d - raise %d",
                             table.getRoundNumber(),
@@ -107,6 +109,7 @@ public class MessageHandler extends MessageHandlerBase {
                     break;
                 case CALL:
                     table.call(player);
+
                     if (player.getCall() > 0) {
                         table.refund(player.getCall());
                     }
@@ -117,7 +120,7 @@ public class MessageHandler extends MessageHandlerBase {
                 case ADD_BOT: {
                     User user = new User();
                     user.id = UUID.randomUUID().toString();
-                    user.name = BETMAN;
+                    user.name = Betman.randomName();
                     addNewPlayer(client, table, user, true);
                 }
                 break;
@@ -125,9 +128,8 @@ public class MessageHandler extends MessageHandlerBase {
 
             if (!betmanCall(client, table, action))
                 check(client, table);
-
         } catch (Exception e) {
-            Logger.error(e.getMessage());
+            Logger.error("onText: %s", e);
         }
     }
 
@@ -147,15 +149,15 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     private boolean betmanCall(WireClient client, Table table, Action cmd) throws Exception {
-        boolean ret = false;
         for (Player player : table.getActivePlayers()) {
             if (player.isBot()) {
                 Betman betman = new Betman(client, table, player);
-                betman.action(cmd, this::check);
-                ret = true;
+                boolean called = betman.action(cmd, this::check);
+                if (called)
+                    return betmanCall(client, table, cmd);
             }
         }
-        return ret;
+        return true;
     }
 
     private Boolean check(WireClient client, Table table) {
@@ -253,7 +255,8 @@ public class MessageHandler extends MessageHandlerBase {
                         player.getChips());
                 client.sendText(text);
             }
-            client.sendText("Type: `deal` to start. `call`, `raise`, `fold` when betting... Have fun!");
+            client.sendText("Add more participants. Type: `deal` to start. `call`, `raise`, `fold` when betting..." +
+                    " If you feel lonely type: `add bot`");
             saveState(table, client.getId());
         } catch (Exception e) {
             Logger.error(e.getMessage());
@@ -307,7 +310,7 @@ public class MessageHandler extends MessageHandlerBase {
     private Table closeTable(WireClient client) throws Exception {
         String botId = client.getId();
         Table table = newTable(client); //todo delete json instead of creating new table, ffs!
-        tables.remove(botId);
+        tables.put(botId, table);
         saveState(table, client.getId());
         return table;
     }
@@ -321,7 +324,7 @@ public class MessageHandler extends MessageHandlerBase {
                 table.addPlayer(user, false);
             }
         }
-        Logger.info("New table with %d players", table.getPlayers().size());
+        Logger.info("New Table with %d players", table.getPlayers().size());
         return table;
     }
 
@@ -345,6 +348,8 @@ public class MessageHandler extends MessageHandlerBase {
 
     private Action parseCommand(String cmd) {
         switch (cmd.toLowerCase().trim()) {
+            case "print":
+                return Action.PRINT;
             case RESET:
                 return Action.RESET;
             case DEAL:

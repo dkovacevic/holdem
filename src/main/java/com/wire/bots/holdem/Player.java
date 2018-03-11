@@ -131,6 +131,7 @@ public class Player implements Comparable<Player> {
         cards.clear();
         called = false;
         folded = false;
+        turn = false;
     }
 
     int take() {
@@ -189,7 +190,7 @@ public class Player implements Comparable<Player> {
     }
 
     String getNameWithRole() {
-        String ret = String.format("%s(%s)", getName(), getRole());
+        String ret = role == Role.Player ? getName() : String.format("%s(%s)", name, role);
         return turn ? String.format("**%s**", ret) : ret;
     }
 

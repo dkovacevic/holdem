@@ -7,5 +7,6 @@ public enum Action {
     DEAL,
     ADD_BOT,
     FOLD,
+    PRINT,
     RESET
 }

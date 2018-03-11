@@ -115,18 +115,27 @@ class Table {
         players.forEach(Player::reset);
     }
 
-    void shiftRoles() {
-        if (players.size() <= 1)
-            return;
+    /**
+     * Move SB and BB to the right
+     *
+     * @return SB
+     */
+    Player shiftRoles() {
+        Player first = players.getFirst();
+
+        if (players.size() == 1)
+            return players.getFirst();
 
         if (players.size() == 2) {
-            Role tmp = players.get(0).getRole();
-            players.get(0).setRole(players.get(1).getRole());
-            players.get(1).setRole(tmp);
-            return;
+            Role tmp = first.getRole();
+            Player second = players.get(1);
+            first.setRole(second.getRole());
+            second.setRole(tmp);
+            return first.getRole() == Role.BB ? first : second;
         }
 
         ListIterator<Player> i = players.listIterator();
+        Player ret = first;
         while (i.hasNext()) {
             Player player = i.next();
             if (player.getRole() == Role.SB) {
@@ -134,60 +143,54 @@ class Table {
                     Player next = i.next();
                     next.setRole(Role.SB);
                     if (i.hasNext()) {
-                        next = i.next();
+                        ret = next = i.next();
                         next.setRole(Role.BB);
                     } else {
-                        players.get(0).setRole(Role.BB);
+                        first.setRole(Role.BB);
+                        ret = first;
                     }
                 } else {
-                    players.get(0).setRole(Role.SB);
-                    players.get(1).setRole(Role.BB);
+                    first.setRole(Role.SB);
+                    Player second = players.get(1);
+                    second.setRole(Role.BB);
+                    ret = second;
                 }
-                return;
+                return ret;
             }
         }
+        return ret;
     }
 
     Player turn() {
-        return turn(players.getFirst());
-    }
+        Player current = players.stream().filter(Player::isTurn).findFirst().orElse(null);
+        if (current == null) {
+            players.getFirst().setTurn(true);
+            return players.getFirst();
+        }
 
-    /**
-     * Find next turn
-     *
-     * @param current If current.isTurn() == true set to False -> recurse with Next
-     *                If current.is == false and folded  -> recurse with Next
-     *                If current.is == false and !folded -> set to True and return current
-     * @return Play who's turn is now
-     */
-    private Player turn(Player current) {
         if (players.size() == 1) {
             current.setTurn(true);
             return current;
         }
 
-        int i = players.indexOf(current);
-        ListIterator<Player> iterator = players.listIterator(i + 1);
+        current.setTurn(false);
+
+        ListIterator<Player> iterator = players.listIterator(players.indexOf(current) + 1);
         if (!iterator.hasNext())
             iterator = players.listIterator();
 
         Player next = iterator.next();
-        if (current.isTurn()) {
-            current.setTurn(false);
-            while (true) {
-                if (!next.isFolded()) {
-                    next.setTurn(true);
-                    return next;
-                }
-                if (!iterator.hasNext()) {
-                    players.getFirst().setTurn(true);
-                    return players.getFirst();
-                }
-                next = iterator.next();
+        while (true) {
+            if (!next.isCalled()) {
+                next.setTurn(true);
+                return next;
             }
+            if (!iterator.hasNext()) {
+                players.getFirst().setTurn(true);
+                return players.getFirst();
+            }
+            next = iterator.next();
         }
-
-        return turn(next);
     }
 
     // Pay to the Player and flush the pot
@@ -243,6 +246,7 @@ class Table {
                 int take = player.take();
                 pot += take;
                 player.setCalled(player.getCall() == 0);
+                turn();
                 return take;
             }
             return -1;
@@ -253,6 +257,7 @@ class Table {
         synchronized (players) {
             if (!player.isCalled()) {
                 player.fold();
+                turn();
                 return true;
             }
             return false;

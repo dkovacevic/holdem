@@ -4,8 +4,8 @@ import com.wire.bots.holdem.strategies.*;
 import com.wire.bots.sdk.WireClient;
 import com.wire.bots.sdk.tools.Logger;
 
+import java.util.Random;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.function.BiFunction;
 
 class Betman {
@@ -22,44 +22,63 @@ class Betman {
         this.bot = bot;
     }
 
-    Action action(Action cmd, BiFunction<WireClient, Table, Boolean> check) {
-        Action action = action(cmd);
+    static String randomName() {
+        String[] names = new String[]{"Betman", "Superman", "Cagil", "Irmak", "Richie", "Steve", "Dave", "Lay Z", "CEO"};
+        Random rnd = new Random();
+        return names[rnd.nextInt(names.length)];
+    }
 
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    if (table.getPot() != 0) {
-                        switch (action) {
-                            case CALL:
-                                call();
-                                break;
-                            case RAISE:
-                                raise();
-                                break;
-                            case FOLD:
-                                fold();
-                                break;
-                        }
-                    }
-                } catch (Exception e) {
-                    Logger.error(e.toString());
-                } finally {
-                    check.apply(client, table);
+    private Action action(Action cmd) {
+        return bot.isTurn() ? chooseStrategy().action(cmd) : Action.DEAL;
+    }
+
+    private Strategy chooseStrategy() {
+        if (bot.getBoard().size() == 3)
+            return new LoosePassive(bot);
+        if (bot.getChips() < 50)
+            return new TightPassive(bot);
+        if (bot.getCall() > 20)
+            return new TightAggressive(bot);
+
+        return new LooseAggressive(bot);
+    }
+
+    boolean action(Action cmd, BiFunction<WireClient, Table, Boolean> check) {
+        boolean ret = false;
+        try {
+            if (table.getPot() != 0 && bot.isTurn()) {
+                switch (action(cmd)) {
+                    case CALL:
+                        ret = call();
+                        break;
+                    case RAISE:
+                        ret = raise();
+                        break;
+                    case FOLD:
+                        ret = fold();
+                        break;
+                    default:
+                        return false;
                 }
             }
-        }, DELAY);
+        } catch (Exception e) {
+            Logger.error(e.toString());
+        } finally {
+            check.apply(client, table);
+        }
 
-        return action;
+        return ret;
     }
 
-    private void fold() throws Exception {
+    private boolean fold() throws Exception {
         if (table.fold(bot)) {
             client.sendText(String.format("%s has folded", bot.getName()));
+            return true;
         }
+        return false;
     }
 
-    private void raise() throws Exception {
+    private boolean raise() throws Exception {
         int raise = table.raise(bot);
         if (raise != -1) {
             client.sendText(String.format("%s(%d) raised by %d, pot %d",
@@ -67,10 +86,12 @@ class Betman {
                     bot.getChips(),
                     raise,
                     table.getPot()));
+            return true;
         }
+        return false;
     }
 
-    private void call() throws Exception {
+    private boolean call() throws Exception {
         int call = table.call(bot);
         if (call != -1) {
             String msg = call == 0 ? String.format("%s(%d) checked. pot: %d",
@@ -85,37 +106,12 @@ class Betman {
 
             client.sendText(msg);
 
-            if (bot.getCall() > 0) {
-                table.refund(bot.getCall());
+            int dept = bot.getCall();
+            if (dept > 0) {
+                table.refund(dept);
             }
+            return true;
         }
-    }
-
-    /**
-     * AI for the bot. Input param cmd is Action performed by the player that bet before
-     *
-     * @param cmd Previous action (action of some other Player)
-     * @return Bot's call as the result to @cmd
-     */
-    private Action action(Action cmd) {
-        Strategy s = chooseStrategy();
-        if (cmd == Action.DEAL) {
-            if (bot.isTurn())
-                return s.action(cmd);
-            else
-                return Action.DEAL; //ignore
-        }
-        return s.action(cmd);
-    }
-
-    private Strategy chooseStrategy() {
-        if (bot.getBoard().size() == 3)
-            return new LoosePassive(bot);
-        if (bot.getChips() < 50)
-            return new TightPassive(bot);
-        if (bot.getCall() > 20)
-            return new TightAggressive(bot);
-
-        return new LooseAggressive(bot);
+        return false;
     }
 }
