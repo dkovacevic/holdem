@@ -52,6 +52,7 @@ public class MessageHandler extends MessageHandlerBase {
     private static final String BET = "bet";
     private static final String B = "b";
     private static final String RESET = "reset";
+    private static final String PRINT = "print";
 
     private final StorageFactory storageFactory;
 
@@ -157,7 +158,7 @@ public class MessageHandler extends MessageHandlerBase {
                     return betmanCall(client, table, cmd);
             }
         }
-        return true;
+        return false;
     }
 
     private Boolean check(WireClient client, Table table) {
@@ -348,7 +349,7 @@ public class MessageHandler extends MessageHandlerBase {
 
     private Action parseCommand(String cmd) {
         switch (cmd.toLowerCase().trim()) {
-            case "print":
+            case PRINT:
                 return Action.PRINT;
             case RESET:
                 return Action.RESET;
