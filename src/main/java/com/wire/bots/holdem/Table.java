@@ -139,6 +139,7 @@ class Table {
         while (i.hasNext()) {
             Player player = i.next();
             if (player.getRole() == Role.SB) {
+                player.setRole(Role.Player);
                 if (i.hasNext()) {
                     Player next = i.next();
                     next.setRole(Role.SB);
