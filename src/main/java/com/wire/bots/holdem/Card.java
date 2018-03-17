@@ -54,7 +54,7 @@ public class Card implements Comparable<Card> {
 
     @Override
     public int hashCode() {
-        return toString().hashCode();
+        return (rank * 4) + suit;
     }
 
     @Override

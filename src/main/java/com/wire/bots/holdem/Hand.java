@@ -117,9 +117,11 @@ public class Hand implements Comparable<Hand> {
 
     @Override
     public int hashCode() {
-        StringBuilder ret = new StringBuilder();
-        cards.forEach(card -> ret.append(card.toString()));
-        return ret.toString().hashCode();
+        int ret = 0;
+        for (int i = 0; i < cards.size(); i++) {
+            ret += cards.get(i).hashCode() * (i * 10);
+        }
+        return ret;
     }
 
     @Override
@@ -250,6 +252,13 @@ public class Hand implements Comparable<Hand> {
         if (onePair() != -1)
             return HandStrength.OnePair;
         return HandStrength.HighCard;
+    }
+
+    boolean isSuited() {
+        if (cards.isEmpty())
+            return false;
+        int suit = cards.get(0).getSuit();
+        return cards.stream().allMatch(x -> x.getSuit() == suit);
     }
 }
 

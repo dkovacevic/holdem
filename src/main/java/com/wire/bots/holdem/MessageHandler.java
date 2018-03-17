@@ -200,10 +200,18 @@ public class MessageHandler extends MessageHandlerBase {
             for (int i = 0; i < number; i++)
                 table.flopCard();
 
+            Probability prob = new Probability(table.getBoard());
+
             for (Player player : table.getActivePlayers()) {
                 if (!player.isBot()) {
                     byte[] image = Images.getImage(player.getCards(), table.getBoard());
                     client.sendPicture(image, MIME_TYPE, player.getId());
+
+                    Hand bestHand = player.getBestHand();
+                    int chance = prob.chance(player);
+
+                    String hand = String.format("%s %d%%", bestHand, chance);
+                    client.sendDirectText(hand, player.getId());
                 }
             }
 

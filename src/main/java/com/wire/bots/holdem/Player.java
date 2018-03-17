@@ -34,6 +34,8 @@ public class Player implements Comparable<Player> {
     private int call;
     @JsonProperty
     private boolean turn;
+    @JsonIgnore
+    private Hand bestHand;
 
     public Player() {
     }
@@ -84,8 +86,11 @@ public class Player implements Comparable<Player> {
 
     @JsonIgnore
     public Hand getBestHand() {
-        Collection<Hand> allHands = allHands();
-        return allHands.stream().max(Comparator.naturalOrder()).orElse(new Hand(cards));
+        if (bestHand == null) {
+            Collection<Hand> allHands = allHands();
+            bestHand = allHands.stream().max(Comparator.naturalOrder()).orElse(new Hand(cards));
+        }
+        return bestHand;
     }
 
     String getId() {
@@ -101,16 +106,20 @@ public class Player implements Comparable<Player> {
         Hand bestHand1 = getBestHand();
         Hand bestHand2 = other.getBestHand();
         int res = bestHand1.compareTo(bestHand2);
-        if (res == 0) {
-            Hand h1 = new Hand(cards);
-            Hand h2 = new Hand(other.cards);
-            res = h1.compareTo(h2);
-            if (res == 0) {
-                return cards.get(0).getSuit() == cards.get(1).getSuit() ? 1 : 0;
-            } else
-                return res;
-        }
-        return res;
+        if (res != 0)
+            return res;
+
+        Hand h1 = new Hand(cards);
+        Hand h2 = new Hand(other.cards);
+        res = h1.compareTo(h2);
+        if (res != 0)
+            return res;
+
+        if (h1.isSuited() && !h2.isSuited())
+            return 1;
+        if (!h1.isSuited() && h2.isSuited())
+            return -1;
+        return 0;
     }
 
     @Override
@@ -217,5 +226,9 @@ public class Player implements Comparable<Player> {
 
     void setTurn(boolean turn) {
         this.turn = turn;
+    }
+
+    void resetBestHand() {
+        bestHand = null;
     }
 }

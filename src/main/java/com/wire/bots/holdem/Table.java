@@ -277,6 +277,7 @@ class Table {
         players.forEach(player -> {
             player.setCall(0);
             player.setCalled(false);
+            player.resetBestHand();
         });
     }
 
