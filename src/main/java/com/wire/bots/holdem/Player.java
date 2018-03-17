@@ -124,7 +124,7 @@ public class Player implements Comparable<Player> {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof Player && hashCode() == o.hashCode();
+        return o instanceof Player && id.equalsIgnoreCase(((Player) o).getId());
     }
 
     @Override

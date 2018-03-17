@@ -208,9 +208,9 @@ public class MessageHandler extends MessageHandlerBase {
                     client.sendPicture(image, MIME_TYPE, player.getId());
 
                     Hand bestHand = player.getBestHand();
-                    int chance = prob.chance(player);
+                    float chance = prob.chance(player);
 
-                    String hand = String.format("%s %d%%", bestHand, chance);
+                    String hand = String.format("You have **%s** with %.1f%% chance to win", bestHand, chance);
                     client.sendDirectText(hand, player.getId());
                 }
             }

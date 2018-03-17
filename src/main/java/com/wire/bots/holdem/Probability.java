@@ -4,9 +4,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 class Probability {
-    private final HashSet<Player> players = new HashSet<>();
+    private final ArrayList<Player> players = new ArrayList<>();
 
     Probability(ArrayList<Card> board) {
+        HashSet<Hand> hands = new HashSet<>(1326);
         for (Card c1 : deck()) {
             if (board.contains(c1))
                 continue;
@@ -20,22 +21,24 @@ class Probability {
                 cards.add(c2);
 
                 Hand h = new Hand(cards);
-                String name = "" + h.hashCode();
-                Player player = new Player(name, name, board);
-                player.addCard(c1);
-                player.addCard(c2);
-                if (players.add(player))
+                if (hands.add(h)) {
+                    String name = "" + h.hashCode();
+                    Player player = new Player(name, name, board);
+                    player.addCard(c1);
+                    player.addCard(c2);
+                    players.add(player);
                     player.getBestHand();
+                }
             }
         }
     }
 
-    int chance(Player player) {
+    float chance(Player player) {
         int w = 0;
         for (Player p : players) {
             w += player.compareTo(p) == 1 ? 1 : 0;
         }
-        return (100 * w) / players.size();
+        return (100f * w) / players.size();
     }
 
     private ArrayList<Card> deck() {
@@ -47,5 +50,9 @@ class Probability {
             }
         }
         return ret;
+    }
+
+    int combinations() {
+        return players.size();
     }
 }

@@ -118,15 +118,25 @@ public class Hand implements Comparable<Hand> {
     @Override
     public int hashCode() {
         int ret = 0;
-        for (int i = 0; i < cards.size(); i++) {
-            ret += cards.get(i).hashCode() * (i * 10);
+        for (Card card : cards) {
+            ret += card.hashCode() + (ret + 250);
         }
         return ret;
     }
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof Hand && hashCode() == o.hashCode();
+        if (o instanceof Hand) {
+            Hand other = (Hand) o;
+            if (cards.size() != other.cards.size())
+                return false;
+            for (int i = 0; i < cards.size(); i++) {
+                if (!cards.get(i).equals(other.cards.get(i)))
+                    return false;
+            }
+            return true;
+        }
+        return false;
     }
 
     ArrayList<Card> getCards() {
