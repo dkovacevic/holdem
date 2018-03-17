@@ -5,9 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashSet;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Player implements Comparable<Player> {
@@ -46,38 +44,32 @@ public class Player implements Comparable<Player> {
         this.board = board;
     }
 
+    private static ArrayList<Hand> allHands(ArrayList<Card> cards) {
+        ArrayList<Hand> ret = new ArrayList<>();
+        int n = cards.size();
+
+        // Run a loop for printing all 2^n
+        // subsets one by obe
+        for (int i = 0; i < (1 << n); i++) {
+            // Print current subset
+
+            ArrayList<Card> sub = new ArrayList<>();
+            for (int j = 0; j < n; j++) {
+
+                if ((i & (1 << j)) > 0) {
+                    Card card = cards.get(j);
+                    sub.add(card);
+                }
+            }
+            if (sub.size() == 5)
+                ret.add(new Hand(sub));
+        }
+        return ret;
+    }
+
     @Override
     public String toString() {
         return getNameWithRole();
-    }
-
-    @JsonIgnore
-    private Collection<Hand> allHands() {
-        HashSet<Hand> ret = new HashSet<>();
-        ArrayList<Card> all = new ArrayList<>();
-        all.addAll(cards);
-        all.addAll(board);
-
-        for (Card a : all) {
-            for (Card b : all) {
-                for (Card c : all) {
-                    for (Card d : all) {
-                        for (Card e : all) {
-                            HashSet<Card> tmp = new HashSet<>();
-                            tmp.add(a);
-                            tmp.add(b);
-                            tmp.add(c);
-                            tmp.add(d);
-                            tmp.add(e);
-
-                            if (tmp.size() == 5)
-                                ret.add(new Hand(tmp));
-                        }
-                    }
-                }
-            }
-        }
-        return ret;
     }
 
     void addCard(Card card) {
@@ -87,8 +79,11 @@ public class Player implements Comparable<Player> {
     @JsonIgnore
     public Hand getBestHand() {
         if (bestHand == null) {
-            Collection<Hand> allHands = allHands();
-            bestHand = allHands.stream().max(Comparator.naturalOrder()).orElse(new Hand(cards));
+            ArrayList<Card> all = new ArrayList<>();
+            all.addAll(cards);
+            all.addAll(board);
+
+            bestHand = allHands(all).stream().max(Comparator.naturalOrder()).orElse(new Hand(cards));
         }
         return bestHand;
     }

@@ -1,6 +1,7 @@
 package com.wire.bots.holdem;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 
@@ -9,6 +10,13 @@ public class Hand implements Comparable<Hand> {
 
     Hand(Collection<Card> cards) {
         this.cards = new ArrayList<>(cards);
+        this.cards.sort(Comparator.reverseOrder());
+    }
+
+    Hand(Card... cards) {
+        this.cards = new ArrayList<>();
+        this.cards.addAll(Arrays.asList(cards));
+
         this.cards.sort(Comparator.reverseOrder());
     }
 
@@ -269,6 +277,10 @@ public class Hand implements Comparable<Hand> {
             return false;
         int suit = cards.get(0).getSuit();
         return cards.stream().allMatch(x -> x.getSuit() == suit);
+    }
+
+    Card getCard(int i) {
+        return cards.get(i);
     }
 }
 
