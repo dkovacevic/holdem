@@ -46,18 +46,18 @@ public class ProbabilityTest {
     @Test
     public void flopTest() {
         ArrayList<Card> board = new ArrayList<>();
-        board.add(new Card(1, 4));
-        board.add(new Card(2, 6));
-        board.add(new Card(1, 8));
+        board.add(new Card(2, 12));
+        board.add(new Card(2, 2));
+        board.add(new Card(1, 9));
 
         Player p1 = new Player("1", "1", board);
-        p1.addCard(new Card(1, 0));
-        p1.addCard(new Card(1, 1));
+        p1.addCard(new Card(1, 12));
+        p1.addCard(new Card(1, 8));
         Probability probability1 = new Probability(board, p1.getCards());
 
         Player p2 = new Player("2", "2", board);
-        p2.addCard(new Card(2, 0));
-        p2.addCard(new Card(3, 1));
+        p2.addCard(new Card(2, 9));
+        p2.addCard(new Card(3, 8));
         Probability probability2 = new Probability(board, p2.getCards());
 
         float chance1 = probability1.chance(p1);

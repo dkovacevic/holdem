@@ -46,16 +46,9 @@ public class Player implements Comparable<Player> {
 
     private static ArrayList<Hand> allHands(ArrayList<Card> cards) {
         ArrayList<Hand> ret = new ArrayList<>();
-        int n = cards.size();
-
-        // Run a loop for printing all 2^n
-        // subsets one by obe
-        for (int i = 0; i < (1 << n); i++) {
-            // Print current subset
-
+        for (int i = 0; i < (1 << cards.size()); i++) {
             ArrayList<Card> sub = new ArrayList<>();
-            for (int j = 0; j < n; j++) {
-
+            for (int j = 0; j < cards.size(); j++) {
                 if ((i & (1 << j)) > 0) {
                     Card card = cards.get(j);
                     sub.add(card);
