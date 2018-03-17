@@ -34,6 +34,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class MessageHandler extends MessageHandlerBase {
     private static final ConcurrentHashMap<String, Table> tables = new ConcurrentHashMap<>();
@@ -55,6 +57,7 @@ public class MessageHandler extends MessageHandlerBase {
     private static final String PRINT = "print";
 
     private final StorageFactory storageFactory;
+    private final ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(4);
 
     MessageHandler(StorageFactory storageFactory) {
         this.storageFactory = storageFactory;
@@ -149,7 +152,7 @@ public class MessageHandler extends MessageHandlerBase {
         }
     }
 
-    private boolean betmanCall(WireClient client, Table table, Action cmd) throws Exception {
+    private boolean betmanCall(WireClient client, Table table, Action cmd) {
         for (Player player : table.getActivePlayers()) {
             if (player.isBot()) {
                 Betman betman = new Betman(client, table, player);
@@ -191,40 +194,55 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     private void flopCards(WireClient client, Table table, int number) {
+        if (number == 0)
+            return;
+
+        table.newBet();
+
+        for (int i = 0; i < number; i++)
+            table.flopCard();
+
+        for (Player player : table.getActivePlayers()) {
+            if (!player.isBot()) {
+                executor.execute(() -> {
+                    sendCards(client, table, player);
+                });
+            }
+        }
+
+        for (Player player : table.getFoldedPlayers()) {
+            if (!player.isBot()) {
+                executor.execute(() -> {
+                    sendBoard(client, table, player);
+                });
+            }
+        }
+
+        betmanCall(client, table, Action.CALL);
+    }
+
+    private void sendBoard(WireClient client, Table table, Player player) {
         try {
-            if (number == 0)
-                return;
-
-            table.newBet();
-
-            for (int i = 0; i < number; i++)
-                table.flopCard();
-
-            Probability prob = new Probability(table.getBoard());
-
-            for (Player player : table.getActivePlayers()) {
-                if (!player.isBot()) {
-                    byte[] image = Images.getImage(player.getCards(), table.getBoard());
-                    client.sendPicture(image, MIME_TYPE, player.getId());
-
-                    Hand bestHand = player.getBestHand();
-                    float chance = prob.chance(player);
-
-                    String hand = String.format("You have **%s** with %.1f%% chance to win", bestHand, chance);
-                    client.sendDirectText(hand, player.getId());
-                }
-            }
-
-            for (Player player : table.getFoldedPlayers()) {
-                if (!player.isBot()) {
-                    byte[] image = Images.getImage(table.getBoard());
-                    client.sendPicture(image, MIME_TYPE, player.getId());
-                }
-            }
-
-            betmanCall(client, table, Action.CALL);
+            byte[] image = Images.getImage(table.getBoard());
+            client.sendPicture(image, MIME_TYPE, player.getId());
         } catch (Exception e) {
-            Logger.error("flopCards: %s", e.toString());
+            Logger.error("sendBoard: %s", e.toString());
+        }
+    }
+
+    private void sendCards(WireClient client, Table table, Player player) {
+        try {
+            byte[] image = Images.getImage(player.getCards(), table.getBoard());
+            client.sendPicture(image, MIME_TYPE, player.getId());
+
+            Probability prob = new Probability(table.getBoard(), player.getCards());
+            Hand bestHand = player.getBestHand();
+            float chance = prob.chance(player);
+
+            String hand = String.format("You have **%s** with %.1f%% chance to win", bestHand, chance);
+            client.sendDirectText(hand, player.getId());
+        } catch (Exception e) {
+            Logger.error("sendCards: %s", e.toString());
         }
     }
 

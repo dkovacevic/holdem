@@ -6,14 +6,17 @@ import java.util.HashSet;
 class Probability {
     private final ArrayList<Player> players = new ArrayList<>();
 
-    Probability(ArrayList<Card> board) {
+    Probability(ArrayList<Card> board, ArrayList<Card> hole) {
         HashSet<Hand> hands = new HashSet<>(1326);
+        HashSet<Card> used = new HashSet<>();
+        used.addAll(board);
+        used.addAll(hole);
         for (Card c1 : deck()) {
-            if (board.contains(c1))
+            if (used.contains(c1))
                 continue;
 
             for (Card c2 : deck()) {
-                if (board.contains(c2) || c1.equals(c2))
+                if (used.contains(c2) || c1.equals(c2))
                     continue;
 
                 ArrayList<Card> cards = new ArrayList<>(2);
@@ -38,7 +41,7 @@ class Probability {
         for (Player p : players) {
             w += player.compareTo(p) == 1 ? 1 : 0;
         }
-        return (100f * w) / players.size();
+        return (100f * w) / combinations();
     }
 
     private ArrayList<Card> deck() {
