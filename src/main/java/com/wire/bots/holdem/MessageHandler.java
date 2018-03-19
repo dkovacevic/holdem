@@ -147,7 +147,7 @@ public class MessageHandler extends MessageHandlerBase {
 
             if (!player.isBot()) {
                 byte[] image = Images.getImage(a, b);
-                client.sendPicture(image, MIME_TYPE, player.getId());
+                client.sendDirectPicture(image, MIME_TYPE, player.getId());
             }
         }
     }
@@ -204,17 +204,13 @@ public class MessageHandler extends MessageHandlerBase {
 
         for (Player player : table.getActivePlayers()) {
             if (!player.isBot()) {
-                executor.execute(() -> {
-                    sendCards(client, table, player);
-                });
+                executor.execute(() -> sendCards(client, table, player));
             }
         }
 
         for (Player player : table.getFoldedPlayers()) {
             if (!player.isBot()) {
-                executor.execute(() -> {
-                    sendBoard(client, table, player);
-                });
+                executor.execute(() -> sendBoard(client, table, player));
             }
         }
 
@@ -224,7 +220,7 @@ public class MessageHandler extends MessageHandlerBase {
     private void sendBoard(WireClient client, Table table, Player player) {
         try {
             byte[] image = Images.getImage(table.getBoard());
-            client.sendPicture(image, MIME_TYPE, player.getId());
+            client.sendDirectPicture(image, MIME_TYPE, player.getId());
         } catch (Exception e) {
             Logger.error("sendBoard: %s", e.toString());
         }
@@ -233,13 +229,13 @@ public class MessageHandler extends MessageHandlerBase {
     private void sendCards(WireClient client, Table table, Player player) {
         try {
             byte[] image = Images.getImage(player.getCards(), table.getBoard());
-            client.sendPicture(image, MIME_TYPE, player.getId());
+            client.sendDirectPicture(image, MIME_TYPE, player.getId());
 
             Probability prob = new Probability(table.getBoard(), player.getCards());
             Hand bestHand = player.getBestHand();
             float chance = prob.chance(player);
 
-            String hand = String.format("You have **%s** with %.1f%% chance to win", bestHand, chance);
+            String hand = String.format("You have **%s** (%.1f%%)", bestHand, chance);
             client.sendDirectText(hand, player.getId());
         } catch (Exception e) {
             Logger.error("sendCards: %s", e.toString());
