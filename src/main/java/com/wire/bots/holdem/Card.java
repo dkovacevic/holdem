@@ -29,7 +29,7 @@ public class Card implements Comparable<Card> {
         return ranks[rank] + "_of_" + suits[suit];
     }
 
-    int getRank() {
+    public int getRank() {
         return rank;
     }
 

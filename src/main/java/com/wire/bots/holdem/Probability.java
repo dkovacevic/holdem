@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 
-class Probability {
+public class Probability {
     private static final HashSet<Hand> hands = holeHands();
     private final ArrayList<Player> players = new ArrayList<>();
 
-    Probability(ArrayList<Card> board, ArrayList<Card> hole) {
+    public Probability(ArrayList<Card> board, ArrayList<Card> hole) {
         Date s = new Date();
         HashSet<Card> usedCards = new HashSet<>();
         usedCards.addAll(board);
@@ -54,7 +54,7 @@ class Probability {
         return hands;
     }
 
-    float chance(Player player) {
+    public float chance(Player player) {
         Date s = new Date();
         int w = 0;
         for (Player p : players) {

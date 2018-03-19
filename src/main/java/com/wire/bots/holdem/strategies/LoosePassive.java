@@ -1,7 +1,6 @@
 package com.wire.bots.holdem.strategies;
 
 import com.wire.bots.holdem.Action;
-import com.wire.bots.holdem.HandStrength;
 import com.wire.bots.holdem.Player;
 
 public class LoosePassive extends BaseStrategy implements Strategy {
@@ -12,11 +11,15 @@ public class LoosePassive extends BaseStrategy implements Strategy {
 
     @Override
     public Action action(Action cmd) {
-        if (!flop())
-            return Action.CALL;
+        if (!flop()) {
+            if (!playable())
+                return Action.FOLD;
+            else
+                return Action.CALL;
+        }
 
         if (call > 0) {
-            if (strength.ordinal() >= HandStrength.OnePair.ordinal())
+            if (getChance() > 25f)
                 return Action.CALL;
             else
                 return Action.FOLD;
@@ -24,7 +27,7 @@ public class LoosePassive extends BaseStrategy implements Strategy {
 
         // it was a call
 
-        if (strength.ordinal() > HandStrength.ThreeOfKind.ordinal() && able())
+        if (getChance() > 80f && able())
             return Action.RAISE;
         else
             return Action.CALL;

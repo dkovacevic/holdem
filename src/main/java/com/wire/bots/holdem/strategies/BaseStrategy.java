@@ -3,24 +3,37 @@ package com.wire.bots.holdem.strategies;
 import com.wire.bots.holdem.Hand;
 import com.wire.bots.holdem.HandStrength;
 import com.wire.bots.holdem.Player;
+import com.wire.bots.holdem.Probability;
 
 public abstract class BaseStrategy {
     protected final Player bot;
-    protected final HandStrength strength;
-    protected final Hand hand;
+    private final Hand hand;
+    private final Probability probability;
     protected int call;
 
-    public BaseStrategy(Player bot) {
+    BaseStrategy(Player bot) {
         this.bot = bot;
         this.hand = bot.getBestHand();
-        this.strength = hand.getStrength();
+        probability = new Probability(bot.getBoard(), bot.getCards());
     }
 
-    protected boolean able() {
+    boolean able() {
         return call < bot.getChips();
     }
 
-    protected boolean flop() {
+    boolean flop() {
         return !bot.getBoard().isEmpty();
+    }
+
+    float getChance() {
+        return probability.chance(bot);
+    }
+
+    boolean playable() {
+        return hand.onePair() != -1 || (hand.getCard(0).getRank() > 7 && hand.getCard(1).getRank() > 7);
+    }
+
+    HandStrength strength() {
+        return hand.getStrength();
     }
 }

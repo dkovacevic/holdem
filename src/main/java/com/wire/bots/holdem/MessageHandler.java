@@ -222,7 +222,7 @@ public class MessageHandler extends MessageHandlerBase {
             byte[] image = Images.getImage(table.getBoard());
             client.sendDirectPicture(image, MIME_TYPE, player.getId());
         } catch (Exception e) {
-            Logger.error("sendBoard: %s", e.toString());
+            Logger.error("sendBoard: %s", e);
         }
     }
 
@@ -238,7 +238,7 @@ public class MessageHandler extends MessageHandlerBase {
             String hand = String.format("You have **%s** (%.1f%%)", bestHand, chance);
             client.sendDirectText(hand, player.getId());
         } catch (Exception e) {
-            Logger.error("sendCards: %s", e.toString());
+            Logger.error("sendCards: %s", e);
         }
     }
 
@@ -264,7 +264,7 @@ public class MessageHandler extends MessageHandlerBase {
                 saveState(table, client.getId());
             }
         } catch (Exception e) {
-            Logger.error("showdown: %s", e.toString());
+            Logger.error("showdown: %s", e);
         }
     }
 

@@ -85,7 +85,7 @@ public class Player implements Comparable<Player> {
         return id;
     }
 
-    ArrayList<Card> getCards() {
+    public ArrayList<Card> getCards() {
         return cards;
     }
 

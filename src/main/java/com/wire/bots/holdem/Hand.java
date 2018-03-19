@@ -279,7 +279,7 @@ public class Hand implements Comparable<Hand> {
         return cards.stream().allMatch(x -> x.getSuit() == suit);
     }
 
-    Card getCard(int i) {
+    public Card getCard(int i) {
         return cards.get(i);
     }
 }

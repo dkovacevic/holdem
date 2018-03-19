@@ -1,7 +1,6 @@
 package com.wire.bots.holdem.strategies;
 
 import com.wire.bots.holdem.Action;
-import com.wire.bots.holdem.HandStrength;
 import com.wire.bots.holdem.Player;
 
 public class TightPassive extends BaseStrategy implements Strategy {
@@ -12,7 +11,7 @@ public class TightPassive extends BaseStrategy implements Strategy {
     @Override
     public Action action(Action cmd) {
         if (!flop()) {
-            if (cmd == Action.RAISE && hand.strongestCard() < 10)
+            if (!playable())
                 return Action.FOLD;
             else
                 return Action.CALL;
@@ -20,7 +19,7 @@ public class TightPassive extends BaseStrategy implements Strategy {
 
         // it was a raise
         if (call > 0) {
-            if (strength.ordinal() >= HandStrength.OnePair.ordinal())
+            if (getChance() > 25f)
                 return Action.CALL;
             else
                 return Action.FOLD;
@@ -28,7 +27,7 @@ public class TightPassive extends BaseStrategy implements Strategy {
 
         // it was a call
 
-        if (strength.ordinal() >= HandStrength.Straight.ordinal() && able())
+        if (getChance() > 80f && able())
             return Action.RAISE;
         else
             return Action.CALL;
