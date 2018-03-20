@@ -8,5 +8,5 @@ public enum Action {
     ADD_BOT,
     FOLD,
     PRINT,
-    RESET
+    RANKING, RESET
 }

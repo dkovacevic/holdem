@@ -39,7 +39,9 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class MessageHandler extends MessageHandlerBase {
     private static final ConcurrentHashMap<String, Table> tables = new ConcurrentHashMap<>();
+    // constance
     private static final String MIME_TYPE = "image/png";
+    private static final String RANKING_FILENAME = "ranking";
     // Commands
     private static final String RAISE = "raise";
     private static final String R = "r";          // short for `raise`
@@ -49,18 +51,20 @@ public class MessageHandler extends MessageHandlerBase {
     private static final String CALL = "call";
     private static final String C = "c";          // short for `call`
     private static final String CHECK = "check";  // equivalent to `call`
-    private static final String ADD_BOT = "add bot";  // equivalent to `call`
+    private static final String ADD_BOT = "add bot";
+    private static final String RANKING = "ranking";
     private static final String TABLE_JSON = "table.json";
     private static final String BET = "bet";
     private static final String B = "b";
     private static final String RESET = "reset";
     private static final String PRINT = "print";
-
+    private static Ranking ranking = new Ranking();
     private final StorageFactory storageFactory;
     private final ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(4);
 
     MessageHandler(StorageFactory storageFactory) {
         this.storageFactory = storageFactory;
+        loadRanking();
     }
 
     @Override
@@ -128,6 +132,8 @@ public class MessageHandler extends MessageHandlerBase {
                     addNewPlayer(client, table, user, true);
                 }
                 break;
+                case RANKING:
+                    client.sendText(ranking.print());
             }
 
             if (!betmanCall(client, table, action))
@@ -259,6 +265,9 @@ public class MessageHandler extends MessageHandlerBase {
             printSummary(client, table);
 
             if (table.getPlayers().size() <= 1) {
+                ranking.winner(winner.getId(), table.getMoney());
+                saveRanking();
+
                 client.ping();
                 table = closeTable(client);
                 saveState(table, client.getId());
@@ -277,6 +286,7 @@ public class MessageHandler extends MessageHandlerBase {
                         player.getName(),
                         player.getChips());
                 client.sendText(text);
+                ranking.player(player.getId(), player.getName());
             }
             client.sendText("Add more participants. Type: `deal` to start. `call`, `raise`, `fold` when betting..." +
                     " If you feel lonely type: `add bot`");
@@ -367,6 +377,7 @@ public class MessageHandler extends MessageHandlerBase {
                 player.getName(),
                 player.getChips());
         client.sendText(text);
+        ranking.player(player.getId(), player.getName());
     }
 
     private Action parseCommand(String cmd) {
@@ -391,6 +402,8 @@ public class MessageHandler extends MessageHandlerBase {
                 return Action.FOLD;
             case ADD_BOT:
                 return Action.ADD_BOT;
+            case RANKING:
+                return Action.RANKING;
             default:
                 return Action.UNKNOWN;
         }
@@ -441,5 +454,27 @@ public class MessageHandler extends MessageHandlerBase {
         }
         sb.append("```");
         client.sendText(sb.toString());
+    }
+
+    private void loadRanking() {
+        try {
+            Storage storage = storageFactory.create("");
+            String json = storage.readGlobalFile(RANKING_FILENAME);
+            ObjectMapper mapper = new ObjectMapper();
+            ranking = mapper.readValue(json, Ranking.class);
+        } catch (Exception e) {
+            Logger.error("loadRanking: %s", e);
+        }
+    }
+
+    private void saveRanking() {
+        try {
+            Storage storage = storageFactory.create("");
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(ranking);
+            storage.saveGlobalFile(RANKING_FILENAME, json);
+        } catch (Exception e) {
+            Logger.error("saveRanking: %s", e);
+        }
     }
 }

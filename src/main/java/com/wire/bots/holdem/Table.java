@@ -28,6 +28,8 @@ class Table {
     private int raise = INITIAL_RAISE;
     @JsonProperty
     private int smallBlind = INITIAL_SMALL_BLIND;
+    @JsonProperty
+    private int money;
 
     public Table() {
     }
@@ -53,6 +55,7 @@ class Table {
         if (players.size() == 2)
             player.setRole(Role.BB);
 
+        money += 5;
         return player;
     }
 
@@ -349,5 +352,9 @@ class Table {
         synchronized (players) {
             return players.stream().anyMatch(player -> player.getChips() <= 0);
         }
+    }
+
+    public int getMoney() {
+        return money;
     }
 }

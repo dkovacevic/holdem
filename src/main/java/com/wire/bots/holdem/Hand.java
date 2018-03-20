@@ -227,7 +227,7 @@ public class Hand implements Comparable<Hand> {
         return pairs(1, 0);
     }
 
-    public int strongestCard() {
+    int strongestCard() {
         return highCard().getRank();
     }
 
