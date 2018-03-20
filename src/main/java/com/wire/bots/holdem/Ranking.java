@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 
 public class Ranking {
+    private static final int FEE = 5;
     @JsonProperty
     private final HashMap<String, Rank> rankings = new HashMap<>();
 
@@ -27,14 +28,19 @@ public class Ranking {
             rank.money += money;
     }
 
-    public void player(String id, String name) {
+    public int player(String id, String name) {
         Rank r = rankings.computeIfAbsent(id, k -> {
             Rank rank = new Rank();
             rank.money = 0;
             rank.name = name;
             return rank;
         });
-        r.money -= 5;
+        r.money -= FEE;
+        return FEE;
+    }
+
+    public int size() {
+        return rankings.size();
     }
 
     static class Rank implements Comparable<Rank> {

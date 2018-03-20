@@ -57,37 +57,36 @@ public class MessageHandler extends MessageHandlerBase {
     private static final String B = "b";
     private static final String RESET = "reset";
     private static final String PRINT = "print";
-    private static Ranking ranking = new Ranking();
+    private final Ranking ranking;
     private final StorageFactory storageFactory;
     private final ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(4);
 
     MessageHandler(StorageFactory storageFactory) {
         this.storageFactory = storageFactory;
-        loadRanking();
+        this.ranking = loadRanking();
     }
 
     @Override
     public void onText(WireClient client, TextMessage msg) {
         try {
-            Table table = getTable(client);
-
-            Player player = table.getPlayer(msg.getUserId());
-
             Action action = parseCommand(msg.getText());
             switch (action) {
-                case PRINT:
+                case PRINT: {
+                    Table table = getTable(client);
                     client.sendText(table.printPlayers());
-                    break;
-                case RESET:
-                    table = closeTable(client);
+                    return;
+                }
+                case RESET: {
+                    closeTable(client);
+                    Table table = getTable(client);
                     client.sendText(String.format("New game. Players: %s blind %d - raise %d",
                             table.printPlayers(),
                             table.getSmallBlind(),
                             table.getRaise()));
-                    break;
+                }
+                break;
                 case DEAL: {
-                    Logger.info("New Deal with %d players", table.getPlayers().size());
-
+                    Table table = getTable(client);
                     Player turn = table.shiftRoles();
                     table.shuffle();
                     turn.setTurn(true);
@@ -102,7 +101,9 @@ public class MessageHandler extends MessageHandlerBase {
                     dealPlayers(client, table);
                 }
                 break;
-                case RAISE:
+                case RAISE: {
+                    Table table = getTable(client);
+                    Player player = table.getPlayer(msg.getUserId());
                     int raise = table.raise(player);
                     if (raise != -1) {
                         client.sendText(String.format("%s(%d) raised by %d, pot %d",
@@ -113,18 +114,26 @@ public class MessageHandler extends MessageHandlerBase {
                     } else if (!player.isCalled()) {
                         client.sendDirectText("Raise failed due to insufficient funds", player.getId());
                     }
-                    break;
-                case CALL:
+                }
+                break;
+                case CALL: {
+                    Table table = getTable(client);
+                    Player player = table.getPlayer(msg.getUserId());
                     table.call(player);
 
                     if (player.getCall() > 0) {
                         table.refund(player.getCall());
                     }
-                    break;
-                case FOLD:
+                }
+                break;
+                case FOLD: {
+                    Table table = getTable(client);
+                    Player player = table.getPlayer(msg.getUserId());
                     table.fold(player);
-                    break;
+                }
+                break;
                 case ADD_BOT: {
+                    Table table = getTable(client);
                     User user = new User();
                     String name = Betman.randomName();
                     user.id = name;
@@ -134,11 +143,16 @@ public class MessageHandler extends MessageHandlerBase {
                 break;
                 case RANKING:
                     client.sendText(ranking.print());
+                    return;
+                default:
+                    return;
             }
 
+            Table table = getTable(client);
             if (!betmanCall(client, table, action))
                 check(client, table);
         } catch (Exception e) {
+            e.printStackTrace();
             Logger.error("onText: %s", e);
         }
     }
@@ -270,8 +284,7 @@ public class MessageHandler extends MessageHandlerBase {
                 saveRanking();
 
                 client.ping();
-                table = closeTable(client);
-                saveState(table, client.getId());
+                closeTable(client);
             }
         } catch (Exception e) {
             Logger.error("showdown: %s", e);
@@ -287,7 +300,6 @@ public class MessageHandler extends MessageHandlerBase {
                         player.getName(),
                         player.getChips());
                 client.sendText(text);
-                ranking.player(player.getId(), player.getName());
             }
             client.sendText("Add more participants. Type: `deal` to start. `call`, `raise`, `fold` when betting..." +
                     " If you feel lonely type: `add bot`");
@@ -341,12 +353,13 @@ public class MessageHandler extends MessageHandlerBase {
         });
     }
 
-    private Table closeTable(WireClient client) throws Exception {
+    private void closeTable(WireClient client) throws Exception {
         String botId = client.getId();
-        Table table = newTable(client); //todo delete json instead of creating new table, ffs!
-        tables.put(botId, table);
-        saveState(table, client.getId());
-        return table;
+        Storage storage = storageFactory.create(botId);
+        boolean deleteFile = storage.deleteFile(TABLE_JSON);
+        String readFile = storage.readFile(TABLE_JSON);
+        Logger.info("Attempting to delete table file. Delete: %s, Exist: %s", deleteFile, readFile != null);
+        tables.remove(botId);
     }
 
     private Table newTable(WireClient client) throws IOException {
@@ -458,17 +471,21 @@ public class MessageHandler extends MessageHandlerBase {
         client.sendText(sb.toString());
     }
 
-    private void loadRanking() {
+    private Ranking loadRanking() {
+        Ranking ret = null;
         try {
             Storage storage = storageFactory.create("");
             String json = storage.readGlobalFile(RANKING_FILENAME);
             if (json != null) {
                 ObjectMapper mapper = new ObjectMapper();
-                ranking = mapper.readValue(json, Ranking.class);
-            }
+                ret = mapper.readValue(json, Ranking.class);
+                Logger.info("Ranking size:", ranking.size());
+            } else
+                ret = new Ranking();
         } catch (Exception e) {
             Logger.error("loadRanking: %s", e);
         }
+        return ret;
     }
 
     private void saveRanking() {
