@@ -32,7 +32,6 @@ import com.wire.bots.sdk.tools.Logger;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -41,7 +40,7 @@ public class MessageHandler extends MessageHandlerBase {
     private static final ConcurrentHashMap<String, Table> tables = new ConcurrentHashMap<>();
     // constance
     private static final String MIME_TYPE = "image/png";
-    private static final String RANKING_FILENAME = "ranking";
+    private static final String RANKING_FILENAME = "global_ranking";
     // Commands
     private static final String RAISE = "raise";
     private static final String R = "r";          // short for `raise`
@@ -127,8 +126,9 @@ public class MessageHandler extends MessageHandlerBase {
                     break;
                 case ADD_BOT: {
                     User user = new User();
-                    user.id = UUID.randomUUID().toString();
-                    user.name = Betman.randomName();
+                    String name = Betman.randomName();
+                    user.id = name;
+                    user.name = name;
                     addNewPlayer(client, table, user, true);
                 }
                 break;
@@ -265,6 +265,7 @@ public class MessageHandler extends MessageHandlerBase {
             printSummary(client, table);
 
             if (table.getPlayers().size() <= 1) {
+                Logger.info("Updating ranking for: %s, money: %s", winner.getName(), table.getMoney());
                 ranking.winner(winner.getId(), table.getMoney());
                 saveRanking();
 
@@ -461,8 +462,10 @@ public class MessageHandler extends MessageHandlerBase {
         try {
             Storage storage = storageFactory.create("");
             String json = storage.readGlobalFile(RANKING_FILENAME);
-            ObjectMapper mapper = new ObjectMapper();
-            ranking = mapper.readValue(json, Ranking.class);
+            if (json != null) {
+                ObjectMapper mapper = new ObjectMapper();
+                ranking = mapper.readValue(json, Ranking.class);
+            }
         } catch (Exception e) {
             Logger.error("loadRanking: %s", e);
         }

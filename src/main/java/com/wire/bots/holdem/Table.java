@@ -354,7 +354,7 @@ class Table {
         }
     }
 
-    public int getMoney() {
+    int getMoney() {
         return money;
     }
 }
