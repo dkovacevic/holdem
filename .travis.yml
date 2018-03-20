@@ -1,0 +1,12 @@
+sudo: 'required'
+language: java
+
+services:
+- docker
+
+after_success:
+  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then
+      docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD ;
+      docker build -t $DOCKER_USERNAME/holdem:latest . ;
+      docker push $DOCKER_USERNAME/holdem ;
+    fi

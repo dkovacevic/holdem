@@ -354,7 +354,8 @@ public class MessageHandler extends MessageHandlerBase {
         for (Member member : conversation.members) {
             if (member.service == null) {
                 User user = client.getUser(member.id);
-                table.addPlayer(user, false);
+                Player player = table.addPlayer(user, false);
+                ranking.player(player.getId(), player.getName());
             }
         }
         Logger.info("New Table with %d players", table.getPlayers().size());

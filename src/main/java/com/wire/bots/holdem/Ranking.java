@@ -10,7 +10,7 @@ public class Ranking {
     @JsonProperty
     private final HashMap<String, Rank> rankings = new HashMap<>();
 
-    public String print() {
+    String print() {
         StringBuilder sb = new StringBuilder();
         ArrayList<Rank> list = new ArrayList<>();
         list.addAll(rankings.values());
@@ -21,9 +21,10 @@ public class Ranking {
         return sb.toString();
     }
 
-    public void winner(String id, int money) {
+    void winner(String id, int money) {
         Rank rank = rankings.get(id);
-        rank.money += money;
+        if (rank != null)
+            rank.money += money;
     }
 
     public void player(String id, String name) {
