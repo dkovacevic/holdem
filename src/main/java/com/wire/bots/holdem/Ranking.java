@@ -24,23 +24,30 @@ public class Ranking {
 
     void winner(String id, int money) {
         Rank rank = rankings.get(id);
-        if (rank != null)
-            rank.money += money;
+        rank.money += money;
     }
 
-    public int player(String id, String name) {
-        Rank r = rankings.computeIfAbsent(id, k -> {
+    int commit(String id, String name) {
+        Rank r = getRank(id, name);
+        r.money -= FEE;
+        return FEE;
+    }
+
+    void register(String id, String name) {
+        getRank(id, name);
+    }
+
+    public int size() {
+        return rankings.size();
+    }
+
+    private Rank getRank(String id, String name) {
+        return rankings.computeIfAbsent(id, k -> {
             Rank rank = new Rank();
             rank.money = 0;
             rank.name = name;
             return rank;
         });
-        r.money -= FEE;
-        return FEE;
-    }
-
-    public int size() {
-        return rankings.size();
     }
 
     static class Rank implements Comparable<Rank> {

@@ -369,7 +369,7 @@ public class MessageHandler extends MessageHandlerBase {
             if (member.service == null) {
                 User user = client.getUser(member.id);
                 Player player = table.addPlayer(user, false);
-                ranking.player(player.getId(), player.getName());
+                ranking.commit(player.getId(), player.getName());
             }
         }
         Logger.info("New Table with %d players", table.getPlayers().size());
@@ -381,8 +381,10 @@ public class MessageHandler extends MessageHandlerBase {
         Table table = mapper.readValue(jsonTable, Table.class);
         for (Player player : table.getPlayers()) {
             player.setBoard(table.getBoard());
+            ranking.register(player.getId(), player.getName());
         }
-        Logger.info("Loaded table from storage");
+        saveRanking();
+        Logger.info("Loaded table with %d players from storage", table.getPlayers().size());
         return table;
     }
 
@@ -392,7 +394,7 @@ public class MessageHandler extends MessageHandlerBase {
                 player.getName(),
                 player.getChips());
         client.sendText(text);
-        ranking.player(player.getId(), player.getName());
+        ranking.commit(player.getId(), player.getName());
     }
 
     private Action parseCommand(String cmd) {
