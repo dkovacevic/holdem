@@ -369,9 +369,11 @@ public class MessageHandler extends MessageHandlerBase {
             if (member.service == null) {
                 User user = client.getUser(member.id);
                 Player player = table.addPlayer(user, false);
-                ranking.commit(player.getId(), player.getName());
+                int fee = ranking.commit(player.getId(), player.getName());
+                table.commitFee(fee);
             }
         }
+        saveRanking();
         Logger.info("New Table with %d players", table.getPlayers().size());
         return table;
     }
@@ -394,7 +396,9 @@ public class MessageHandler extends MessageHandlerBase {
                 player.getName(),
                 player.getChips());
         client.sendText(text);
-        ranking.commit(player.getId(), player.getName());
+        int fee = ranking.commit(player.getId(), player.getName());
+        table.commitFee(fee);
+        saveRanking();
     }
 
     private Action parseCommand(String cmd) {

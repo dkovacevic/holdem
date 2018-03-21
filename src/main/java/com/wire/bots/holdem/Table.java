@@ -55,7 +55,6 @@ class Table {
         if (players.size() == 2)
             player.setRole(Role.BB);
 
-        money += 5;
         return player;
     }
 
@@ -356,5 +355,9 @@ class Table {
 
     int getMoney() {
         return money;
+    }
+
+    void commitFee(int fee) {
+        money += fee;
     }
 }

@@ -12,19 +12,19 @@ public class Ranking {
     private final HashMap<String, Rank> rankings = new HashMap<>();
 
     String print() {
-        StringBuilder sb = new StringBuilder();
         ArrayList<Rank> list = new ArrayList<>();
         list.addAll(rankings.values());
         list.sort(Comparator.reverseOrder());
-        list.forEach(v ->
-                sb.append(String.format("%-20s $ %d", v.name, v.money))
-                        .append("\n"));
-        return sb.toString();
+        StringBuilder sb = new StringBuilder("```\n");
+        sb.append(String.format("**%-20s\t%s\t%s**\n", "Name", "Wins", "$"));
+        list.forEach(v -> sb.append(String.format("%-20s\t%d\t\t%d\n", v.name, v.wins, v.money)));
+        return sb.append("```").toString();
     }
 
     void winner(String id, int money) {
         Rank rank = rankings.get(id);
         rank.money += money;
+        rank.wins++;
     }
 
     int commit(String id, String name) {
@@ -44,7 +44,6 @@ public class Ranking {
     private Rank getRank(String id, String name) {
         return rankings.computeIfAbsent(id, k -> {
             Rank rank = new Rank();
-            rank.money = 0;
             rank.name = name;
             return rank;
         });
@@ -55,6 +54,8 @@ public class Ranking {
         String name;
         @JsonProperty
         int money;
+        @JsonProperty
+        int wins;
 
         @Override
         public int compareTo(Rank other) {
