@@ -1,12 +1,13 @@
-package com.wire.bots.holdem;
+package com.wire.bots.holdem.game;
 
+import com.wire.bots.holdem.Action;
 import com.wire.bots.holdem.strategies.*;
 import com.wire.bots.sdk.WireClient;
 import com.wire.bots.sdk.tools.Logger;
 
 import java.util.Random;
 import java.util.Timer;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 
 class Betman {
     private static final int DELAY = 2000;
@@ -43,7 +44,7 @@ class Betman {
         return new LooseAggressive(bot);
     }
 
-    boolean action(Action cmd, BiFunction<WireClient, Table, Boolean> check) {
+    boolean action(Action cmd, Function<WireClient, Boolean> check) {
         boolean ret = false;
         try {
             if (table.getPot() != 0 && bot.isTurn()) {
@@ -64,7 +65,7 @@ class Betman {
         } catch (Exception e) {
             Logger.error(e.toString());
         } finally {
-            check.apply(client, table);
+            check.apply(client);
         }
 
         return ret;

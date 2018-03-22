@@ -1,4 +1,4 @@
-package com.wire.bots.holdem;
+package com.wire.bots.holdem.game;
 
 import java.util.ArrayList;
 import java.util.Arrays;

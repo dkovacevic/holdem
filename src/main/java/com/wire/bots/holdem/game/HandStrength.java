@@ -1,4 +1,4 @@
-package com.wire.bots.holdem;
+package com.wire.bots.holdem.game;
 
 
 public enum HandStrength {

@@ -1,7 +1,7 @@
 package com.wire.bots.holdem.strategies;
 
 import com.wire.bots.holdem.Action;
-import com.wire.bots.holdem.Player;
+import com.wire.bots.holdem.game.Player;
 
 public class TightAggressive extends BaseStrategy implements Strategy {
     public TightAggressive(Player bot) {

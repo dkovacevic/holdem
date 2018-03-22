@@ -1,9 +1,9 @@
 package com.wire.bots.holdem.strategies;
 
-import com.wire.bots.holdem.Hand;
-import com.wire.bots.holdem.HandStrength;
-import com.wire.bots.holdem.Player;
-import com.wire.bots.holdem.Probability;
+import com.wire.bots.holdem.game.Hand;
+import com.wire.bots.holdem.game.HandStrength;
+import com.wire.bots.holdem.game.Player;
+import com.wire.bots.holdem.game.Probability;
 
 public abstract class BaseStrategy {
     protected final Player bot;

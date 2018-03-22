@@ -1,4 +1,4 @@
-package com.wire.bots.holdem;
+package com.wire.bots.holdem.game;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;

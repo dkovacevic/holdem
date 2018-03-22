@@ -1,4 +1,4 @@
-package com.wire.bots.holdem;
+package com.wire.bots.holdem.game;
 
 import com.wire.bots.sdk.server.model.User;
 import org.junit.Test;

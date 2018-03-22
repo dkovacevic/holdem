@@ -1,7 +1,7 @@
 package test;
 
-import com.wire.bots.holdem.Card;
 import com.wire.bots.holdem.Images;
+import com.wire.bots.holdem.game.Card;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;

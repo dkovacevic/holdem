@@ -1,5 +1,4 @@
-package com.wire.bots.holdem;
-
+package com.wire.bots.holdem.game;
 
 import org.junit.Test;
 

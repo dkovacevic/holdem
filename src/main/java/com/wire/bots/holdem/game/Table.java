@@ -1,4 +1,4 @@
-package com.wire.bots.holdem;
+package com.wire.bots.holdem.game;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

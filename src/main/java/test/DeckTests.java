@@ -1,7 +1,7 @@
 package test;
 
-import com.wire.bots.holdem.Card;
-import com.wire.bots.holdem.Deck;
+import com.wire.bots.holdem.game.Card;
+import com.wire.bots.holdem.game.Deck;
 
 import java.io.IOException;
 

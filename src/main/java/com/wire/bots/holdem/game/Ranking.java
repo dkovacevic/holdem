@@ -1,4 +1,4 @@
-package com.wire.bots.holdem;
+package com.wire.bots.holdem.game;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -16,7 +16,7 @@ public class Ranking {
         list.addAll(rankings.values());
         list.sort(Comparator.reverseOrder());
         StringBuilder sb = new StringBuilder("```\n");
-        sb.append(String.format("**%-20s\t%s\t%s**\n", "Name", "Wins", "$"));
+        sb.append(String.format("%-20s\t%s\t%s\n", "Name", "Wins", "$"));
         list.forEach(v -> sb.append(String.format("%-20s\t%d\t\t%d\n", v.name, v.wins, v.money)));
         return sb.append("```").toString();
     }
