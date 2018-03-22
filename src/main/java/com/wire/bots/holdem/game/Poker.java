@@ -11,6 +11,10 @@ import com.wire.bots.sdk.server.model.User;
 import com.wire.bots.sdk.storage.Storage;
 import com.wire.bots.sdk.tools.Logger;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -376,7 +380,25 @@ public class Poker {
                     bestHand);
             client.sendText(text);
 
-            byte[] image = Images.getImage(player.getCards(), bestHand.getCards());
+            ArrayList<BufferedImage> board = new ArrayList<>();
+            for (Card c : table.getBoard()) {
+                Color color = bestHand.getCards().contains(c) ? Color.WHITE : Color.LIGHT_GRAY;
+                BufferedImage image = Images.getBufferedImage(c, 1f, color);
+                board.add(image);
+            }
+
+            ArrayList<BufferedImage> hole = new ArrayList<>();
+            for (Card c : player.getCards()) {
+                Color color = bestHand.getCards().contains(c) ? Color.WHITE : Color.LIGHT_GRAY;
+                BufferedImage image = Images.getBufferedImage(c, 1f, color);
+                hole.add(image);
+            }
+
+            BufferedImage attached = Images.attach(hole, board);
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            ImageIO.write(attached, "png", output);
+            byte[] image = output.toByteArray();
+
             client.sendPicture(image, MIME_TYPE);
         }
     }
