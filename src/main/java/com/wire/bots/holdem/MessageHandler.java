@@ -19,7 +19,7 @@ public class MessageHandler extends MessageHandlerBase {
     private static final String R = "r";          // short for `raise`
 
     private static final String DEAL = "deal";    // deal cards
-    private static final String D = "d";    // deal cards
+    private static final String D = "d";          // deal cards
 
     private static final String F = "f";          // short for `fold`
     private static final String FOLD = "fold";
@@ -28,13 +28,13 @@ public class MessageHandler extends MessageHandlerBase {
     private static final String C = "c";          // short for `call`
     private static final String CHECK = "check";  // equivalent to `call`
 
-    private static final String BLIND = "blind";
-    private static final String BET = "bet";
-    private static final String B = "b";
+    private static final String BLIND = "blind";  // equivalent to `call`
+    private static final String BET = "bet";      // equivalent to `raise`
+    private static final String B = "b";          // equivalent to `raise`
 
     private static final String RESET = "reset";
     private static final String NEW = "new";
-
+    // Commands
 
     private final Poker poker;
 
@@ -56,27 +56,26 @@ public class MessageHandler extends MessageHandlerBase {
                 case RESET:
                     poker.onReset(client);
                     break;
+                case ADD_BOT:
+                    poker.onAddBot(client);
+                    break;
                 case DEAL:
                     poker.onDeal(client);
                     break;
                 case RAISE:
-                    poker.onRaise(client, msg);
+                    poker.onRaise(client, msg.getUserId());
                     break;
                 case CALL:
-                    poker.onCall(client, msg);
+                    poker.onCall(client, msg.getUserId());
                     break;
                 case FOLD:
-                    poker.onFold(client, msg);
-                    break;
-                case ADD_BOT:
-                    poker.onAddBot(client);
+                    poker.onFold(client, msg.getUserId());
                     break;
                 default:
                     return;
             }
             poker.onBots(client, action);
         } catch (Exception e) {
-            e.printStackTrace();
             Logger.error("onText: %s", e);
         }
     }
@@ -87,7 +86,7 @@ public class MessageHandler extends MessageHandlerBase {
             client.sendText("Add more participants. Type: `deal` to start. `call`, `raise`, `fold` when betting..." +
                     " If you feel lonely type: `add bot`");
         } catch (Exception e) {
-            Logger.error(e.getMessage());
+            Logger.error("onNewConversation: %s", e);
         }
     }
 
@@ -96,7 +95,7 @@ public class MessageHandler extends MessageHandlerBase {
         try {
             poker.onMemberJoin(client, userIds);
         } catch (Exception e) {
-            Logger.error(e.getMessage());
+            Logger.error("onMemberJoin: %s", e);
         }
     }
 
@@ -105,7 +104,7 @@ public class MessageHandler extends MessageHandlerBase {
         try {
             poker.onMemberLeave(client, userIds);
         } catch (Exception e) {
-            Logger.error(e.getMessage());
+            Logger.error("onMemberLeave: %s", e);
         }
     }
 

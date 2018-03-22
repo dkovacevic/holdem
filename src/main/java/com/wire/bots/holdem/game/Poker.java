@@ -5,7 +5,6 @@ import com.wire.bots.holdem.Action;
 import com.wire.bots.holdem.Images;
 import com.wire.bots.sdk.WireClient;
 import com.wire.bots.sdk.factories.StorageFactory;
-import com.wire.bots.sdk.models.TextMessage;
 import com.wire.bots.sdk.server.model.Conversation;
 import com.wire.bots.sdk.server.model.Member;
 import com.wire.bots.sdk.server.model.User;
@@ -45,15 +44,15 @@ public class Poker {
         addNewPlayer(client, user, true);
     }
 
-    public void onFold(WireClient client, TextMessage msg) {
+    public void onFold(WireClient client, String userId) {
         Table table = getTable(client);
-        Player player = table.getPlayer(msg.getUserId());
+        Player player = table.getPlayer(userId);
         table.fold(player);
     }
 
-    public void onCall(WireClient client, TextMessage msg) {
+    public void onCall(WireClient client, String userId) {
         Table table = getTable(client);
-        Player player = table.getPlayer(msg.getUserId());
+        Player player = table.getPlayer(userId);
         table.call(player);
 
         if (player.getCall() > 0) {
@@ -61,9 +60,9 @@ public class Poker {
         }
     }
 
-    public void onRaise(WireClient client, TextMessage msg) throws Exception {
+    public void onRaise(WireClient client, String userId) throws Exception {
         Table table = getTable(client);
-        Player player = table.getPlayer(msg.getUserId());
+        Player player = table.getPlayer(userId);
         int raise = table.raise(player);
         if (raise != -1) {
             client.sendText(String.format("%s(%d) raised by %d, pot %d",

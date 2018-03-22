@@ -6,16 +6,16 @@ import com.wire.bots.sdk.WireClient;
 import com.wire.bots.sdk.tools.Logger;
 
 import java.util.Random;
-import java.util.Timer;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.function.Function;
 
 class Betman {
-    private static final int DELAY = 2000;
+    private static final ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(2);
 
-    private final Timer timer = new Timer("Betman");
     private final WireClient client;
     private final Table table;
-    private Player bot;
+    private final Player bot;
 
     Betman(WireClient client, Table table, Player bot) {
         this.client = client;
@@ -46,53 +46,50 @@ class Betman {
 
     boolean action(Action cmd, Function<WireClient, Boolean> check) {
         boolean ret = false;
-        try {
-            if (table.getPot() != 0 && bot.isTurn()) {
-                switch (action(cmd)) {
-                    case CALL:
-                        ret = call();
-                        break;
-                    case RAISE:
-                        ret = raise();
-                        break;
-                    case FOLD:
-                        ret = fold();
-                        break;
-                    default:
-                        return false;
-                }
+        if (table.getPot() != 0 && bot.isTurn()) {
+            switch (action(cmd)) {
+                case CALL:
+                    ret = call();
+                    break;
+                case RAISE:
+                    ret = raise();
+                    break;
+                case FOLD:
+                    ret = fold();
+                    break;
+                default:
+                    return false;
             }
-        } catch (Exception e) {
-            Logger.error(e.toString());
-        } finally {
-            check.apply(client);
         }
 
+        check.apply(client);
         return ret;
     }
 
-    private boolean fold() throws Exception {
+    private boolean fold() {
         if (table.fold(bot)) {
-            client.sendText(String.format("%s has folded", bot.getName()));
+            String msg = String.format("%s has folded", bot.getName());
+            sendMessage(msg);
             return true;
         }
         return false;
     }
 
-    private boolean raise() throws Exception {
+    private boolean raise() {
         int raise = table.raise(bot);
         if (raise != -1) {
-            client.sendText(String.format("%s(%d) raised by %d, pot %d",
+            String msg = String.format("%s(%d) raised by %d, pot %d",
                     bot.getName(),
                     bot.getChips(),
                     raise,
-                    table.getPot()));
+                    table.getPot());
+            sendMessage(msg);
             return true;
         }
         return false;
     }
 
-    private boolean call() throws Exception {
+    private boolean call() {
         int call = table.call(bot);
         if (call != -1) {
             String msg = call == 0 ? String.format("%s(%d) checked. pot: %d",
@@ -105,7 +102,7 @@ class Betman {
                     call,
                     table.getPot());
 
-            client.sendText(msg);
+            sendMessage(msg);
 
             int dept = bot.getCall();
             if (dept > 0) {
@@ -114,5 +111,15 @@ class Betman {
             return true;
         }
         return false;
+    }
+
+    private void sendMessage(String msg) {
+        executor.execute(() -> {
+            try {
+                client.sendText(msg);
+            } catch (Exception e) {
+                Logger.error("Betman.sendMessage: %s", e);
+            }
+        });
     }
 }
