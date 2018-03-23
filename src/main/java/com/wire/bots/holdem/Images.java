@@ -18,7 +18,7 @@ import java.util.Collection;
 public class Images {
     private static final int SHIFT = 30;
     private static final String PNG = "png";
-    private static final float FACTOR = 0.66f;
+    private static final float FACTOR = 0.7f;
 
     public static byte[] getImage(Collection<Card> cards) throws IOException {
         ArrayList<BufferedImage> load = load(cards);
@@ -80,7 +80,7 @@ public class Images {
         BufferedImage a = combine(images1);
         BufferedImage b = combine(images2);
 
-        int shift = 3 * SHIFT;
+        int shift = 5 * SHIFT;
         final int width = a.getWidth() + b.getWidth() + shift;
 
         BufferedImage result = new BufferedImage(width, a.getHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -146,7 +146,7 @@ public class Images {
 
     private static BufferedImage scale(BufferedImage image, float scale) {
         int w = (int) (image.getWidth() * scale);
-        int h = (int) (image.getWidth() * scale);
+        int h = (int) (image.getHeight() * scale);
         Image scaled = image.getScaledInstance(w, h, Image.SCALE_SMOOTH);
         BufferedImage newImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
         Graphics g = newImage.getGraphics();
