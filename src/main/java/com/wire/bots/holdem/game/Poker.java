@@ -11,10 +11,8 @@ import com.wire.bots.sdk.server.model.User;
 import com.wire.bots.sdk.storage.Storage;
 import com.wire.bots.sdk.tools.Logger;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -375,31 +373,27 @@ public class Poker {
             String name = player.equals(winner)
                     ? String.format("**%s** has won %d chips", player.getName(), pot)
                     : player.getName();
-            String text = String.format("%s with %s",
-                    name,
-                    bestHand);
+            String text = String.format("%s with %s", name, bestHand);
             client.sendText(text);
 
+            // Show board cards with the ones not used in best hand as gray
             ArrayList<BufferedImage> board = new ArrayList<>();
             for (Card c : table.getBoard()) {
                 Color color = bestHand.getCards().contains(c) ? Color.WHITE : Color.LIGHT_GRAY;
-                BufferedImage image = Images.getBufferedImage(c, 1f, color);
+                BufferedImage image = Images.getBufferedImage(c, color);
                 board.add(image);
             }
 
+            // Show hole cards with the ones not used in best hand as gray
             ArrayList<BufferedImage> hole = new ArrayList<>();
             for (Card c : player.getCards()) {
                 Color color = bestHand.getCards().contains(c) ? Color.WHITE : Color.LIGHT_GRAY;
-                BufferedImage image = Images.getBufferedImage(c, 1f, color);
+                BufferedImage image = Images.getBufferedImage(c, color);
                 hole.add(image);
             }
 
             BufferedImage attached = Images.attach(hole, board);
-            ByteArrayOutputStream output = new ByteArrayOutputStream();
-            ImageIO.write(attached, "png", output);
-            byte[] image = output.toByteArray();
-
-            client.sendPicture(image, MIME_TYPE);
+            client.sendPicture(Images.getBytes(attached), MIME_TYPE);
         }
     }
 

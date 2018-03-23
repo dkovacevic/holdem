@@ -16,44 +16,37 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public class Images {
-    //private static final ConcurrentHashMap<Card, BufferedImage> cache = new ConcurrentHashMap<>();
-    private static final int SHIFT = 30;   // 42
-    private static final int HEIGHT = 216; //323
-    private static final int WIDTH = 150;  //222
+    private static final int SHIFT = 30;
     private static final String PNG = "png";
+    private static final float FACTOR = 0.66f;
 
     public static byte[] getImage(Collection<Card> cards) throws IOException {
-        ArrayList<BufferedImage> load = getBufferedImages(cards);
+        ArrayList<BufferedImage> load = load(cards);
         BufferedImage combine = combine(load);
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        ImageIO.write(combine, PNG, output);
-        return output.toByteArray();
+        return getBytes(combine);
     }
 
     public static byte[] getImage(Card c1, Card c2) throws IOException {
         BufferedImage a = load(c1).get(0);
         BufferedImage b = load(c2).get(0);
         BufferedImage attached = attach(a, b);
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        ImageIO.write(attached, PNG, output);
-        return output.toByteArray();
+        return getBytes(attached);
     }
 
     public static byte[] getImage(Collection<Card> coll1, Collection<Card> coll2) throws IOException {
-        ArrayList<BufferedImage> load1 = getBufferedImages(coll1);
-        ArrayList<BufferedImage> load2 = getBufferedImages(coll2);
+        ArrayList<BufferedImage> load1 = load(coll1);
+        ArrayList<BufferedImage> load2 = load(coll2);
 
         BufferedImage attached = attach(load1, load2);
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        ImageIO.write(attached, PNG, output);
-        return output.toByteArray();
+        return getBytes(attached);
     }
 
     public static BufferedImage combine(ArrayList<BufferedImage> images) {
-        int size = images.size() - 1;
-        final int width = WIDTH + (size * SHIFT);
+        final BufferedImage first = images.get(0);
+        final int size = images.size() - 1;
+        final int width = first.getWidth() + (size * SHIFT);
 
-        BufferedImage result = new BufferedImage(width, HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage result = new BufferedImage(width, first.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics g = result.getGraphics();
 
         for (int i = 0; i < size; i++) {
@@ -90,20 +83,27 @@ public class Images {
         int shift = 3 * SHIFT;
         final int width = a.getWidth() + b.getWidth() + shift;
 
-        BufferedImage result = new BufferedImage(width, HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage result = new BufferedImage(width, a.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics g = result.getGraphics();
 
         g.drawImage(a, 0, 0, null);
         g.drawImage(b, a.getWidth() + shift, 0, null);
         g.dispose();
         return result;
+    }
+
+    public static byte[] getBytes(BufferedImage combine) throws IOException {
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            ImageIO.write(combine, PNG, output);
+            return output.toByteArray();
+        }
     }
 
     private static BufferedImage attach(BufferedImage a, BufferedImage b) {
         int shift = 3 * SHIFT;
         final int width = a.getWidth() + b.getWidth() + shift;
 
-        BufferedImage result = new BufferedImage(width, HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage result = new BufferedImage(width, a.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics g = result.getGraphics();
 
         g.drawImage(a, 0, 0, null);
@@ -112,32 +112,25 @@ public class Images {
         return result;
     }
 
-    public static ArrayList<BufferedImage> getBufferedImages(Collection<Card> collection) {
-        Card[] cards = new Card[collection.size()];
-        collection.toArray(cards);
-        try {
-            return load(cards);
-        } catch (IOException e) {
-            Logger.error(e.toString());
-            return null;
-        }
-    }
-
     private static BufferedImage getBufferedImage(Card card) {
-        return getBufferedImage(card, 1f, new Color(255, 255, 255, 255));
+        return getBufferedImage(card, FACTOR, Color.WHITE);
     }
 
-    public static BufferedImage getBufferedImage(Card card, float factor, Color color) {
+    private static BufferedImage getBufferedImage(Card card, float scale, Color color) {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         String path = String.format("%s/%s.png", "cards", card);
         try (InputStream input = classloader.getResourceAsStream(path)) {
             BufferedImage read = ImageIO.read(input);
             BufferedImage image = replaceAlpha(read, color);
-            return scale(image, factor);
+            return scale(image, scale);
         } catch (IOException e) {
             Logger.error(e.toString());
             return null;
         }
+    }
+
+    public static BufferedImage getBufferedImage(Card card, Color color) {
+        return getBufferedImage(card, FACTOR, color);
     }
 
     public static BufferedImage getOriginalBufferedImage(Card card) {
@@ -151,13 +144,9 @@ public class Images {
         }
     }
 
-    private static BufferedImage scale(BufferedImage image) {
-        return scale(image, 1f);
-    }
-
-    private static BufferedImage scale(BufferedImage image, float factor) {
-        int w = (int) (WIDTH * factor);
-        int h = (int) (HEIGHT * factor);
+    private static BufferedImage scale(BufferedImage image, float scale) {
+        int w = (int) (image.getWidth() * scale);
+        int h = (int) (image.getWidth() * scale);
         Image scaled = image.getScaledInstance(w, h, Image.SCALE_SMOOTH);
         BufferedImage newImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
         Graphics g = newImage.getGraphics();
@@ -175,38 +164,30 @@ public class Images {
         return images;
     }
 
-    public static BufferedImage replaceAlpha(BufferedImage image, Color color) {
-        BufferedImageOp lookup = new LookupOp(new ColorMapper(color), null);
-        return lookup.filter(image, null);
+    private static ArrayList<BufferedImage> load(Collection<Card> collection) {
+        Card[] cards = new Card[collection.size()];
+        collection.toArray(cards);
+        try {
+            return load(cards);
+        } catch (IOException e) {
+            Logger.error(e.toString());
+            return null;
+        }
     }
 
-    private static class ColorMapper extends LookupTable {
-        private final Color color;
-
-        ColorMapper(Color color) {
-            super(0, 4);
-            this.color = color;
-        }
-
-        ColorMapper() {
-            super(0, 4);
-            this.color = new Color(255, 255, 255, 255);
-        }
-
-        @Override
-        public int[] lookupPixel(int[] src, int[] dest) {
-            if (dest == null) {
-                dest = new int[src.length];
+    private static BufferedImage replaceAlpha(BufferedImage image, Color color) {
+        BufferedImageOp lookup = new LookupOp(new LookupTable(0, 4) {
+            @Override
+            public int[] lookupPixel(int[] src, int[] dest) {
+                if (src[3] == 0) {
+                    dest[0] = color.getRed();
+                    dest[1] = color.getGreen();
+                    dest[2] = color.getBlue();
+                    dest[3] = color.getAlpha();
+                }
+                return dest;
             }
-
-            if (src[3] == 0) {
-                dest[0] = color.getRed();
-                dest[1] = color.getGreen();
-                dest[2] = color.getBlue();
-                dest[3] = color.getAlpha();
-            }
-
-            return dest;
-        }
+        }, null);
+        return lookup.filter(image, null);
     }
 }

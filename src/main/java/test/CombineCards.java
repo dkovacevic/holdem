@@ -45,11 +45,11 @@ public class CombineCards {
         read = ImageIO.read(new ByteArrayInputStream(image));
         ImageIO.write(read, PNG, new File("attached.png"));
 
-        BufferedImage image1 = Images.getBufferedImage(card1, 1f, Color.WHITE);
-        BufferedImage image2 = Images.getBufferedImage(card2, 1f, Color.LIGHT_GRAY);
-        BufferedImage image3 = Images.getBufferedImage(card3, 1f, Color.WHITE);
-        BufferedImage image4 = Images.getBufferedImage(card4, 1f, Color.LIGHT_GRAY);
-        BufferedImage image5 = Images.getBufferedImage(card5, 1f, Color.WHITE);
+        BufferedImage image1 = Images.getBufferedImage(card1, Color.WHITE);
+        BufferedImage image2 = Images.getBufferedImage(card2, Color.LIGHT_GRAY);
+        BufferedImage image3 = Images.getBufferedImage(card3, Color.WHITE);
+        BufferedImage image4 = Images.getBufferedImage(card4, Color.LIGHT_GRAY);
+        BufferedImage image5 = Images.getBufferedImage(card5, Color.WHITE);
 
         ArrayList<BufferedImage> list = new ArrayList<>();
         list.add(image1);
@@ -60,7 +60,6 @@ public class CombineCards {
 
         BufferedImage combine = Images.combine(list);
         ImageIO.write(combine, PNG, new File("board.png"));
-
 
     }
 }
