@@ -437,4 +437,17 @@ public class Poker {
             Logger.error("saveRanking: %s", e);
         }
     }
+
+    public boolean onKickOut(WireClient client, String name) throws Exception {
+        Table table = getTable(client);
+        Player player = table.findPlayer(name);
+        if (player != null) {
+            if (table.removePlayer(player.getId())) {
+                client.sendText(name + " was kicked out");
+                return true;
+            }
+        }
+        client.sendText("Could not kick out " + name);
+        return false;
+    }
 }

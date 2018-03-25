@@ -34,6 +34,7 @@ public class MessageHandler extends MessageHandlerBase {
 
     private static final String RESET = "reset";
     private static final String NEW = "new";
+    private static final String KICK_OUT = "kick out";
     // Commands
 
     private final Poker poker;
@@ -45,7 +46,14 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onText(WireClient client, TextMessage msg) {
         try {
-            Action action = parseCommand(msg.getText());
+            String sCmd = msg.getText().toLowerCase();
+            if (sCmd.startsWith(KICK_OUT)) {
+                String name = sCmd.replace(KICK_OUT, "").trim();
+                poker.onKickOut(client, name);
+                return;
+            }
+
+            Action action = parseCommand(sCmd);
             switch (action) {
                 case PRINT:
                     poker.onPrint(client);
@@ -71,8 +79,9 @@ public class MessageHandler extends MessageHandlerBase {
                 case FOLD:
                     poker.onFold(client, msg.getUserId());
                     break;
-                default:
+                default: {
                     return;
+                }
             }
             poker.onBots(client, action);
         } catch (Exception e) {
@@ -135,8 +144,9 @@ public class MessageHandler extends MessageHandlerBase {
                 return Action.ADD_BOT;
             case RANKING:
                 return Action.RANKING;
-            default:
+            default: {
                 return Action.UNKNOWN;
+            }
         }
     }
 }

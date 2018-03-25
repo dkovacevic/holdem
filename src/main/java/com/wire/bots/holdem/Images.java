@@ -80,7 +80,7 @@ public class Images {
         BufferedImage a = combine(images1);
         BufferedImage b = combine(images2);
 
-        int shift = 5 * SHIFT;
+        int shift = 3 * SHIFT;
         final int width = a.getWidth() + b.getWidth() + shift;
 
         BufferedImage result = new BufferedImage(width, a.getHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -100,7 +100,7 @@ public class Images {
     }
 
     private static BufferedImage attach(BufferedImage a, BufferedImage b) {
-        int shift = 3 * SHIFT;
+        int shift = 5 * SHIFT;
         final int width = a.getWidth() + b.getWidth() + shift;
 
         BufferedImage result = new BufferedImage(width, a.getHeight(), BufferedImage.TYPE_INT_ARGB);

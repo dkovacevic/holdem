@@ -95,8 +95,8 @@ class Table {
         return getActivePlayers().size() <= 1;
     }
 
-    void removePlayer(String userId) {
-        players.removeIf(player -> player.getId().equals(userId));
+    boolean removePlayer(String userId) {
+        return players.removeIf(player -> player.getId().equals(userId));
     }
 
     Card dealCard(Player player) {
@@ -359,5 +359,12 @@ class Table {
 
     void commitFee(int fee) {
         money += fee;
+    }
+
+    Player findPlayer(String name) {
+        return players.stream()
+                .filter(player -> player.getName().equalsIgnoreCase(name))
+                .findAny()
+                .orElse(null);
     }
 }
