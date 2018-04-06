@@ -1,5 +1,5 @@
 # Texas Hold'em
-Texas Hold'em Poker for Wire
+Texas Hold'em Poker for Wire 
 [![Build Status](https://travis-ci.org/dkovacevic/holdem.svg?branch=master)](https://travis-ci.org/dkovacevic/holdem)
 
 ## How to start the game?
