@@ -2,13 +2,14 @@ package com.wire.bots.holdem.game;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.holdem.Action;
+import com.wire.bots.holdem.Database;
 import com.wire.bots.holdem.Images;
+import com.wire.bots.holdem.Service;
+import com.wire.bots.sdk.Configuration;
 import com.wire.bots.sdk.WireClient;
-import com.wire.bots.sdk.factories.StorageFactory;
 import com.wire.bots.sdk.server.model.Conversation;
 import com.wire.bots.sdk.server.model.Member;
 import com.wire.bots.sdk.server.model.User;
-import com.wire.bots.sdk.storage.Storage;
 import com.wire.bots.sdk.tools.Logger;
 
 import java.awt.*;
@@ -23,15 +24,15 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 public class Poker {
     private static final ConcurrentHashMap<String, Table> tables = new ConcurrentHashMap<>();
     private static final String MIME_TYPE = "image/png";
-    private static final String RANKING_FILENAME = "global_ranking";
-    private static final String TABLE_JSON = "table.json";
     private final ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(4);
     private final Ranking ranking;
-    private final StorageFactory storageFactory;
+    private final Database db;
 
-    public Poker(StorageFactory storageFactory) {
-        this.storageFactory = storageFactory;
+    public Poker() {
         this.ranking = loadRanking();
+
+        Configuration.DB conf = Service.CONFIG.getDB();
+        db = new Database(conf.host, conf.port, conf.password);
     }
 
     public void onRanking(WireClient client) throws Exception {
@@ -108,7 +109,7 @@ public class Poker {
     }
 
     public void onReset(WireClient client) throws Exception {
-        closeTable(client);
+        deleteTable(client);
         onPrint(client);
     }
 
@@ -122,14 +123,14 @@ public class Poker {
         for (User user : users) {
             addNewPlayer(client, user, false);
         }
-        saveState(client);
+        saveTable(client);
     }
 
     public void onMemberLeave(WireClient client, ArrayList<String> userIds) {
         Table table = getTable(client);
         for (String userId : userIds)
             table.removePlayer(userId);
-        saveState(client);
+        saveTable(client);
     }
 
     public void onBots(WireClient client, Action cmd) {
@@ -246,7 +247,7 @@ public class Poker {
 
             return false;
         } finally {
-            saveState(client);
+            saveTable(client);
         }
     }
 
@@ -272,7 +273,7 @@ public class Poker {
                 saveRanking();
 
                 client.ping();
-                closeTable(client);
+                deleteTable(client);
             }
         } catch (Exception e) {
             Logger.error("showdown: %s", e);
@@ -286,8 +287,8 @@ public class Poker {
     private Table getTable(WireClient client, boolean create) {
         return tables.computeIfAbsent(client.getId(), k -> {
             try {
-                Storage storage = storageFactory.create(client.getId());
-                String jsonTable = storage.readFile(TABLE_JSON);
+
+                String jsonTable = db.getTable(client.getId());
                 if (jsonTable != null) {
                     return deserializeTable(jsonTable);
                 }
@@ -299,11 +300,23 @@ public class Poker {
         });
     }
 
-    private void closeTable(WireClient client) throws Exception {
+    private void deleteTable(WireClient client) throws Exception {
         String botId = client.getId();
         tables.remove(botId);
-        Storage storage = storageFactory.create(botId);
-        boolean deleteFile = storage.deleteFile(TABLE_JSON);
+        db.deleteTable(botId);
+    }
+
+    private void saveTable(WireClient client) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            Table table = getTable(client, false);
+            if (table != null) {
+                String jsonTable = mapper.writeValueAsString(table);
+                db.insertTable(client.getId(), jsonTable);
+            }
+        } catch (Exception e) {
+            Logger.error(e.toString());
+        }
     }
 
     private Table newTable(WireClient client) throws IOException {
@@ -344,20 +357,6 @@ public class Poker {
         int fee = ranking.commit(player.getId(), player.getName());
         table.commitFee(fee);
         saveRanking();
-    }
-
-    private void saveState(WireClient client) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            Table table = getTable(client, false);
-            if (table != null) {
-                String jsonTable = mapper.writeValueAsString(table);
-                Storage storage = storageFactory.create(client.getId());
-                storage.saveFile(TABLE_JSON, jsonTable);
-            }
-        } catch (Exception e) {
-            Logger.error(e.toString());
-        }
     }
 
     private void printWinner(WireClient client, Table table, Player winner, int pot) throws Exception {
@@ -411,28 +410,24 @@ public class Poker {
     }
 
     private Ranking loadRanking() {
-        Ranking ret = null;
+        Ranking ret;
         try {
-            Storage storage = storageFactory.create("");
-            String json = storage.readGlobalFile(RANKING_FILENAME);
-            if (json != null) {
-                ObjectMapper mapper = new ObjectMapper();
-                ret = mapper.readValue(json, Ranking.class);
-                Logger.info("Ranking size:", ranking.size());
-            } else
-                ret = new Ranking();
+            String json = db.getRanking();
+            ObjectMapper mapper = new ObjectMapper();
+            ret = mapper.readValue(json, Ranking.class);
+            Logger.info("Ranking size:", ranking.size());
         } catch (Exception e) {
             Logger.error("loadRanking: %s", e);
+            ret = new Ranking();
         }
         return ret;
     }
 
     private void saveRanking() {
         try {
-            Storage storage = storageFactory.create("");
             ObjectMapper mapper = new ObjectMapper();
             String json = mapper.writeValueAsString(ranking);
-            storage.saveGlobalFile(RANKING_FILENAME, json);
+            db.saveRanking(json);
         } catch (Exception e) {
             Logger.error("saveRanking: %s", e);
         }

@@ -18,50 +18,57 @@
 
 package com.wire.bots.holdem;
 
-import com.wire.bots.cryptonite.CryptoService;
-import com.wire.bots.cryptonite.StorageService;
 import com.wire.bots.sdk.MessageHandlerBase;
 import com.wire.bots.sdk.Server;
+import com.wire.bots.sdk.crypto.CryptoDatabase;
+import com.wire.bots.sdk.crypto.storage.RedisStorage;
 import com.wire.bots.sdk.factories.CryptoFactory;
 import com.wire.bots.sdk.factories.StorageFactory;
+import com.wire.bots.sdk.state.RedisState;
 import io.dropwizard.setup.Environment;
 
-import java.net.URI;
-
 public class Service extends Server<Config> {
-
-    private static final String SERVICE = "holdem";
+    public static Config CONFIG;
 
     public static void main(String[] args) throws Exception {
         new Service().run(args);
     }
 
     @Override
+    protected void initialize(Config config, Environment env) throws Exception {
+        CONFIG = config;
+        env.jersey().setUrlPattern("/holdem/*");
+    }
+
+    @Override
     protected MessageHandlerBase createHandler(Config config, Environment env) {
-        return new MessageHandler(getStorageFactory(config));
+        return new MessageHandler();
     }
 
     /**
      * Instructs the framework to use Storage Service for the state.
      * Remove this override in order to use local File system storage
      *
-     * @param config
-     * @return
+     * @param config Config
+     * @return Storage
      */
     @Override
     protected StorageFactory getStorageFactory(Config config) {
-        return botId -> new StorageService(SERVICE, botId, new URI(config.data));
+        return botId -> new RedisState(botId, config.db);
     }
 
     /**
      * Instructs the framework to use Crypto Service for the crypto keys.
-     * Remove this override in order to store key onto your local File system
+     * Remove this override in order to store cryptobox onto your local File system
      *
-     * @param config
+     * @param config Config
      * @return CryptoFactory
      */
     @Override
     protected CryptoFactory getCryptoFactory(Config config) {
-        return (botId) -> new CryptoService(SERVICE, botId, new URI(config.data));
+        return (botId) -> {
+            RedisStorage storage = new RedisStorage(config.db.host, config.db.port, config.db.password);
+            return new CryptoDatabase(botId, storage);
+        };
     }
 }

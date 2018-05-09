@@ -3,7 +3,6 @@ package com.wire.bots.holdem;
 import com.wire.bots.holdem.game.Poker;
 import com.wire.bots.sdk.MessageHandlerBase;
 import com.wire.bots.sdk.WireClient;
-import com.wire.bots.sdk.factories.StorageFactory;
 import com.wire.bots.sdk.models.TextMessage;
 import com.wire.bots.sdk.tools.Logger;
 
@@ -39,8 +38,8 @@ public class MessageHandler extends MessageHandlerBase {
 
     private final Poker poker;
 
-    MessageHandler(StorageFactory storageFactory) {
-        poker = new Poker(storageFactory);
+    MessageHandler() {
+        poker = new Poker();
     }
 
     @Override
@@ -49,8 +48,9 @@ public class MessageHandler extends MessageHandlerBase {
             String sCmd = msg.getText().toLowerCase();
             if (sCmd.startsWith(KICK_OUT)) {
                 String name = sCmd.replace(KICK_OUT, "").trim();
-                poker.onKickOut(client, name);
-                return;
+                if (poker.onKickOut(client, name)) {
+                    return;
+                }
             }
 
             Action action = parseCommand(sCmd);
