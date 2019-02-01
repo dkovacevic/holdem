@@ -18,13 +18,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class Poker {
     private static final ConcurrentHashMap<String, Table> tables = new ConcurrentHashMap<>();
     private static final String MIME_TYPE = "image/png";
-    private final ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(4);
+    //private final ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(4);
     private final Ranking ranking;
     private final Database db;
 
@@ -133,7 +131,7 @@ public class Poker {
         saveTable(client);
     }
 
-    public void onBots(WireClient client, Action cmd) {
+    public void onBots(WireClient client, Action cmd) throws Exception {
         Table table = getTable(client);
         for (Player player : table.getActivePlayers()) {
             if (player.isBot()) {
@@ -148,7 +146,7 @@ public class Poker {
         check(client);
     }
 
-    private void flopCards(WireClient client, Table table, int number) {
+    private void flopCards(WireClient client, Table table, int number) throws Exception {
         if (number == 0)
             return;
 
@@ -159,13 +157,15 @@ public class Poker {
 
         for (Player player : table.getActivePlayers()) {
             if (!player.isBot()) {
-                executor.execute(() -> sendCards(client, table, player));
+                //executor.execute(() -> sendCards(client, table, player));
+                sendCards(client, table, player);
             }
         }
 
         for (Player player : table.getFoldedPlayers()) {
             if (!player.isBot()) {
-                executor.execute(() -> sendBoard(client, table, player));
+                //executor.execute(() -> sendBoard(client, table, player));
+                sendBoard(client, table, player);
             }
         }
 
@@ -181,7 +181,8 @@ public class Poker {
             Card b = table.dealCard(player);
 
             if (!player.isBot()) {
-                executor.execute(() -> sendHoleCards(client, player, a, b));
+                //executor.execute(() -> sendHoleCards(client, player, a, b));
+                sendHoleCards(client, player, a, b);
             }
         }
     }
@@ -244,11 +245,13 @@ public class Poker {
                 flopCards(client, table, table.isFlopped() ? 1 : 3); // turn or river or flop
                 return true;
             }
-
-            return false;
+        } catch (Exception e) {
+            Logger.error("Poker.check: %s", e);
         } finally {
             saveTable(client);
         }
+
+        return false;
     }
 
     private void showdown(WireClient client, Table table) {
@@ -300,7 +303,7 @@ public class Poker {
         });
     }
 
-    private void deleteTable(WireClient client) throws Exception {
+    private void deleteTable(WireClient client) {
         String botId = client.getId();
         tables.remove(botId);
         db.deleteTable(botId);

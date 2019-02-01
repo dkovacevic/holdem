@@ -6,7 +6,15 @@ server:
   requestLog:
     appenders: []
 
-auth: your_token   # Service's auth token
+auth: ${WIRE_HOLDEM_SERVICE_TOKEN}   # Service's auth token
 
-#your custom config comes here
-someValue: 'this is some custom string'
+swagger:
+  resourcePackage: com.wire.bots.sdk.server.resources
+  uriPrefix: /holdem
+  schemes:
+    - http
+    - https
+
+db:
+  host: localhost
+  port: 6379

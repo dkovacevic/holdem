@@ -3,7 +3,6 @@ package com.wire.bots.holdem.game;
 import com.wire.bots.holdem.Action;
 import com.wire.bots.holdem.strategies.*;
 import com.wire.bots.sdk.WireClient;
-import com.wire.bots.sdk.tools.Logger;
 
 import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
@@ -44,7 +43,7 @@ class Betman {
         return new LooseAggressive(bot);
     }
 
-    boolean action(Action cmd, Function<WireClient, Boolean> check) {
+    boolean action(Action cmd, Function<WireClient, Boolean> check) throws Exception {
         boolean ret = false;
         if (table.getPot() != 0 && bot.isTurn()) {
             switch (action(cmd)) {
@@ -66,7 +65,7 @@ class Betman {
         return ret;
     }
 
-    private boolean fold() {
+    private boolean fold() throws Exception {
         if (table.fold(bot)) {
             String msg = String.format("%s has folded", bot.getName());
             sendMessage(msg);
@@ -75,7 +74,7 @@ class Betman {
         return false;
     }
 
-    private boolean raise() {
+    private boolean raise() throws Exception {
         int raise = table.raise(bot);
         if (raise != -1) {
             String msg = String.format("%s(%d) raised by %d, pot %d",
@@ -89,7 +88,7 @@ class Betman {
         return false;
     }
 
-    private boolean call() {
+    private boolean call() throws Exception {
         int call = table.call(bot);
         if (call != -1) {
             String msg = call == 0 ? String.format("%s(%d) checked. pot: %d",
@@ -113,13 +112,15 @@ class Betman {
         return false;
     }
 
-    private void sendMessage(String msg) {
-        executor.execute(() -> {
-            try {
-                client.sendText(msg);
-            } catch (Exception e) {
-                Logger.error("Betman.sendMessage: %s", e);
-            }
-        });
+    private void sendMessage(String msg) throws Exception {
+        client.sendText(msg);
+
+//        executor.execute(() -> {
+//            try {
+//                client.sendText(msg);
+//            } catch (Exception e) {
+//                Logger.error("Betman.sendMessage: %s", e);
+//            }
+//        });
     }
 }

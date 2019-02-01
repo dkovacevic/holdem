@@ -16,7 +16,7 @@ public class Database {
     private final Integer port;
     private final String password;
 
-    public Database(String host, int port, String password) {
+    public Database(String host, Integer port, String password) {
         this.host = host;
         this.port = port;
         this.password = password;
