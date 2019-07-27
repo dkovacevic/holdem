@@ -2,11 +2,11 @@
 Texas Hold'em Poker for Wire 
 [![Build Status](https://travis-ci.org/dkovacevic/holdem.svg?branch=master)](https://travis-ci.org/dkovacevic/holdem)
 
-## How to start the game?
-```
-$ ./add.sh
-```
-Provide the email/password you used when registering on Wire. New conversation named: Texas Hold'em is created.
+## How to try this bot
+First you need to enable this bot for your Team.
+- In Team Settings navigate to _Services_ tab then add the following code:
+`59d7abe5-3850-4b34-8fe5-0bcd4bfad4e6:1729cc5f-b229-4f5c-8bd7-d68024c75e01`
+- In Wire app open a conversation with exas Hold'em bot or add it into an existing one. Have fun!
 
 ## How to add more players?
 Add more participants to _Texas Hold'em_ conversation
