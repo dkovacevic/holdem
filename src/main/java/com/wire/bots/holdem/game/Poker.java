@@ -7,12 +7,14 @@ import com.wire.bots.holdem.Images;
 import com.wire.bots.holdem.Service;
 import com.wire.bots.sdk.Configuration;
 import com.wire.bots.sdk.WireClient;
+import com.wire.bots.sdk.assets.Poll;
 import com.wire.bots.sdk.exceptions.HttpException;
 import com.wire.bots.sdk.server.model.Conversation;
 import com.wire.bots.sdk.server.model.Member;
 import com.wire.bots.sdk.server.model.User;
 import com.wire.bots.sdk.tools.Logger;
 
+import javax.annotation.Nullable;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -188,6 +190,27 @@ public class Poker {
                 sendHoleCards(client, player, a, b);
             }
         }
+
+        sendButtons(client, null, null);
+    }
+
+    private void sendButtons(WireClient client, @Nullable String text, @Nullable UUID userId) {
+        Poll poll = new Poll();
+        if (text != null)
+            poll.addText(text);
+
+        poll.addButton("call", "Call");
+        poll.addButton("raise", "Raise");
+        poll.addButton("fold", "Fold");
+
+        try {
+            if (userId != null)
+                client.send(poll, userId);
+            else
+                client.send(poll);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void sendHoleCards(WireClient client, Player player, Card a, Card b) {
@@ -218,7 +241,7 @@ public class Poker {
             float chance = prob.chance(player);
 
             String hand = String.format("You have **%s** (%.1f%%)", bestHand, chance);
-            client.sendDirectText(hand, player.getId());
+            sendButtons(client, hand, player.getId());
         } catch (Exception e) {
             Logger.error("sendCards: %s", e);
         }

@@ -1,11 +1,16 @@
 package com.wire.bots.holdem;
 
+import com.waz.model.Messages;
 import com.wire.bots.holdem.game.Poker;
 import com.wire.bots.sdk.MessageHandlerBase;
 import com.wire.bots.sdk.WireClient;
+import com.wire.bots.sdk.assets.ButtonActionConfirmation;
+import com.wire.bots.sdk.assets.Poll;
 import com.wire.bots.sdk.models.TextMessage;
 import com.wire.bots.sdk.server.model.SystemMessage;
 import com.wire.bots.sdk.tools.Logger;
+
+import java.util.UUID;
 
 public class MessageHandler extends MessageHandlerBase {
     // Commands
@@ -91,8 +96,13 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onNewConversation(WireClient client, SystemMessage message) {
         try {
-            client.sendText("Add more participants. Type: `deal` to start. `call`, `raise`, `fold` when betting..." +
-                    " If you feel lonely type: `add bot`");
+            client.sendText("Texas Hold'em");
+
+            Poll poll = new Poll();
+            poll.addButton("deal", "Deal");
+            poll.addButton("add bot", "Add bot");
+
+            client.send(poll, message.from);
         } catch (Exception e) {
             Logger.error("onNewConversation: %s", e);
         }
@@ -114,6 +124,39 @@ public class MessageHandler extends MessageHandlerBase {
         } catch (Exception e) {
             Logger.error("onMemberLeave: %s", e);
         }
+    }
+
+    @Override
+    public void onEvent(WireClient client, UUID userId, Messages.GenericMessage event) {
+        UUID botId = client.getId();
+        UUID messageId = UUID.fromString(event.getMessageId());
+
+        // User clicked on a Poll Button
+        if (event.hasButtonAction()) {
+            Messages.ButtonAction action = event.getButtonAction();
+
+            final UUID pollId = UUID.fromString(action.getReferenceMessageId());
+            final String buttonId = action.getButtonId();
+
+            ButtonActionConfirmation confirmation = new ButtonActionConfirmation(
+                    pollId,
+                    buttonId);
+
+            try {
+                client.send(confirmation, userId);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            TextMessage textMessage = new TextMessage(messageId, client.getConversationId(), client.getDeviceId(), userId);
+            textMessage.setText(buttonId);
+            onText(client, textMessage);
+        }
+    }
+
+    @Override
+    public int getAccentColour() {
+        return 4;
     }
 
     private Action parseCommand(String cmd) {
