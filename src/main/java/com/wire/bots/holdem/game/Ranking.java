@@ -5,15 +5,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.UUID;
 
 public class Ranking {
     private static final int FEE = 5;
     @JsonProperty
-    private final HashMap<String, Rank> rankings = new HashMap<>();
+    private final HashMap<UUID, Rank> rankings = new HashMap<>();
 
     String print() {
-        ArrayList<Rank> list = new ArrayList<>();
-        list.addAll(rankings.values());
+        ArrayList<Rank> list = new ArrayList<>(rankings.values());
         list.sort(Comparator.reverseOrder());
         StringBuilder sb = new StringBuilder("```\n");
         sb.append(String.format("%-20s\t%s\t%s\n", "Name", "Wins", "$"));
@@ -21,19 +21,19 @@ public class Ranking {
         return sb.append("```").toString();
     }
 
-    void winner(String id, int money) {
+    void winner(UUID id, int money) {
         Rank rank = rankings.get(id);
         rank.money += money;
         rank.wins++;
     }
 
-    int commit(String id, String name) {
+    int commit(UUID id, String name) {
         Rank r = getRank(id, name);
         r.money -= FEE;
         return FEE;
     }
 
-    void register(String id, String name) {
+    void register(UUID id, String name) {
         getRank(id, name);
     }
 
@@ -41,7 +41,7 @@ public class Ranking {
         return rankings.size();
     }
 
-    private Rank getRank(String id, String name) {
+    private Rank getRank(UUID id, String name) {
         return rankings.computeIfAbsent(id, k -> {
             Rank rank = new Rank();
             rank.name = name;

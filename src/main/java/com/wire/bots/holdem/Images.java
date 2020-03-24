@@ -10,6 +10,7 @@ import java.awt.image.BufferedImageOp;
 import java.awt.image.LookupOp;
 import java.awt.image.LookupTable;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -119,7 +120,7 @@ public class Images {
     private static BufferedImage getBufferedImage(Card card, float scale, Color color) {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         String path = String.format("%s/%s.png", "cards", card);
-        try (InputStream input = classloader.getResourceAsStream(path)) {
+        try (InputStream input = new FileInputStream(path)) {
             BufferedImage read = ImageIO.read(input);
             BufferedImage image = replaceAlpha(read, color);
             return scale(image, scale);
@@ -136,7 +137,7 @@ public class Images {
     public static BufferedImage getOriginalBufferedImage(Card card) {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         String path = String.format("%s/%s.png", "cards", card);
-        try (InputStream input = classloader.getResourceAsStream(path)) {
+        try (InputStream input = new FileInputStream(path)) {
             return ImageIO.read(input);
         } catch (IOException e) {
             Logger.error(e.toString());

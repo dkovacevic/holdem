@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.UUID;
 
 public class ProbabilityTest {
     @Test
@@ -50,12 +51,12 @@ public class ProbabilityTest {
         board.add(new Card(2, 2));
         board.add(new Card(1, 9));
 
-        Player p1 = new Player("1", "1", board);
+        Player p1 = new Player(UUID.randomUUID(), "1", board);
         p1.addCard(new Card(1, 12));
         p1.addCard(new Card(1, 8));
         Probability probability1 = new Probability(board, p1.getCards());
 
-        Player p2 = new Player("2", "2", board);
+        Player p2 = new Player(UUID.randomUUID(), "2", board);
         p2.addCard(new Card(2, 9));
         p2.addCard(new Card(3, 8));
         Probability probability2 = new Probability(board, p2.getCards());
@@ -74,12 +75,12 @@ public class ProbabilityTest {
         board.add(new Card(1, 9));
         board.add(new Card(0, 9));
 
-        Player p1 = new Player("1", "1", board);
+        Player p1 = new Player(UUID.randomUUID(), "1", board);
         p1.addCard(new Card(1, 0));
         p1.addCard(new Card(0, 1));
         Probability probability1 = new Probability(board, p1.getCards());
 
-        Player p2 = new Player("2", "2", board);
+        Player p2 = new Player(UUID.randomUUID(), "2", board);
         p2.addCard(new Card(2, 0));
         p2.addCard(new Card(2, 7));
         Probability probability2 = new Probability(board, p2.getCards());
@@ -99,12 +100,12 @@ public class ProbabilityTest {
         board.add(new Card(0, 9));
         board.add(new Card(0, 4));
 
-        Player p1 = new Player("1", "1", board);
+        Player p1 = new Player(UUID.randomUUID(), "1", board);
         p1.addCard(new Card(1, 0));
         p1.addCard(new Card(0, 1));
         Probability probability1 = new Probability(board, p1.getCards());
 
-        Player p2 = new Player("2", "2", board);
+        Player p2 = new Player(UUID.randomUUID(), "2", board);
         p2.addCard(new Card(2, 0));
         p2.addCard(new Card(2, 7));
         Probability probability2 = new Probability(board, p2.getCards());

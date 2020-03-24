@@ -2,14 +2,16 @@ package com.wire.bots.holdem.game;
 
 import org.junit.Test;
 
+import java.util.UUID;
+
 public class PotTests {
     @Test
     public void testCallInsufficientFunds() {
         Table table = new Table(new Deck());
         table.setRaise(5);
 
-        Player p1 = table.addPlayer("1", "1", false);
-        Player p2 = table.addPlayer("2", "2", false);
+        Player p1 = table.addPlayer(UUID.randomUUID(), "1", false);
+        Player p2 = table.addPlayer(UUID.randomUUID(), "2", false);
 
         p1.setChips(20);
         p2.setChips(3);
@@ -38,8 +40,8 @@ public class PotTests {
         Table table = new Table(new Deck());
         table.setRaise(5);
 
-        Player p1 = table.addPlayer("1", "1", false);
-        Player p2 = table.addPlayer("2", "2", false);
+        Player p1 = table.addPlayer(UUID.randomUUID(), "1", false);
+        Player p2 = table.addPlayer(UUID.randomUUID(), "2", false);
 
         p1.setChips(100);
         p2.setChips(5);
@@ -66,8 +68,8 @@ public class PotTests {
         Table table = new Table(new Deck());
         table.setRaise(5);
 
-        Player p1 = table.addPlayer("1", "1", false);
-        Player p2 = table.addPlayer("2", "2", false);
+        Player p1 = table.addPlayer(UUID.randomUUID(), "1", false);
+        Player p2 = table.addPlayer(UUID.randomUUID(), "2", false);
 
         p1.setChips(5);
         p2.setChips(100);

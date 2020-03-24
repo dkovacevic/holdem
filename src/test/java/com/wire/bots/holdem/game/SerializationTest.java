@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.UUID;
 
 public class SerializationTest {
     @Test
@@ -11,7 +12,7 @@ public class SerializationTest {
         Deck deck = new Deck();
         Table table = new Table(deck);
         for (int i = 0; i < 5; i++) {
-            Player player = table.addPlayer("" + i, "" + i, false);
+            Player player = table.addPlayer(UUID.randomUUID(), "" + i, false);
             table.dealCard(player);
             table.dealCard(player);
 
@@ -24,7 +25,7 @@ public class SerializationTest {
             assert player.getCards().get(1).equals(player1.getCards().get(1));
         }
 
-        Player bot = table.addPlayer("bot", "bot", true);
+        Player bot = table.addPlayer(UUID.randomUUID(), "bot", true);
         table.dealCard(bot);
         table.dealCard(bot);
 

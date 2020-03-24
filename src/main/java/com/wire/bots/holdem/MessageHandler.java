@@ -4,9 +4,8 @@ import com.wire.bots.holdem.game.Poker;
 import com.wire.bots.sdk.MessageHandlerBase;
 import com.wire.bots.sdk.WireClient;
 import com.wire.bots.sdk.models.TextMessage;
+import com.wire.bots.sdk.server.model.SystemMessage;
 import com.wire.bots.sdk.tools.Logger;
-
-import java.util.ArrayList;
 
 public class MessageHandler extends MessageHandlerBase {
     // Commands
@@ -90,7 +89,7 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     @Override
-    public void onNewConversation(WireClient client) {
+    public void onNewConversation(WireClient client, SystemMessage message) {
         try {
             client.sendText("Add more participants. Type: `deal` to start. `call`, `raise`, `fold` when betting..." +
                     " If you feel lonely type: `add bot`");
@@ -100,18 +99,18 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     @Override
-    public void onMemberJoin(WireClient client, ArrayList<String> userIds) {
+    public void onMemberJoin(WireClient client, SystemMessage message) {
         try {
-            poker.onMemberJoin(client, userIds);
+            poker.onMemberJoin(client, message.users);
         } catch (Exception e) {
             Logger.error("onMemberJoin: %s", e);
         }
     }
 
     @Override
-    public void onMemberLeave(WireClient client, ArrayList<String> userIds) {
+    public void onMemberLeave(WireClient client, SystemMessage message) {
         try {
-            poker.onMemberLeave(client, userIds);
+            poker.onMemberLeave(client, message.users);
         } catch (Exception e) {
             Logger.error("onMemberLeave: %s", e);
         }

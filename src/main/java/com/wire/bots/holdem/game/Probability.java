@@ -3,6 +3,7 @@ package com.wire.bots.holdem.game;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.UUID;
 
 public class Probability {
     private static final HashSet<Hand> hands = holeHands();
@@ -20,7 +21,7 @@ public class Probability {
             if (usedCards.contains(c1) || usedCards.contains(c2))
                 continue;
 
-            Player player = new Player("", "", board);
+            Player player = new Player(UUID.randomUUID(), "", board);
             player.addCard(c1);
             player.addCard(c2);
             players.add(player);
