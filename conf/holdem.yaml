@@ -1,20 +1,22 @@
 server:
-  applicationConnectors:
-    - type: http
-      port: 8080
-
+  rootPath: /holdem/*
   requestLog:
-    appenders: []
+    appenders:
+      - type: console
+        filterFactories:
+          - type: status-filter-factory
 
-auth: ${WIRE_HOLDEM_SERVICE_TOKEN}   # Service's auth token
-
-swagger:
-  resourcePackage: com.wire.bots.sdk.server.resources
-  uriPrefix: /holdem
-  schemes:
-    - http
-    - https
+logging:
+  level: INFO
+  loggers:
+    "com.wire.bots.logger": ${LOG_LEVEL:-INFO}
 
 db:
-  host: localhost
-  port: 6379
+  driver: redis
+  host: ${DB_HOST:-localhost}
+  port: ${DB_PORT:-6379}
+  password: ${DB_PASSWORD:-}
+
+database:
+  driverClass: dummy
+  url: dummy

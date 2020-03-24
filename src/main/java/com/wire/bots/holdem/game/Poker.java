@@ -7,6 +7,7 @@ import com.wire.bots.holdem.Images;
 import com.wire.bots.holdem.Service;
 import com.wire.bots.sdk.Configuration;
 import com.wire.bots.sdk.WireClient;
+import com.wire.bots.sdk.exceptions.HttpException;
 import com.wire.bots.sdk.server.model.Conversation;
 import com.wire.bots.sdk.server.model.Member;
 import com.wire.bots.sdk.server.model.User;
@@ -17,10 +18,12 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Poker {
-    private static final ConcurrentHashMap<String, Table> tables = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<UUID, Table> tables = new ConcurrentHashMap<>();
     private static final String MIME_TYPE = "image/png";
     //private final ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(4);
     private final Ranking ranking;
@@ -29,8 +32,8 @@ public class Poker {
     public Poker() {
         this.ranking = loadRanking();
 
-        Configuration.DB conf = Service.CONFIG.getDB();
-        db = new Database(conf.host, conf.port, conf.password);
+        final Configuration.DB db = Service.CONFIG.db;
+        this.db = new Database(db.host, db.port, db.password);
     }
 
     public void onRanking(WireClient client) throws Exception {
@@ -40,18 +43,18 @@ public class Poker {
     public void onAddBot(WireClient client) throws Exception {
         User user = new User();
         String name = Betman.randomName();
-        user.id = name;
+        user.id = UUID.randomUUID();
         user.name = name;
         addNewPlayer(client, user, true);
     }
 
-    public void onFold(WireClient client, String userId) {
+    public void onFold(WireClient client, UUID userId) {
         Table table = getTable(client);
         Player player = table.getPlayer(userId);
         table.fold(player);
     }
 
-    public void onCall(WireClient client, String userId) {
+    public void onCall(WireClient client, UUID userId) {
         Table table = getTable(client);
         Player player = table.getPlayer(userId);
         table.call(player);
@@ -61,7 +64,7 @@ public class Poker {
         }
     }
 
-    public void onRaise(WireClient client, String userId) throws Exception {
+    public void onRaise(WireClient client, UUID userId) throws Exception {
         Table table = getTable(client);
         Player player = table.getPlayer(userId);
         int raise = table.raise(player);
@@ -116,7 +119,7 @@ public class Poker {
         client.sendText(table.printPlayers());
     }
 
-    public void onMemberJoin(WireClient client, ArrayList<String> userIds) throws Exception {
+    public void onMemberJoin(WireClient client, List<UUID> userIds) throws Exception {
         Collection<User> users = client.getUsers(userIds);
         for (User user : users) {
             addNewPlayer(client, user, false);
@@ -124,9 +127,9 @@ public class Poker {
         saveTable(client);
     }
 
-    public void onMemberLeave(WireClient client, ArrayList<String> userIds) {
+    public void onMemberLeave(WireClient client, List<UUID> userIds) {
         Table table = getTable(client);
-        for (String userId : userIds)
+        for (UUID userId : userIds)
             table.removePlayer(userId);
         saveTable(client);
     }
@@ -304,7 +307,7 @@ public class Poker {
     }
 
     private void deleteTable(WireClient client) {
-        String botId = client.getId();
+        UUID botId = client.getId();
         tables.remove(botId);
         db.deleteTable(botId);
     }
@@ -322,7 +325,7 @@ public class Poker {
         }
     }
 
-    private Table newTable(WireClient client) throws IOException {
+    private Table newTable(WireClient client) throws IOException, HttpException {
         Table table = new Table(new Deck());
         Conversation conversation = client.getConversation();
         for (Member member : conversation.members) {

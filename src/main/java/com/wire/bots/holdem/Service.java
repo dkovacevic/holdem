@@ -18,6 +18,7 @@
 
 package com.wire.bots.holdem;
 
+import com.wire.bots.sdk.Configuration;
 import com.wire.bots.sdk.MessageHandlerBase;
 import com.wire.bots.sdk.Server;
 import io.dropwizard.setup.Environment;
@@ -32,11 +33,18 @@ public class Service extends Server<Config> {
     @Override
     protected void initialize(Config config, Environment env) {
         CONFIG = config;
-        env.jersey().setUrlPattern("/holdem/*");
     }
 
     @Override
     protected MessageHandlerBase createHandler(Config config, Environment env) {
         return new MessageHandler();
+    }
+
+    @Override
+    protected void migrateDBifNeeded(Configuration.Database database) {
+    }
+
+    @Override
+    protected void buildJdbi(Configuration.Database database) {
     }
 }

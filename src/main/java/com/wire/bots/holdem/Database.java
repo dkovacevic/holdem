@@ -5,6 +5,7 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 import java.time.Duration;
+import java.util.UUID;
 
 public class Database {
     private static final int TIMEOUT = 5000;
@@ -16,7 +17,7 @@ public class Database {
     private final Integer port;
     private final String password;
 
-    public Database(String host, Integer port, String password) {
+    public Database(String host, int port, String password) {
         this.host = host;
         this.port = port;
         this.password = password;
@@ -37,7 +38,7 @@ public class Database {
         return poolConfig;
     }
 
-    private static JedisPool pool(String host, Integer port, String password) {
+    private static JedisPool pool(String host, int port, String password) {
         if (pool == null) {
             JedisPoolConfig poolConfig = buildPoolConfig();
             pool = new JedisPool(poolConfig, host, port, TIMEOUT, password);
@@ -46,21 +47,21 @@ public class Database {
     }
 
 
-    public String getTable(String id) {
+    public String getTable(UUID id) {
         try (Jedis jedis = getConnection()) {
             String key = key(TABLE, id);
             return jedis.get(key);
         }
     }
 
-    public void insertTable(String id, String table) {
+    public void insertTable(UUID id, String table) {
         try (Jedis jedis = getConnection()) {
             String key = key(TABLE, id);
             jedis.set(key, table);
         }
     }
 
-    public void deleteTable(String id) {
+    public void deleteTable(UUID id) {
         try (Jedis jedis = getConnection()) {
             String key = key(TABLE, id);
             jedis.del(key);
@@ -81,7 +82,7 @@ public class Database {
         }
     }
 
-    private String key(String name, String id) {
+    private String key(String name, Object id) {
         return String.format("holdem_%s_%s", name, id);
     }
 

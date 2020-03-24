@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Player implements Comparable<Player> {
@@ -15,7 +16,7 @@ public class Player implements Comparable<Player> {
     @JsonProperty
     protected boolean bot = false;
     @JsonProperty
-    private String id;
+    private UUID id;
     @JsonProperty
     private String name;
     @JsonIgnore
@@ -38,7 +39,7 @@ public class Player implements Comparable<Player> {
     public Player() {
     }
 
-    public Player(String userId, String name, ArrayList<Card> board) {
+    public Player(UUID userId, String name, ArrayList<Card> board) {
         this.id = userId;
         this.name = name;
         this.board = board;
@@ -81,7 +82,7 @@ public class Player implements Comparable<Player> {
         return bestHand;
     }
 
-    String getId() {
+    UUID getId() {
         return id;
     }
 
@@ -112,7 +113,7 @@ public class Player implements Comparable<Player> {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof Player && id.equalsIgnoreCase(((Player) o).getId());
+        return o instanceof Player && id.equals(((Player) o).getId());
     }
 
     @Override

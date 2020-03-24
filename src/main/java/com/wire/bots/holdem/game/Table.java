@@ -42,7 +42,7 @@ class Table {
         return addPlayer(user.id, user.name, bot);
     }
 
-    Player addPlayer(String userId, String name, boolean bot) {
+    Player addPlayer(UUID userId, String name, boolean bot) {
         Player player = new Player(userId, name, board);
         player.setBot(bot);
 
@@ -95,7 +95,7 @@ class Table {
         return getActivePlayers().size() <= 1;
     }
 
-    boolean removePlayer(String userId) {
+    boolean removePlayer(UUID userId) {
         return players.removeIf(player -> player.getId().equals(userId));
     }
 
@@ -320,7 +320,7 @@ class Table {
         this.raise = raise;
     }
 
-    Player getPlayer(String userId) {
+    Player getPlayer(UUID userId) {
         return players.stream()
                 .filter(player -> player.getId().equals(userId))
                 .findAny()

@@ -3,11 +3,13 @@ package com.wire.bots.holdem.game;
 import com.wire.bots.sdk.server.model.User;
 import org.junit.Test;
 
+import java.util.UUID;
+
 public class ShiftTest {
     @Test
     public void test1() {
         Table table = new Table(new Deck());
-        Player a = table.addPlayer(newUser("a", "A"), false);
+        Player a = table.addPlayer(newUser("A"), false);
 
         assert a.getRole() == Role.SB;
 
@@ -19,8 +21,8 @@ public class ShiftTest {
     @Test
     public void test2() {
         Table table = new Table(new Deck());
-        Player a = table.addPlayer(newUser("a", "A"), false);
-        Player b = table.addPlayer(newUser("b", "B"), false);
+        Player a = table.addPlayer(newUser("A"), false);
+        Player b = table.addPlayer(newUser("B"), false);
 
         assert a.getRole() == Role.SB;
         assert b.getRole() == Role.BB;
@@ -33,9 +35,9 @@ public class ShiftTest {
     @Test
     public void test3() {
         Table table = new Table(new Deck());
-        Player a = table.addPlayer(newUser("a", "A"), false);
-        Player b = table.addPlayer(newUser("b", "B"), false);
-        Player c = table.addPlayer(newUser("c", "C"), false);
+        Player a = table.addPlayer(newUser("A"), false);
+        Player b = table.addPlayer(newUser("B"), false);
+        Player c = table.addPlayer(newUser("C"), false);
 
         assert a.getRole() == Role.SB;
         assert b.getRole() == Role.BB;
@@ -60,10 +62,10 @@ public class ShiftTest {
     @Test
     public void test4() {
         Table table = new Table(new Deck());
-        Player a = table.addPlayer(newUser("a", "A"), false);
-        Player b = table.addPlayer(newUser("b", "B"), false);
-        Player c = table.addPlayer(newUser("c", "C"), false);
-        Player d = table.addPlayer(newUser("d", "D"), false);
+        Player a = table.addPlayer(newUser("A"), false);
+        Player b = table.addPlayer(newUser("B"), false);
+        Player c = table.addPlayer(newUser("C"), false);
+        Player d = table.addPlayer(newUser("D"), false);
 
         assert a.getRole() == Role.SB;
         assert b.getRole() == Role.BB;
@@ -95,9 +97,9 @@ public class ShiftTest {
         assert d.getRole() == Role.Player;
     }
 
-    private User newUser(String id, String name) {
+    private User newUser(String name) {
         User u = new User();
-        u.id = id;
+        u.id = UUID.randomUUID();
         u.name = name;
         return u;
     }
