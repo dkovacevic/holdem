@@ -1,12 +1,13 @@
 package com.wire.bots.holdem;
 
 import com.waz.model.Messages;
-import com.wire.bots.holdem.game.Poker;
+import com.wire.bots.holdem.game.Game;
 import com.wire.bots.sdk.MessageHandlerBase;
 import com.wire.bots.sdk.WireClient;
 import com.wire.bots.sdk.assets.ButtonActionConfirmation;
 import com.wire.bots.sdk.assets.Poll;
 import com.wire.bots.sdk.models.TextMessage;
+import com.wire.bots.sdk.server.model.NewBot;
 import com.wire.bots.sdk.server.model.SystemMessage;
 import com.wire.bots.sdk.tools.Logger;
 
@@ -40,10 +41,10 @@ public class MessageHandler extends MessageHandlerBase {
     private static final String KICK_OUT = "kick out";
     // Commands
 
-    private final Poker poker;
+    private final Game poker;
 
     MessageHandler() {
-        poker = new Poker();
+        poker = new Game();
     }
 
     @Override
@@ -128,7 +129,6 @@ public class MessageHandler extends MessageHandlerBase {
 
     @Override
     public void onEvent(WireClient client, UUID userId, Messages.GenericMessage event) {
-        UUID botId = client.getId();
         UUID messageId = UUID.fromString(event.getMessageId());
 
         // User clicked on a Poll Button
@@ -155,8 +155,8 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     @Override
-    public int getAccentColour() {
-        return 3;
+    public String getName(NewBot newBot) {
+        return "Poker";
     }
 
     private Action parseCommand(String cmd) {

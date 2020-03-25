@@ -24,17 +24,17 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Poker {
+public class Game {
     private static final ConcurrentHashMap<UUID, Table> tables = new ConcurrentHashMap<>();
     private static final String MIME_TYPE = "image/png";
     //private final ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(4);
     private final Ranking ranking;
     private final Database db;
 
-    public Poker() {
+    public Game() {
         this.ranking = loadRanking();
 
-        final Configuration.DB db = Service.CONFIG.db;
+        final Configuration.DB db = Service.CONFIG().db;
         this.db = new Database(db.host, db.port, db.password);
     }
 
@@ -78,7 +78,7 @@ public class Poker {
                             active.getChips(),
                             raise,
                             table.getPot());
-                    sendButtons(client, text, active, table.getRaise());
+                    sendButtons(client, text, active, raise);
                 }
             }
         } else if (!player.isCalled()) {
@@ -203,7 +203,10 @@ public class Poker {
         if (text != null)
             poll.addText(text);
 
-        poll.addButton("call", "Call with " + player.getCall());
+        final String call = player.getCall() > 0
+                ? "Call with " + player.getCall()
+                : "Check";
+        poll.addButton("call", call);
         poll.addButton("raise", "Raise by " + raise);
         poll.addButton("fold", "Fold");
 

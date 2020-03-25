@@ -3,14 +3,13 @@ package com.wire.bots.holdem.game;
 import com.wire.bots.holdem.Action;
 import com.wire.bots.holdem.strategies.*;
 import com.wire.bots.sdk.WireClient;
+import com.wire.bots.sdk.assets.Poll;
 
 import java.util.Random;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.function.Function;
 
 class Betman {
-    private static final ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(2);
+    //private static final ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(2);
 
     private final WireClient client;
     private final Table table;
@@ -77,12 +76,23 @@ class Betman {
     private boolean raise() throws Exception {
         int raise = table.raise(bot);
         if (raise != -1) {
-            String msg = String.format("%s(%d) raised by %d, pot %d",
+            String text = String.format("%s(%d) raised by %d, pot %d",
                     bot.getName(),
                     bot.getChips(),
                     raise,
                     table.getPot());
-            sendMessage(msg);
+
+            for (Player active : table.getActivePlayers()) {
+                Poll poll = new Poll();
+                poll.addText(text);
+                final String call = active.getCall() > 0
+                        ? "Call with " + active.getCall()
+                        : "Check";
+                poll.addButton("call", call);
+                poll.addButton("raise", "Raise by " + raise);
+                poll.addButton("fold", "Fold");
+                client.send(poll, active.getId());
+            }
             return true;
         }
         return false;
