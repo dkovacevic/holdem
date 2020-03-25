@@ -71,11 +71,16 @@ public class Poker {
         Player player = table.getPlayer(userId);
         int raise = table.raise(player);
         if (raise != -1) {
-            client.sendText(String.format("%s(%d) raised by %d, pot %d",
-                    player.getName(),
-                    player.getChips(),
-                    raise,
-                    table.getPot()));
+            for (Player active : table.getActivePlayers()) {
+                if (!active.getId().equals(userId)) {
+                    final String text = String.format("%s(%d) raised by %d, pot %d",
+                            active.getName(),
+                            active.getChips(),
+                            raise,
+                            table.getPot());
+                    sendButtons(client, text, active, table.getRaise());
+                }
+            }
         } else if (!player.isCalled()) {
             client.sendDirectText("Raise failed due to insufficient funds", player.getId());
         }
@@ -97,18 +102,17 @@ public class Poker {
         Player turn = table.shiftRoles();
         table.shuffle();
         turn.setTurn(true);
-        Player player = table.turn();
+        table.turn();
 
-        client.sendText(String.format("%d. %s blind %d - raise %d",
+        final String text = String.format("%d. %s blind %d - raise %d",
                 table.getRoundNumber(),
                 table.printPlayers(),
                 table.getSmallBlind(),
-                table.getRaise()));
+                table.getRaise());
 
-        dealPlayers(client, table);
+        //client.sendText(format);
 
-        if (!player.isBot())
-            client.sendDirectText("It's your turn", player.getId());
+        dealPlayers(client, table, text);
     }
 
     public void onReset(WireClient client) throws Exception {
@@ -177,7 +181,7 @@ public class Poker {
         onBots(client, Action.CALL);
     }
 
-    private void dealPlayers(WireClient client, Table table) {
+    private void dealPlayers(WireClient client, Table table, String text) {
         Collection<Player> players = table.getPlayers();
         for (Player player : players) {
             table.blind(player);//take SB or BB
@@ -188,26 +192,23 @@ public class Poker {
             if (!player.isBot()) {
                 //executor.execute(() -> sendHoleCards(client, player, a, b));
                 sendHoleCards(client, player, a, b);
+
+                sendButtons(client, text, player, table.getRaise());
             }
         }
-
-        sendButtons(client, null, null);
     }
 
-    private void sendButtons(WireClient client, @Nullable String text, @Nullable UUID userId) {
+    private void sendButtons(WireClient client, @Nullable String text, Player player, int raise) {
         Poll poll = new Poll();
         if (text != null)
             poll.addText(text);
 
-        poll.addButton("call", "Call");
-        poll.addButton("raise", "Raise");
+        poll.addButton("call", "Call with " + player.getCall());
+        poll.addButton("raise", "Raise by " + raise);
         poll.addButton("fold", "Fold");
 
         try {
-            if (userId != null)
-                client.send(poll, userId);
-            else
-                client.send(poll);
+            client.send(poll, player.getId());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -241,7 +242,7 @@ public class Poker {
             float chance = prob.chance(player);
 
             String hand = String.format("You have **%s** (%.1f%%)", bestHand, chance);
-            sendButtons(client, hand, player.getId());
+            sendButtons(client, hand, player, table.getRaise());
         } catch (Exception e) {
             Logger.error("sendCards: %s", e);
         }
@@ -304,6 +305,9 @@ public class Poker {
                 client.ping();
                 deleteTable(client);
             }
+
+            Poll poll = new Poll().addButton("deal", "Deal");
+            client.send(poll);
         } catch (Exception e) {
             Logger.error("showdown: %s", e);
         }

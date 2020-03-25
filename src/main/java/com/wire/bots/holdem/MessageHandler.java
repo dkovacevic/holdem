@@ -156,7 +156,7 @@ public class MessageHandler extends MessageHandlerBase {
 
     @Override
     public int getAccentColour() {
-        return 4;
+        return 3;
     }
 
     private Action parseCommand(String cmd) {
