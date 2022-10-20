@@ -18,5 +18,5 @@ db:
   password: ${DB_PASSWORD:-}
 
 database:
-  driverClass: dummy
+  driverClass: fs
   url: dummy

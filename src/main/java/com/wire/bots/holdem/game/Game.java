@@ -7,7 +7,16 @@ import com.wire.bots.holdem.Images;
 import com.wire.bots.holdem.Service;
 import com.wire.lithium.Configuration;
 import com.wire.xenon.WireClient;
+import com.wire.xenon.assets.MessageText;
+import com.wire.xenon.assets.Picture;
+import com.wire.xenon.assets.Ping;
+import com.wire.xenon.assets.Poll;
+import com.wire.xenon.backend.models.Conversation;
+import com.wire.xenon.backend.models.Member;
 import com.wire.xenon.backend.models.User;
+import com.wire.xenon.exceptions.HttpException;
+import com.wire.xenon.models.PhotoPreviewMessage;
+import com.wire.xenon.tools.Logger;
 
 import javax.annotation.Nullable;
 import java.awt.*;
@@ -29,12 +38,11 @@ public class Game {
     public Game() {
         this.ranking = loadRanking();
 
-        final Configuration.Database db = Service.CONFIG().database;
-        this.db = new Database(db.host, db.port, db.password);
+        this.db = new Database(Service.CONFIG().db.host, Service.CONFIG().db.port, Service.CONFIG().db.password);
     }
 
     public void onRanking(WireClient client) throws Exception {
-        client.sendText(ranking.print());
+        client.send(new MessageText(ranking.print()));
     }
 
     public void onAddBot(WireClient client) throws Exception {
@@ -77,20 +85,20 @@ public class Game {
                 }
             }
         } else if (!player.isCalled()) {
-            client.sendDirectText("Raise failed due to insufficient funds", player.getId());
+            client.send(new MessageText("Raise failed due to insufficient funds"), player.getId());
         }
     }
 
     public void onDeal(WireClient client) throws Exception {
         Table table = getTable(client);
         if (table == null) {
-            client.sendText("Type: `new` to start new game");
+            client.send(new MessageText("Type: `new` to start new game"));
             return;
         }
 
         if (table.getPlayers().size() <= 1) {
-            client.sendText("You are single player on this table. " +
-                    "Add a participant to this conversation or type: `add bot` to add a bot player");
+            client.send(new MessageText("You are single player on this table. " +
+                    "Add a participant to this conversation or type: `add bot` to add a bot player"));
             return;
         }
 
@@ -105,7 +113,7 @@ public class Game {
                 table.getSmallBlind(),
                 table.getRaise());
 
-        //client.sendText(format);
+        //client.send(new MessageText(format);
 
         dealPlayers(client, table, text);
     }
@@ -117,7 +125,7 @@ public class Game {
 
     public void onPrint(WireClient client) throws Exception {
         Table table = getTable(client);
-        client.sendText(table.printPlayers());
+        client.send(new MessageText(table.printPlayers()));
     }
 
     public void onMemberJoin(WireClient client, List<UUID> userIds) throws Exception {
@@ -215,7 +223,8 @@ public class Game {
     private void sendHoleCards(WireClient client, Player player, Card a, Card b) {
         try {
             byte[] image = Images.getImage(a, b);
-            client.sendDirectPicture(image, MIME_TYPE, player.getId());
+            Picture picture = new Picture(image, MIME_TYPE);
+            client.send(picture, player.getId());
         } catch (Exception e) {
             Logger.error("sendHoleCards: %s", e);
         }
@@ -224,7 +233,8 @@ public class Game {
     private void sendBoard(WireClient client, Table table, Player player) {
         try {
             byte[] image = Images.getImage(table.getBoard());
-            client.sendDirectPicture(image, MIME_TYPE, player.getId());
+            Picture picture = new Picture(image, MIME_TYPE);
+            client.send(picture, player.getId());
         } catch (Exception e) {
             Logger.error("sendBoard: %s", e);
         }
@@ -233,7 +243,8 @@ public class Game {
     private void sendCards(WireClient client, Table table, Player player) {
         try {
             byte[] image = Images.getImage(player.getCards(), table.getBoard());
-            client.sendDirectPicture(image, MIME_TYPE, player.getId());
+            Picture picture = new Picture(image, MIME_TYPE);
+            client.send(picture, player.getId());
 
             Probability prob = new Probability(table.getBoard(), player.getCards());
             Hand bestHand = player.getBestHand();
@@ -290,7 +301,7 @@ public class Game {
             printWinner(client, table, winner, pot);
 
             for (Player player : table.collectPlayers()) {
-                client.sendText(String.format("%s has ran out of chips and was kicked out", player.getName()));
+                client.send(new MessageText(String.format("%s has ran out of chips and was kicked out", player.getName())));
             }
 
             printSummary(client, table);
@@ -300,7 +311,7 @@ public class Game {
                 ranking.winner(winner.getId(), table.getMoney());
                 saveRanking();
 
-                client.ping();
+                client.send(new Ping());
                 deleteTable(client);
             }
 
@@ -384,7 +395,7 @@ public class Game {
         String text = String.format("%s has joined the table with %d chips",
                 player.getName(),
                 player.getChips());
-        client.sendText(text);
+        client.send(new MessageText(text));
         int fee = ranking.commit(player.getId(), player.getName());
         table.commitFee(fee);
         saveRanking();
@@ -394,7 +405,7 @@ public class Game {
         Collection<Player> activePlayers = table.getActivePlayers();
         if (activePlayers.size() <= 1) {
             String text = String.format("%s has won pot of %d chips", winner.getName(), pot);
-            client.sendText(text);
+            client.send(new MessageText(text));
             return;
         }
 
@@ -404,7 +415,7 @@ public class Game {
                     ? String.format("**%s** has won %d chips", player.getName(), pot)
                     : player.getName();
             String text = String.format("%s with %s", name, bestHand);
-            client.sendText(text);
+            client.send(new MessageText(text));
 
             // Show board cards with the ones not used in best hand as gray
             ArrayList<BufferedImage> board = new ArrayList<>();
@@ -423,7 +434,7 @@ public class Game {
             }
 
             BufferedImage attached = Images.attach(hole, board);
-            client.sendPicture(Images.getBytes(attached), MIME_TYPE);
+            client.send(new Picture(Images.getBytes(attached), MIME_TYPE));
         }
     }
 
@@ -437,7 +448,7 @@ public class Game {
             sb.append("\n");
         }
         sb.append("```");
-        client.sendText(sb.toString());
+        client.send(new MessageText(sb.toString()));
     }
 
     private Ranking loadRanking() {
@@ -469,11 +480,11 @@ public class Game {
         Player player = table.findPlayer(name);
         if (player != null) {
             if (table.removePlayer(player.getId())) {
-                client.sendText(name + " was kicked out");
+                client.send(new MessageText(name + " was kicked out"));
                 return true;
             }
         }
-        client.sendText("Could not kick out " + name);
+        client.send(new MessageText("Could not kick out " + name));
         return false;
     }
 }
