@@ -2,8 +2,9 @@ package com.wire.bots.holdem.game;
 
 import com.wire.bots.holdem.Action;
 import com.wire.bots.holdem.strategies.*;
-import com.wire.bots.sdk.WireClient;
-import com.wire.bots.sdk.assets.Poll;
+import com.wire.xenon.WireClient;
+import com.wire.xenon.assets.MessageText;
+import com.wire.xenon.assets.Poll;
 
 import java.util.Random;
 import java.util.function.Function;
@@ -123,7 +124,7 @@ class Betman {
     }
 
     private void sendMessage(String msg) throws Exception {
-        client.sendText(msg);
+        client.send(new MessageText(msg));
 
 //        executor.execute(() -> {
 //            try {

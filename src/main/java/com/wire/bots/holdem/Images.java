@@ -1,7 +1,7 @@
 package com.wire.bots.holdem;
 
 import com.wire.bots.holdem.game.Card;
-import com.wire.bots.sdk.tools.Logger;
+import com.wire.xenon.tools.Logger;
 
 import javax.imageio.ImageIO;
 import java.awt.*;

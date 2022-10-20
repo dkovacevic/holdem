@@ -18,10 +18,5 @@
 
 package com.wire.bots.holdem;
 
-public class Config extends com.wire.bots.sdk.Configuration {
-    private String someValue;
-
-    public String getSomeValue() {
-        return someValue;
-    }
+public class Config extends com.wire.lithium.Configuration {
 }

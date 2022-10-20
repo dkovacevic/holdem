@@ -1,9 +1,11 @@
 package com.wire.bots.holdem;
 
-import com.wire.bots.sdk.ClientRepo;
-import com.wire.bots.sdk.Configuration;
-import com.wire.bots.sdk.MessageHandlerBase;
-import com.wire.bots.sdk.Server;
+import com.wire.lithium.Configuration;
+import com.wire.lithium.Server;
+import com.wire.xenon.MessageHandlerBase;
+import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
+import io.dropwizard.configuration.SubstitutingSourceProvider;
+import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
 public class Service extends Server<Config> {
@@ -15,24 +17,22 @@ public class Service extends Server<Config> {
     }
 
     @Override
-    protected MessageHandlerBase createHandler(Config config, Environment env) {
+    public void initialize(Bootstrap<Config> bootstrap) {
+        bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(bootstrap.getConfigurationSourceProvider(),
+                new EnvironmentVariableSubstitutor(false)));
+    }
 
+    @Override
+    protected MessageHandlerBase createHandler(Config config, Environment env) {
         return new MessageHandler();
     }
 
     @Override
-    protected void migrateDBifNeeded(Configuration.Database database) {
-    }
-
-    @Override
-    protected void buildJdbi(Configuration.Database database) {
+    protected void setupDatabase(Configuration.Database database) {
     }
 
     public static Config CONFIG() {
         return instance.getConfig();
     }
 
-    public static ClientRepo REPO() {
-        return instance.getRepo();
-    }
 }

@@ -2,14 +2,10 @@ package com.wire.bots.holdem;
 
 import com.waz.model.Messages;
 import com.wire.bots.holdem.game.Game;
-import com.wire.bots.sdk.MessageHandlerBase;
-import com.wire.bots.sdk.WireClient;
-import com.wire.bots.sdk.assets.ButtonActionConfirmation;
-import com.wire.bots.sdk.assets.Poll;
-import com.wire.bots.sdk.models.TextMessage;
-import com.wire.bots.sdk.server.model.NewBot;
-import com.wire.bots.sdk.server.model.SystemMessage;
-import com.wire.bots.sdk.tools.Logger;
+import com.wire.xenon.MessageHandlerBase;
+import com.wire.xenon.WireClient;
+import com.wire.xenon.backend.models.SystemMessage;
+import com.wire.xenon.models.TextMessage;
 
 import java.util.UUID;
 

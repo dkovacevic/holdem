@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wire.bots.sdk.server.model.User;
+import com.wire.xenon.backend.models.User;
 
 import java.util.*;
 import java.util.stream.Collectors;

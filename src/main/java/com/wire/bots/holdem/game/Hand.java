@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.Comparator;
 
 public class Hand implements Comparable<Hand> {
-    private ArrayList<Card> cards;
+    private final ArrayList<Card> cards;
 
     Hand(Collection<Card> cards) {
         this.cards = new ArrayList<>(cards);

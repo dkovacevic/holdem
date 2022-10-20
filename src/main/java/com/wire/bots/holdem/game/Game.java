@@ -5,14 +5,9 @@ import com.wire.bots.holdem.Action;
 import com.wire.bots.holdem.Database;
 import com.wire.bots.holdem.Images;
 import com.wire.bots.holdem.Service;
-import com.wire.bots.sdk.Configuration;
-import com.wire.bots.sdk.WireClient;
-import com.wire.bots.sdk.assets.Poll;
-import com.wire.bots.sdk.exceptions.HttpException;
-import com.wire.bots.sdk.server.model.Conversation;
-import com.wire.bots.sdk.server.model.Member;
-import com.wire.bots.sdk.server.model.User;
-import com.wire.bots.sdk.tools.Logger;
+import com.wire.lithium.Configuration;
+import com.wire.xenon.WireClient;
+import com.wire.xenon.backend.models.User;
 
 import javax.annotation.Nullable;
 import java.awt.*;
@@ -34,7 +29,7 @@ public class Game {
     public Game() {
         this.ranking = loadRanking();
 
-        final Configuration.DB db = Service.CONFIG().db;
+        final Configuration.Database db = Service.CONFIG().database;
         this.db = new Database(db.host, db.port, db.password);
     }
 

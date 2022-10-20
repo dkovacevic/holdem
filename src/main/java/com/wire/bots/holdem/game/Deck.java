@@ -10,7 +10,7 @@ import java.util.Random;
 public class Deck {
     private final static Random rnd = new Random();
     @JsonProperty
-    private ArrayList<Card> cards;
+    private final ArrayList<Card> cards;
 
     public Deck() {
         cards = new ArrayList<>(52);
