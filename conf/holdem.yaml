@@ -11,12 +11,24 @@ logging:
   loggers:
     "com.wire.bots.logger": ${LOG_LEVEL:-INFO}
 
-db:
-  driver: redis
-  host: ${DB_HOST:-localhost}
-  port: ${DB_PORT:-6379}
-  password: ${DB_PASSWORD:-}
+token: ${SERVICE_TOKEN:-}
+
+redis:
+  host: ${REDIS_HOST:-localhost}
+  port: ${REDIS_PORT:-6379}
+  password: ${REDIS_PASSWORD:-}
 
 database:
-  driverClass: fs
-  url: dummy
+  driverClass: org.postgresql.Driver
+  password: ${DB_PASSWORD:-}
+  user: ${DB_USER:-}
+  url: ${DB_URL:-jdbc:postgresql://localhost/holdem}
+  properties:
+    charSet: UTF-8
+  maxWaitForConnection: 1s
+  validationQuery: "/* MyService Health Check */ SELECT 1"
+  minSize: 8
+  maxSize: 32
+  checkConnectionWhileIdle: false
+  evictionInterval: 10s
+  minIdleTime: 1 minute

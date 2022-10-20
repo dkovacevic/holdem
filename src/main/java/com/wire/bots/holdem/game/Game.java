@@ -1,11 +1,7 @@
 package com.wire.bots.holdem.game;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wire.bots.holdem.Action;
-import com.wire.bots.holdem.Database;
-import com.wire.bots.holdem.Images;
-import com.wire.bots.holdem.Service;
-import com.wire.lithium.Configuration;
+import com.wire.bots.holdem.*;
 import com.wire.xenon.WireClient;
 import com.wire.xenon.assets.MessageText;
 import com.wire.xenon.assets.Picture;
@@ -15,7 +11,6 @@ import com.wire.xenon.backend.models.Conversation;
 import com.wire.xenon.backend.models.Member;
 import com.wire.xenon.backend.models.User;
 import com.wire.xenon.exceptions.HttpException;
-import com.wire.xenon.models.PhotoPreviewMessage;
 import com.wire.xenon.tools.Logger;
 
 import javax.annotation.Nullable;
@@ -36,9 +31,9 @@ public class Game {
     private final Database db;
 
     public Game() {
+        Config.Redis redis = Service.instance.getConfig().redis;
+        this.db = new Database(redis.host, redis.port, redis.password);
         this.ranking = loadRanking();
-
-        this.db = new Database(Service.CONFIG().db.host, Service.CONFIG().db.port, Service.CONFIG().db.password);
     }
 
     public void onRanking(WireClient client) throws Exception {
@@ -459,7 +454,7 @@ public class Game {
             ret = mapper.readValue(json, Ranking.class);
             Logger.info("Ranking size:", ranking.size());
         } catch (Exception e) {
-            Logger.error("loadRanking: %s", e);
+            Logger.warning("loadRanking: %s", e.getMessage());
             ret = new Ranking();
         }
         return ret;

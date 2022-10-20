@@ -9,7 +9,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
 public class Service extends Server<Config> {
-    private static Service instance;
+    public static Service instance;
 
     public static void main(String[] args) throws Exception {
         instance = new Service();
@@ -17,22 +17,9 @@ public class Service extends Server<Config> {
     }
 
     @Override
-    public void initialize(Bootstrap<Config> bootstrap) {
-        bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(bootstrap.getConfigurationSourceProvider(),
-                new EnvironmentVariableSubstitutor(false)));
-    }
-
-    @Override
     protected MessageHandlerBase createHandler(Config config, Environment env) {
+
         return new MessageHandler();
-    }
-
-    @Override
-    protected void setupDatabase(Configuration.Database database) {
-    }
-
-    public static Config CONFIG() {
-        return instance.getConfig();
     }
 
 }

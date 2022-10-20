@@ -26,14 +26,14 @@ WORKDIR /opt/holdem
 EXPOSE  8080 8081
 
 # Copy configuration
-COPY conf/holdem.yaml /opt/holdem/
+COPY conf/holdem.yaml /etc/holdem/
 
 # Copy built target
 COPY --from=build /app/target/holdem.jar /opt/holdem/
 
 # create version file
 ARG release_version=development
-ENV RELEASE_FILE_PATH=/opt/recording/release.txt
+ENV RELEASE_FILE_PATH=/opt/holdem/release.txt
 RUN echo $release_version > $RELEASE_FILE_PATH
 
 EXPOSE  8080 8081

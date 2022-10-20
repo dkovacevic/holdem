@@ -20,12 +20,11 @@ package com.wire.bots.holdem;
 
 public class Config extends com.wire.lithium.Configuration {
 
-    public Redis db;
+    public Redis redis;
 
     public static class Redis {
         public String host;
         public int port;
-        public String driver;
         public String password;
     }
 }
