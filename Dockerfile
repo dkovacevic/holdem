@@ -26,7 +26,7 @@ WORKDIR /opt/holdem
 EXPOSE  8080 8081
 
 # Copy configuration
-COPY conf/holdem.yaml /etc/holdem/
+COPY holdem.yaml /etc/holdem/
 
 # Copy built target
 COPY --from=build /app/target/holdem.jar /opt/holdem/

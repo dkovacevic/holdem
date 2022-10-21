@@ -32,7 +32,7 @@ public class Game {
 
     public Game() {
         Config.Redis redis = Service.instance.getConfig().redis;
-        this.db = new Database(redis.host, redis.port, redis.password);
+        this.db = new Database(redis.host, Integer.parseInt(redis.port), redis.password);
         this.ranking = loadRanking();
     }
 

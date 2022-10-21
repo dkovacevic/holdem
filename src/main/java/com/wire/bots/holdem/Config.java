@@ -24,7 +24,7 @@ public class Config extends com.wire.lithium.Configuration {
 
     public static class Redis {
         public String host;
-        public int port;
+        public String port;
         public String password;
     }
 }
