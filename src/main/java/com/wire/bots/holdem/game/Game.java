@@ -11,6 +11,7 @@ import com.wire.xenon.backend.models.Conversation;
 import com.wire.xenon.backend.models.Member;
 import com.wire.xenon.backend.models.User;
 import com.wire.xenon.exceptions.HttpException;
+import com.wire.xenon.models.AssetKey;
 import com.wire.xenon.tools.Logger;
 
 import javax.annotation.Nullable;
@@ -218,8 +219,7 @@ public class Game {
     private void sendHoleCards(WireClient client, Player player, Card a, Card b) {
         try {
             byte[] image = Images.getImage(a, b);
-            Picture picture = new Picture(image, MIME_TYPE);
-            client.send(picture, player.getId());
+            postPicture(client, player, image);
         } catch (Exception e) {
             Logger.error("sendHoleCards: %s", e);
         }
@@ -228,18 +228,26 @@ public class Game {
     private void sendBoard(WireClient client, Table table, Player player) {
         try {
             byte[] image = Images.getImage(table.getBoard());
-            Picture picture = new Picture(image, MIME_TYPE);
-            client.send(picture, player.getId());
+            postPicture(client, player, image);
         } catch (Exception e) {
             Logger.error("sendBoard: %s", e);
         }
     }
 
+    private void postPicture(WireClient client, Player player, byte[] image) throws Exception {
+        Picture picture = new Picture(image, MIME_TYPE);
+        client.send(picture, player.getId());
+
+        final AssetKey assetKey = client.uploadAsset(picture);
+        picture.setAssetKey(assetKey.id);
+        picture.setAssetToken(assetKey.token);
+        client.send(picture, player.getId());
+    }
+
     private void sendCards(WireClient client, Table table, Player player) {
         try {
             byte[] image = Images.getImage(player.getCards(), table.getBoard());
-            Picture picture = new Picture(image, MIME_TYPE);
-            client.send(picture, player.getId());
+            postPicture(client, player, image);
 
             Probability prob = new Probability(table.getBoard(), player.getCards());
             Hand bestHand = player.getBestHand();
@@ -429,7 +437,8 @@ public class Game {
             }
 
             BufferedImage attached = Images.attach(hole, board);
-            client.send(new Picture(Images.getBytes(attached), MIME_TYPE));
+            byte[] image = Images.getBytes(attached);
+            postPicture(client, player, image);
         }
     }
 
