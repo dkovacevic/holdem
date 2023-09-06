@@ -190,7 +190,7 @@ public class Game {
 
             if (!player.isBot()) {
                 //executor.execute(() -> sendHoleCards(client, player, a, b));
-                sendHoleCards(client, player, a, b);
+                sendHoldCards(client, player, a, b);
 
                 sendButtons(client, text, player, table.getRaise());
             }
@@ -216,38 +216,38 @@ public class Game {
         }
     }
 
-    private void sendHoleCards(WireClient client, Player player, Card a, Card b) {
+    private void sendHoldCards(WireClient client, Player player, Card a, Card b) {
         try {
             byte[] image = Images.getImage(a, b);
-            postPicture(client, player, image);
+            postPicture(client, player.getId(), image);
         } catch (Exception e) {
-            Logger.error("sendHoleCards: %s", e);
+            Logger.error("sendHoldCards: %s", e);
         }
     }
 
     private void sendBoard(WireClient client, Table table, Player player) {
         try {
             byte[] image = Images.getImage(table.getBoard());
-            postPicture(client, player, image);
+            postPicture(client, player.getId(), image);
         } catch (Exception e) {
             Logger.error("sendBoard: %s", e);
         }
     }
 
-    private void postPicture(WireClient client, Player player, byte[] image) throws Exception {
-        Picture picture = new Picture(image, MIME_TYPE);
-        client.send(picture, player.getId());
+    private void postPicture(WireClient client,  UUID userId, byte[] image) throws Exception {
+        final Picture picture = new Picture(image, MIME_TYPE);
+        client.send(picture, userId);
 
         final AssetKey assetKey = client.uploadAsset(picture);
         picture.setAssetKey(assetKey.id);
         picture.setAssetToken(assetKey.token);
-        client.send(picture, player.getId());
+        client.send(picture, userId);
     }
 
     private void sendCards(WireClient client, Table table, Player player) {
         try {
             byte[] image = Images.getImage(player.getCards(), table.getBoard());
-            postPicture(client, player, image);
+            postPicture(client, player.getId(), image);
 
             Probability prob = new Probability(table.getBoard(), player.getCards());
             Hand bestHand = player.getBestHand();
@@ -438,7 +438,7 @@ public class Game {
 
             BufferedImage attached = Images.attach(hole, board);
             byte[] image = Images.getBytes(attached);
-            postPicture(client, player, image);
+            postPicture(client, player.getId(), image);
         }
     }
 
