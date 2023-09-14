@@ -1,0 +1,53 @@
+version: '3.8'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - release_version=docker-compose
+    image: holdem
+    ports:
+      - 8080:8080
+      - 8081:8081
+    environment:
+      # put here the token used for testing
+      - SERVICE_TOKEN=some-service-token-from-BE
+
+      # local database
+      - DB_URL=jdbc:postgresql://db:5432/holdem
+      - DB_USER=holdem
+      - DB_PASSWORD=holdem
+
+      #cache
+      - REDIS_PASSWORD=eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+      - REDIS_HOST=cache
+    depends_on:
+      - db
+      - cache
+
+  db:
+    image: postgres:13
+    # just for local development
+    environment:
+      - POSTGRES_USER=holdem
+      - POSTGRES_PASSWORD=holdem
+      - POSTGRES_DB=holdem
+    ports:
+      - 5432:5432
+    volumes:
+      - holdem-db:/var/lib/postgresql/data/
+
+  cache:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    volumes:
+      - cache:/data
+
+volumes:
+  holdem-db:
+  cache:
+    driver: local

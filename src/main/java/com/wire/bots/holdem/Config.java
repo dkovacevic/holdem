@@ -18,10 +18,13 @@
 
 package com.wire.bots.holdem;
 
-public class Config extends com.wire.bots.sdk.Configuration {
-    private String someValue;
+public class Config extends com.wire.lithium.Configuration {
 
-    public String getSomeValue() {
-        return someValue;
+    public Redis redis;
+
+    public static class Redis {
+        public String host;
+        public String port;
+        public String password;
     }
 }

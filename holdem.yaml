@@ -1,0 +1,34 @@
+server:
+  rootPath: /holdem/*
+  requestLog:
+    appenders:
+      - type: console
+        filterFactories:
+          - type: status-filter-factory
+
+logging:
+  level: INFO
+  loggers:
+    "com.wire.bots.logger": ${LOG_LEVEL:-INFO}
+
+token: ${SERVICE_TOKEN:-}
+
+redis:
+  host: ${REDIS_HOST:-localhost}
+  port: ${REDIS_PORT:-6379}
+  password: ${REDIS_PASSWORD:-}
+
+database:
+  driverClass: org.postgresql.Driver
+  password: ${DB_PASSWORD:-}
+  user: ${DB_USER:-}
+  url: ${DB_URL:-jdbc:postgresql://localhost/holdem}
+  properties:
+    charSet: UTF-8
+  maxWaitForConnection: 1s
+  validationQuery: "/* MyService Health Check */ SELECT 1"
+  minSize: 8
+  maxSize: 32
+  checkConnectionWhileIdle: false
+  evictionInterval: 10s
+  minIdleTime: 1 minute

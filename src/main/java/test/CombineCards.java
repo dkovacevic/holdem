@@ -6,7 +6,6 @@ import com.wire.bots.holdem.game.Card;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,16 +32,13 @@ public class CombineCards {
         cards.add(card6);
         cards.add(card7);
 
-        byte[] image = Images.getImage(cards);
-        BufferedImage read = ImageIO.read(new ByteArrayInputStream(image));
+        BufferedImage read =  Images.getImage(cards);
         ImageIO.write(read, PNG, new File("result.png"));
 
-        image = Images.getImage(cards.subList(0, 2), cards.subList(2, 7));
-        read = ImageIO.read(new ByteArrayInputStream(image));
+        read = Images.getImage(cards.subList(0, 2), cards.subList(2, 7));
         ImageIO.write(read, PNG, new File("combined.png"));
 
-        image = Images.getImage(card1, card2);
-        read = ImageIO.read(new ByteArrayInputStream(image));
+        read = Images.getImage(card1, card2);
         ImageIO.write(read, PNG, new File("attached.png"));
 
         BufferedImage image1 = Images.getBufferedImage(card1, Color.WHITE);

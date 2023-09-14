@@ -2,15 +2,17 @@ package com.wire.bots.holdem;
 
 import com.waz.model.Messages;
 import com.wire.bots.holdem.game.Game;
-import com.wire.bots.sdk.MessageHandlerBase;
-import com.wire.bots.sdk.WireClient;
-import com.wire.bots.sdk.assets.ButtonActionConfirmation;
-import com.wire.bots.sdk.assets.Poll;
-import com.wire.bots.sdk.models.TextMessage;
-import com.wire.bots.sdk.server.model.NewBot;
-import com.wire.bots.sdk.server.model.SystemMessage;
-import com.wire.bots.sdk.tools.Logger;
+import com.wire.xenon.MessageHandlerBase;
+import com.wire.xenon.WireClient;
+import com.wire.xenon.assets.ButtonActionConfirmation;
+import com.wire.xenon.assets.MessageText;
+import com.wire.xenon.assets.Poll;
+import com.wire.xenon.backend.models.NewBot;
+import com.wire.xenon.backend.models.SystemMessage;
+import com.wire.xenon.models.TextMessage;
+import com.wire.xenon.tools.Logger;
 
+import java.util.Date;
 import java.util.UUID;
 
 public class MessageHandler extends MessageHandlerBase {
@@ -97,7 +99,7 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onNewConversation(WireClient client, SystemMessage message) {
         try {
-            client.sendText("Texas Hold'em");
+            client.send(new MessageText("Texas Hold'em"));
 
             Poll poll = new Poll();
             poll.addButton("deal", "Deal");
@@ -148,7 +150,13 @@ public class MessageHandler extends MessageHandlerBase {
                 e.printStackTrace();
             }
 
-            TextMessage textMessage = new TextMessage(messageId, client.getConversationId(), client.getDeviceId(), userId);
+            TextMessage textMessage = new TextMessage(
+                    UUID.randomUUID(),
+                    messageId,
+                    client.getConversationId(),
+                    client.getDeviceId(),
+                    userId,
+                    "" + new Date().getTime());
             textMessage.setText(buttonId);
             onText(client, textMessage);
         }

@@ -1,0 +1,53 @@
+name: Image Build
+
+on:
+  push:
+    branches:
+      - new_lithium
+
+env:
+  # set docker image for the service - i.e. "wire-bot/poll"
+  DOCKER_IMAGE: wire-bot/holdem
+  # name of the service in the Dagobah - the value for label name, i.e. "polls"
+  SERVICE_NAME: holdem
+
+jobs:
+  publish:
+    name: Image Build
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+        # use latest tag as release version in the docker container
+      - name: Set Release Version
+        run: echo "RELEASE_VERSION=${GITHUB_SHA}" >> $GITHUB_ENV
+
+      # extract metadata for labels https://github.com/crazy-max/ghaction-docker-meta
+      - name: Docker meta
+        id: docker_meta
+        uses: crazy-max/ghaction-docker-meta@v1
+        with:
+          images: eu.gcr.io/${{ env.DOCKER_IMAGE }}
+
+        # setup docker actions https://github.com/docker/build-push-action
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      # login to GCR repo
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          registry: eu.gcr.io
+          username: _json_key
+          password: ${{ secrets.GCR_ACCESS_JSON }}
+
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
+          push: true
+          build-args: |
+            release_version=${{ env.RELEASE_VERSION }}

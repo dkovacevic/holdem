@@ -1,7 +1,7 @@
 package com.wire.bots.holdem;
 
 import com.wire.bots.holdem.game.Card;
-import com.wire.bots.sdk.tools.Logger;
+import com.wire.xenon.tools.Logger;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -21,25 +21,22 @@ public class Images {
     private static final String PNG = "png";
     private static final float FACTOR = 0.7f;
 
-    public static byte[] getImage(Collection<Card> cards) throws IOException {
+    public static BufferedImage getImage(Collection<Card> cards) throws IOException {
         ArrayList<BufferedImage> load = load(cards);
-        BufferedImage combine = combine(load);
-        return getBytes(combine);
+        return combine(load);
     }
 
-    public static byte[] getImage(Card c1, Card c2) throws IOException {
+    public static BufferedImage getImage(Card c1, Card c2) throws IOException {
         BufferedImage a = load(c1).get(0);
         BufferedImage b = load(c2).get(0);
-        BufferedImage attached = attach(a, b);
-        return getBytes(attached);
+        return attach(a, b);
     }
 
-    public static byte[] getImage(Collection<Card> coll1, Collection<Card> coll2) throws IOException {
+    public static BufferedImage getImage(Collection<Card> coll1, Collection<Card> coll2) throws IOException {
         ArrayList<BufferedImage> load1 = load(coll1);
         ArrayList<BufferedImage> load2 = load(coll2);
 
-        BufferedImage attached = attach(load1, load2);
-        return getBytes(attached);
+        return attach(load1, load2);
     }
 
     public static BufferedImage combine(ArrayList<BufferedImage> images) {

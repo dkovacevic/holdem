@@ -1,6 +1,6 @@
 package com.wire.bots.holdem.game;
 
-import com.wire.bots.sdk.server.model.User;
+import com.wire.xenon.backend.models.User;
 import org.junit.Test;
 
 import java.util.UUID;
