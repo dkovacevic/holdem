@@ -215,7 +215,7 @@ public class Game {
 
     private void sendHoldCards(WireClient client, Player player, Card a, Card b) {
         try {
-            byte[] image = Images.getImage(a, b);
+            BufferedImage image = Images.getImage(a, b);
             postPicture(client, player.getId(), image);
         } catch (Exception e) {
             Logger.error("sendHoldCards: %s", e);
@@ -224,29 +224,35 @@ public class Game {
 
     private void sendBoard(WireClient client, Table table, Player player) {
         try {
-            byte[] image = Images.getImage(table.getBoard());
+            BufferedImage image = Images.getImage(table.getBoard());
             postPicture(client, player.getId(), image);
         } catch (Exception e) {
             Logger.error("sendBoard: %s", e);
         }
     }
 
-    private void postPicture(WireClient client, UUID userId, byte[] image) throws Exception {
+    private void postPicture(WireClient client, UUID userId, BufferedImage image) throws Exception {
+        byte[] bytes = Images.getBytes(image);
         UUID messageId = UUID.randomUUID();
         ImagePreview preview = new ImagePreview(messageId, MIME_TYPE);
+        preview.setSize(bytes.length);
+        preview.setHeight(image.getHeight());
+        preview.setWidth(image.getWidth());
         client.send(preview, userId);
 
-        ImageAsset asset = new ImageAsset(messageId, image, MIME_TYPE);
+        ImageAsset asset = new ImageAsset(messageId, bytes, MIME_TYPE);
         final AssetKey assetKey = client.uploadAsset(asset);
         asset.setAssetKey(assetKey.id);
         asset.setAssetToken(assetKey.token);
         asset.setDomain(assetKey.domain);
         client.send(asset, userId);
+
+        Logger.info("postPicture: %s %s. len: %d bytes", assetKey.id, assetKey.domain, bytes.length);
     }
 
     private void sendCards(WireClient client, Table table, Player player) {
         try {
-            byte[] image = Images.getImage(player.getCards(), table.getBoard());
+            BufferedImage image = Images.getImage(player.getCards(), table.getBoard());
             postPicture(client, player.getId(), image);
 
             Probability prob = new Probability(table.getBoard(), player.getCards());
@@ -437,8 +443,7 @@ public class Game {
             }
 
             BufferedImage attached = Images.attach(hole, board);
-            byte[] image = Images.getBytes(attached);
-            postPicture(client, player.getId(), image);
+            postPicture(client, player.getId(), attached);
         }
     }
 
