@@ -13,7 +13,7 @@ COPY . ./
 RUN mvn -Dmaven.test.skip=true package
 
 # runtime stage
-FROM wirebot/runtime:1.2.0
+FROM wirebot/runtime:1.4.0
 
 RUN mkdir /opt/holdem
 RUN mkdir /opt/holdem/cards

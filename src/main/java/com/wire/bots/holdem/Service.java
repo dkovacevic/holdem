@@ -1,11 +1,7 @@
 package com.wire.bots.holdem;
 
-import com.wire.lithium.Configuration;
 import com.wire.lithium.Server;
 import com.wire.xenon.MessageHandlerBase;
-import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
-import io.dropwizard.configuration.SubstitutingSourceProvider;
-import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
 public class Service extends Server<Config> {

@@ -3,10 +3,7 @@ package com.wire.bots.holdem.game;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.holdem.*;
 import com.wire.xenon.WireClient;
-import com.wire.xenon.assets.MessageText;
-import com.wire.xenon.assets.Picture;
-import com.wire.xenon.assets.Ping;
-import com.wire.xenon.assets.Poll;
+import com.wire.xenon.assets.*;
 import com.wire.xenon.backend.models.Conversation;
 import com.wire.xenon.backend.models.Member;
 import com.wire.xenon.backend.models.User;
@@ -234,14 +231,17 @@ public class Game {
         }
     }
 
-    private void postPicture(WireClient client,  UUID userId, byte[] image) throws Exception {
-        final Picture picture = new Picture(image, MIME_TYPE);
-        client.send(picture, userId);
+    private void postPicture(WireClient client, UUID userId, byte[] image) throws Exception {
+        UUID messageId = UUID.randomUUID();
+        ImagePreview preview = new ImagePreview(messageId, MIME_TYPE);
+        client.send(preview, userId);
 
-        final AssetKey assetKey = client.uploadAsset(picture);
-        picture.setAssetKey(assetKey.id);
-        picture.setAssetToken(assetKey.token);
-        client.send(picture, userId);
+        ImageAsset asset = new ImageAsset(messageId, image, MIME_TYPE);
+        final AssetKey assetKey = client.uploadAsset(asset);
+        asset.setAssetKey(assetKey.id);
+        asset.setAssetToken(assetKey.token);
+        asset.setDomain(assetKey.domain);
+        client.send(asset, userId);
     }
 
     private void sendCards(WireClient client, Table table, Player player) {
